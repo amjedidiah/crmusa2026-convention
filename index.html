@@ -244,9 +244,9 @@
     .section-title em { font-style: italic; }
     .section-body {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       line-height: 1.85;
-      color: #3a3a4a;
+      color: #1A1A2E;
       max-width: 640px;
     }
 
@@ -398,7 +398,7 @@
     .venue-item .vi-val {
       font-family: 'Cormorant Garamond', serif;
       font-size: 1.15rem;
-      color: var(--navy);
+      color: #1A1A2E;
       line-height: 1.5;
     }
 
@@ -942,27 +942,6 @@
 
     /* ── REGISTRATION FORM ── */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Jost', sans-serif;
-  background: #0B1628;
-  color: #F5EFE0;
-  padding: 2rem 1rem;
-  min-height: 100vh;
-}
-
-.wrap { max-width: 680px; margin: 0 auto; }
-
-h1 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.6rem;
-  font-weight: 300;
-  font-style: italic;
-  color: #E8C87A;
-  text-align: center;
-  margin-bottom: 2rem;
-}
 
 /* ── TABS ── */
 .tabs {
@@ -1560,7 +1539,7 @@ h1 {
       <div class="venue-wrap">
         <div class="venue-map">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3457.0!2d-95.5324!3d29.9089!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640d0a3f6a3c7a1%3A0x1234567890abcdef!2sHoliday+Inn+NW+Houston!5e0!3m2!1sen!2sus!4v1680000000000"
+            src="https://maps.google.com/maps?q=Holiday+Inn+NW+Houston,+3539+N+Sam+Houston+Pkwy+W,+Houston,+TX+77086&output=embed"
             allowfullscreen=""
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
@@ -2281,17 +2260,20 @@ function makeCode() {
 })();
 /* Scroll fade-in */
 (function(){
-  try {
-    var obs = new IntersectionObserver(function(en){
-      en.forEach(function(e){ if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }});
-    },{threshold:0.1});
-    document.querySelectorAll('.about-stat,.schedule-day,.venue-item').forEach(function(el){
-      el.style.opacity='0'; el.style.transform='translateY(16px)';
-      el.style.transition='opacity 0.6s ease,transform 0.6s ease';
-      obs.observe(el);
-    });
-  } catch(e){}
-})();
+      try {
+        var obs = new IntersectionObserver(function(en){
+          en.forEach(function(e){ if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }});
+        },{threshold:0.05,rootMargin:'0px 0px -20px 0px'});
+        /* Only animate on desktop/mouse devices — skip on mobile/touch to prevent invisible content */
+        if (!window.matchMedia('(hover:none)').matches) {
+          document.querySelectorAll('.about-stat,.schedule-day,.venue-item').forEach(function(el){
+            el.style.opacity='0'; el.style.transform='translateY(16px)';
+            el.style.transition='opacity 0.6s ease,transform 0.6s ease';
+            obs.observe(el);
+          });
+        }
+      } catch(e){}
+    })();
 /* Sticky nav */
 (function(){
   var nb = document.getElementById('navbar');
