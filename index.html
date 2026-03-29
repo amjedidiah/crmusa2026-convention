@@ -2118,30 +2118,7 @@ function generateCode() {
 window.addEventListener('DOMContentLoaded', function() {
   addAttendee();
 });
-  </script><script>
-    // Sticky nav
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 50);
-    });
 
-    // Register form submit
-    function handleSubmit(btn) {
-      const inputs = btn.parentElement.querySelectorAll('input');
-      const name  = inputs[0].value.trim();
-      const email = inputs[1].value.trim();
-      if (!name || !email) {
-        btn.textContent = 'Please fill name & email';
-        btn.style.background = '#a04040';
-        btn.style.color = '#fff';
-        setTimeout(() => {
-          btn.textContent = 'Submit Interest';
-          btn.style.background = '';
-          btn.style.color = '';
-        }, 2500);
-        return;
-      }
-      btn.textContent = 'Thank You — We\'ll Be in Touch!';
-      btn.style.background = '#3a7a4a';
-      btn.style.color = '#fff';
-      btn.disabled
+  </script>
+</body>
+</html>
