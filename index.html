@@ -9,15 +9,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --navy:   #0B1628;
-      --navy2:  #112040;
-      --gold:   #C8A85A;
-      --gold2:  #E8C87A;
-      --cream:  #F5EFE0;
-      --offwhite: #FAF6EE;
-      --text:   #1A1A2E;
-      --muted:  #6B7080;
-      --border: rgba(200, 168, 90, 0.25);
+      --navy:     #180D00;
+      --navy2:    #241200;
+      --gold:     #E8B830;
+      --gold2:    #F5D060;
+      --cream:    #FDF3D8;
+      --offwhite: #FEF8EC;
+      --text:     #1A0E00;
+      --muted:    #7A6040;
+      --border:   rgba(232, 184, 48, 0.28);
     }
 
     html { scroll-behavior: smooth; }
@@ -33,7 +33,7 @@
     .hero {
       position: relative;
       min-height: 100vh;
-      background: var(--navy);
+      background: radial-gradient(ellipse 120% 80% at 50% 0%, #3D1E00 0%, #1A0C00 40%, #0E0600 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,45 +42,36 @@
       padding: 4rem 2rem;
     }
 
-    /* Radial glow behind cross */
+    /* Warm ambient glow */
     .hero::before {
       content: '';
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 60% 55% at 50% 50%, rgba(200,168,90,0.14) 0%, transparent 70%),
-        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(11,22,40,0.9) 0%, transparent 70%);
+        radial-gradient(ellipse 70% 50% at 50% 20%, rgba(232,184,48,0.18) 0%, transparent 65%),
+        radial-gradient(ellipse 100% 50% at 50% 100%, rgba(14,6,0,0.95) 0%, transparent 70%);
       pointer-events: none;
     }
 
-    /* Animated light rays */
-    .rays {
+    /* Wheat scene */
+    .wheat-scene {
       position: absolute;
       inset: 0;
       overflow: hidden;
       pointer-events: none;
     }
-    .ray {
+    .wheat-svg {
       position: absolute;
-      top: 0;
-      left: 50%;
-      width: 1px;
-      height: 65%;
-      transform-origin: top center;
-      background: linear-gradient(to bottom, rgba(200,168,90,0.18), transparent);
-      animation: ray-pulse 6s ease-in-out infinite;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      animation: wheat-sway 8s ease-in-out infinite;
     }
-    .ray:nth-child(1)  { transform: rotate(-40deg); animation-delay: 0s; }
-    .ray:nth-child(2)  { transform: rotate(-28deg); animation-delay: 0.5s; }
-    .ray:nth-child(3)  { transform: rotate(-16deg); animation-delay: 1s; }
-    .ray:nth-child(4)  { transform: rotate(-6deg);  animation-delay: 1.5s; }
-    .ray:nth-child(5)  { transform: rotate(6deg);   animation-delay: 0.8s; }
-    .ray:nth-child(6)  { transform: rotate(16deg);  animation-delay: 0.3s; }
-    .ray:nth-child(7)  { transform: rotate(28deg);  animation-delay: 1.2s; }
-    .ray:nth-child(8)  { transform: rotate(40deg);  animation-delay: 0.6s; }
-    @keyframes ray-pulse {
-      0%, 100% { opacity: 0.4; }
-      50%       { opacity: 1; }
+    @keyframes wheat-sway {
+      0%, 100% { transform: skewX(0deg) translateX(0); }
+      25%       { transform: skewX(0.4deg) translateX(3px); }
+      75%       { transform: skewX(-0.4deg) translateX(-3px); }
     }
 
     /* Dove / flame SVG icon */
@@ -89,6 +80,7 @@
       z-index: 2;
       margin-bottom: 2.5rem;
       animation: icon-rise 1.2s cubic-bezier(0.22,0.61,0.36,1) both;
+      filter: drop-shadow(0 0 20px rgba(232,184,48,0.35));
     }
     @keyframes icon-rise {
       from { opacity: 0; transform: translateY(20px); }
@@ -252,7 +244,7 @@
 
     /* ── THEME STRIP ── */
     .theme-strip {
-      background: var(--navy);
+      background: linear-gradient(135deg, #1E0E00 0%, #2A1600 50%, #1A0A00 100%);
       padding: 4rem 2rem;
       text-align: center;
     }
@@ -307,7 +299,7 @@
     }
 
     /* ── SCHEDULE ── */
-    .schedule-section { background: var(--navy); color: var(--cream); }
+    .schedule-section { background: linear-gradient(180deg, #1A0C00 0%, #0E0600 100%); color: var(--cream); }
     .schedule-section .section-title { color: var(--cream); }
     .schedule-section .section-body { color: rgba(245,239,224,0.65); }
     .schedule-grid {
@@ -319,7 +311,7 @@
       border: 1px solid rgba(200,168,90,0.15);
     }
     .schedule-day {
-      background: var(--navy2);
+      background: rgba(36,18,0,0.95);
       padding: 2rem 1.4rem;
       transition: background 0.25s;
       cursor: default;
@@ -404,7 +396,7 @@
 
     /* ── REGISTER ── */
     .register-section {
-      background: linear-gradient(135deg, var(--navy) 0%, #1a2a4a 100%);
+      background: linear-gradient(135deg, #1A0C00 0%, #2A1600 100%);
       padding: 6rem 2rem;
       text-align: center;
     }
@@ -455,7 +447,7 @@
 
     /* ── FOOTER ── */
     footer {
-      background: #080f1e;
+      background: #0A0500;
       padding: 3rem 2rem;
       text-align: center;
     }
@@ -492,9 +484,9 @@
       transition: background 0.4s, backdrop-filter 0.4s;
     }
     nav.scrolled {
-      background: rgba(11,22,40,0.92);
+      background: rgba(24,13,0,0.95);
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(200,168,90,0.12);
+      border-bottom: 1px solid rgba(232,184,48,0.15);
     }
     .nav-brand {
       font-family: 'Cinzel', serif;
@@ -956,11 +948,89 @@
 
   <!-- HERO -->
   <section class="hero" id="home">
-    <div class="rays">
-      <div class="ray"></div><div class="ray"></div>
-      <div class="ray"></div><div class="ray"></div>
-      <div class="ray"></div><div class="ray"></div>
-      <div class="ray"></div><div class="ray"></div>
+    <!-- Golden Wheat Background -->
+    <div class="wheat-scene">
+      <svg class="wheat-svg" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <!-- Sun rays fanning from top center -->
+        <g opacity="0.22">
+          <polygon points="720,0 400,700 480,700"  fill="#E8B830"/>
+          <polygon points="720,0 480,700 560,700"  fill="#C8941A"/>
+          <polygon points="720,0 560,700 640,700"  fill="#E8B830"/>
+          <polygon points="720,0 640,700 720,700"  fill="#C8941A"/>
+          <polygon points="720,0 720,700 800,700"  fill="#E8B830"/>
+          <polygon points="720,0 800,700 880,700"  fill="#C8941A"/>
+          <polygon points="720,0 880,700 960,700"  fill="#E8B830"/>
+          <polygon points="720,0 960,700 1040,700" fill="#C8941A"/>
+        </g>
+        <!-- Horizon ground strip -->
+        <rect x="0" y="580" width="1440" height="120" fill="#2A1400" opacity="0.7"/>
+        <rect x="0" y="610" width="1440" height="90"  fill="#1A0C00" opacity="0.6"/>
+        <!-- Wheat stalks — back row (shorter, more faded) -->
+        <g fill="#C8841A" opacity="0.28">
+          <rect x="50"  y="390" width="5" height="200" rx="2"/>
+          <rect x="150" y="370" width="5" height="220" rx="2"/>
+          <rect x="260" y="400" width="5" height="190" rx="2"/>
+          <rect x="380" y="380" width="5" height="210" rx="2"/>
+          <rect x="500" y="395" width="5" height="195" rx="2"/>
+          <rect x="620" y="375" width="5" height="215" rx="2"/>
+          <rect x="750" y="385" width="5" height="205" rx="2"/>
+          <rect x="870" y="370" width="5" height="220" rx="2"/>
+          <rect x="990" y="400" width="5" height="190" rx="2"/>
+          <rect x="1110"y="380" width="5" height="210" rx="2"/>
+          <rect x="1230"y="390" width="5" height="200" rx="2"/>
+          <rect x="1370"y="375" width="5" height="215" rx="2"/>
+        </g>
+        <!-- Wheat heads — back row -->
+        <g fill="#C8841A" opacity="0.28">
+          <ellipse cx="52"  cy="386" rx="9" ry="18" transform="rotate(-10,52,386)"/>
+          <ellipse cx="52"  cy="386" rx="9" ry="18" transform="rotate(10,52,386)"/>
+          <ellipse cx="152" cy="366" rx="9" ry="18" transform="rotate(-10,152,366)"/>
+          <ellipse cx="152" cy="366" rx="9" ry="18" transform="rotate(10,152,366)"/>
+          <ellipse cx="752" cy="381" rx="9" ry="18" transform="rotate(-10,752,381)"/>
+          <ellipse cx="752" cy="381" rx="9" ry="18" transform="rotate(10,752,381)"/>
+          <ellipse cx="1112"cy="376" rx="9" ry="18" transform="rotate(-10,1112,376)"/>
+          <ellipse cx="1112"cy="376" rx="9" ry="18" transform="rotate(10,1112,376)"/>
+        </g>
+        <!-- Wheat stalks — front row (taller, more visible) -->
+        <g fill="#D4921E" opacity="0.45">
+          <rect x="20"  y="340" width="6" height="260" rx="2"/>
+          <rect x="110" y="310" width="6" height="290" rx="2"/>
+          <rect x="210" y="350" width="6" height="250" rx="2"/>
+          <rect x="310" y="320" width="6" height="280" rx="2"/>
+          <rect x="420" y="345" width="6" height="255" rx="2"/>
+          <rect x="530" y="315" width="6" height="285" rx="2"/>
+          <rect x="650" y="340" width="6" height="260" rx="2"/>
+          <rect x="790" y="325" width="6" height="275" rx="2"/>
+          <rect x="910" y="355" width="6" height="245" rx="2"/>
+          <rect x="1030"y="320" width="6" height="280" rx="2"/>
+          <rect x="1150"y="342" width="6" height="258" rx="2"/>
+          <rect x="1270"y="318" width="6" height="282" rx="2"/>
+          <rect x="1400"y="338" width="6" height="262" rx="2"/>
+        </g>
+        <!-- Wheat heads — front row (paired ellipses = seed clusters) -->
+        <g fill="#D4921E" opacity="0.45">
+          <ellipse cx="23"  cy="335" rx="11" ry="22" transform="rotate(-12,23,335)"/>
+          <ellipse cx="23"  cy="335" rx="11" ry="22" transform="rotate(12,23,335)"/>
+          <ellipse cx="113" cy="305" rx="11" ry="22" transform="rotate(-12,113,305)"/>
+          <ellipse cx="113" cy="305" rx="11" ry="22" transform="rotate(12,113,305)"/>
+          <ellipse cx="313" cy="315" rx="11" ry="22" transform="rotate(-12,313,315)"/>
+          <ellipse cx="313" cy="315" rx="11" ry="22" transform="rotate(12,313,315)"/>
+          <ellipse cx="533" cy="310" rx="11" ry="22" transform="rotate(-12,533,310)"/>
+          <ellipse cx="533" cy="310" rx="11" ry="22" transform="rotate(12,533,310)"/>
+          <ellipse cx="793" cy="320" rx="11" ry="22" transform="rotate(-12,793,320)"/>
+          <ellipse cx="793" cy="320" rx="11" ry="22" transform="rotate(12,793,320)"/>
+          <ellipse cx="1033"cy="315" rx="11" ry="22" transform="rotate(-12,1033,315)"/>
+          <ellipse cx="1033"cy="315" rx="11" ry="22" transform="rotate(12,1033,315)"/>
+          <ellipse cx="1273"cy="313" rx="11" ry="22" transform="rotate(-12,1273,313)"/>
+          <ellipse cx="1273"cy="313" rx="11" ry="22" transform="rotate(12,1273,313)"/>
+        </g>
+        <!-- Swaying bends on some front stalks -->
+        <g fill="none" stroke="#D4921E" stroke-width="4" opacity="0.3" stroke-linecap="round">
+          <path d="M423 345 Q430 420 420 470 Q412 520 418 600"/>
+          <path d="M653 340 Q660 415 650 465 Q642 515 648 600"/>
+          <path d="M913 355 Q920 430 910 480 Q902 530 908 600"/>
+        </g>
+      </svg>
     </div>
 
     <!-- Flame / Dove SVG -->
@@ -1479,25 +1549,67 @@
       const list = document.getElementById('attendee-list');
       list.innerHTML = attendees.map((a, idx) => {
         const price = a.age !== '' ? getPrice(parseInt(a.age)) : null;
-        const priceStr = price === null ? '' : price === 0 ? '<span class="att-price free">Free</span>' : '<span class="att-price">$' + price + '</span>';
-        return '<div class="attendee-row" id="att-' + a.id + '">' +
-          '<div class="att-num">' + (idx + 1) + '</div>' +
-          '<div class="att-fields">' +
-            '<input type="text" placeholder="Full name" value="' + escHtml(a.name) + '" oninput="updateAttendee(' + a.id + ','name',this.value)" />' +
-            '<input type="number" placeholder="Age" min="0" max="120" value="' + (a.age !== '' ? a.age : '') + '" oninput="updateAttendee(' + a.id + ','age',this.value)" style="width:80px;" />' +
-          '</div>' +
-          priceStr +
-          (attendees.length > 1 ? '<button class="att-remove" onclick="removeAttendee(' + a.id + ')">✕</button>' : '') +
-        '</div>';
+        const priceStr = price === null ? '' : price === 0
+          ? '<span class="att-price free">Free</span>'
+          : '<span class="att-price">$' + price + '</span>';
+        const removeBtn = attendees.length > 1
+          ? '<button class="att-remove" data-id="' + a.id + '" data-action="remove">✕</button>'
+          : '';
+        return [
+          '<div class="attendee-row" id="att-' + a.id + '">',
+            '<div class="att-num">' + (idx + 1) + '</div>',
+            '<div class="att-fields">',
+              '<input type="text" placeholder="Full name" value="' + escHtml(a.name) + '"',
+              '  data-id="' + a.id + '" data-field="name" class="att-input" />',
+              '<input type="number" placeholder="Age" min="0" max="120" value="' + (a.age !== '' ? a.age : '') + '"',
+              '  data-id="' + a.id + '" data-field="age" class="att-input" style="width:80px;" />',
+            '</div>',
+            priceStr,
+            removeBtn,
+          '</div>'
+        ].join('');
       }).join('');
     }
 
+    // Single delegated event listener — no inline handlers needed
+    document.addEventListener('input', function(e) {
+      if (e.target.classList.contains('att-input')) {
+        const id = parseInt(e.target.dataset.id);
+        const field = e.target.dataset.field;
+        const att = attendees.find(a => a.id === id);
+        if (att) {
+          att[field] = e.target.value;
+          // Only update price display, don't re-render (preserves focus)
+          const row = document.getElementById('att-' + id);
+          if (row && field === 'age') {
+            const age = parseInt(e.target.value);
+            let existing = row.querySelector('.att-price');
+            const price = !isNaN(age) ? getPrice(age) : null;
+            if (price === null) {
+              if (existing) existing.remove();
+            } else {
+              if (!existing) {
+                existing = document.createElement('span');
+                row.insertBefore(existing, row.querySelector('.att-remove') || null);
+              }
+              existing.className = 'att-price' + (price === 0 ? ' free' : '');
+              existing.textContent = price === 0 ? 'Free' : '$' + price;
+            }
+          }
+        }
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (e.target.dataset.action === 'remove') {
+        const id = parseInt(e.target.dataset.id);
+        removeAttendee(id);
+      }
+    });
+
     function updateAttendee(id, field, val) {
       const att = attendees.find(a => a.id === id);
-      if (!att) return;
-      att[field] = val;
-      // Re-render just the price span for this row
-      renderAttendees();
+      if (att) { att[field] = val; }
     }
 
     function escHtml(s) {
