@@ -1842,11 +1842,8 @@ function go4() {
   syncAtts();
   grandTotal = calcTotal();
   if (!currentPledgeCode) currentPledgeCode = makeCode();
+  registrationSaved = false;
   renderStep4();
-  if (!registrationSaved) {
-    saveRegistrationNow();
-    registrationSaved = true;
-  }
   setStep(4);
 }
 
@@ -1944,9 +1941,8 @@ function renderCart() {
     '</div>';
 }
 
-/* ── STEP 4: BREEZE PAYMENT ── */
+/* ── STEP 4: PAYMENT AMOUNT + BREEZE ── */
 function renderStep4() {
-  /* pay summary strip */
   var mini = document.getElementById('pay-summary');
   if (mini) {
     mini.innerHTML =
@@ -1959,76 +1955,150 @@ function renderStep4() {
 
   var body = document.getElementById('s4-body');
   var back = document.getElementById('s4-back');
+  if (!body) return;
 
-  /* FREE registration */
+  /* FREE — no input needed, just a button */
   if (grandTotal === 0) {
-    if (body) body.innerHTML =
-      '<div class="success" style="display:block;">'+
-        '<div class="tick">✓</div>'+
-        '<h3>Registration Confirmed!</h3>'+
-        '<p>Your free registration has been saved.<br/>We look forward to seeing you in Houston!</p>'+
-      '</div>';
-    if (back) back.style.display = 'none';
+    body.innerHTML =
+      '<div class="pledge-box" style="text-align:center;">'+
+        '<p class="pledge-lbl">All Attendees are Free</p>'+
+        '<p class="pledge-sub" style="margin-bottom:1.2rem;">Click below to confirm your registration.</p>'+
+        '<button class="btn-next" style="width:100%;" onclick="completeRegistration(0)">'+
+          'Complete Free Registration →'+
+        '</button>'+
+      '</div>'+
+      '<div id="s4-success"></div>';
+    if (back) back.style.display = '';
     return;
   }
 
-  /* PAID registration */
-  if (body) body.innerHTML =
+  /* PAID — show amount picker */
+  var half = Math.ceil(grandTotal / 2);
+  body.innerHTML =
+    '<div class="pledge-box" style="margin-bottom:1.2rem;">'+
+      '<p class="pledge-lbl">How much would you like to pay today?</p>'+
+      '<p class="pledge-sub">'+
+        'You can pay <strong style="color:#E8C87A;">any amount</strong> — $0 to lock in your spot '+
+        'and pay later, a partial amount, or the full total. '+
+        'Your registration is secured at today's tier price regardless.'+
+      '</p>'+
+      '<div class="pledge-row">'+
+        '<label>Amount to Pay Today (USD)</label>'+
+        '<div class="pledge-inp-wrap">'+
+          '<span class="pledge-sym">$</span>'+
+          '<input type="number" id="reg-pay-amt" min="0" max="'+grandTotal+'" placeholder="0"/>'+
+        '</div>'+
+        '<div class="quick-btns" style="margin-top:0.7rem;">'+
+          '<button class="quick" onclick="setRegAmt(0)">$0 — Pay Later</button>'+
+          '<button class="quick" onclick="setRegAmt('+half+')">50% ($'+half+')</button>'+
+          '<button class="quick" onclick="setRegAmt('+grandTotal+')">Full ($'+grandTotal+')</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<button class="btn-next" id="complete-btn" style="width:100%;margin-bottom:1.2rem;" '+
+      'onclick="completeRegistration()">'+
+      'Complete Registration →'+
+    '</button>'+
+    '<div id="s4-success"></div>';
+  if (back) back.style.display = '';
+}
 
+function setRegAmt(n) {
+  var inp = document.getElementById('reg-pay-amt');
+  if (inp) inp.value = n;
+}
+
+function completeRegistration(forcedAmt) {
+  var amt;
+  if (typeof forcedAmt !== 'undefined') {
+    amt = forcedAmt;
+  } else {
+    var inp = document.getElementById('reg-pay-amt');
+    amt = inp ? (parseFloat(inp.value) || 0) : 0;
+    if (amt < 0) amt = 0;
+    if (amt > grandTotal) { alert('Amount cannot exceed $'+grandTotal+'.'); return; }
+  }
+
+  /* Disable button to prevent double-submit */
+  var btn = document.getElementById('complete-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  /* Save registration */
+  saveRegistrationNow(amt);
+
+  /* Send confirmation email via /api/confirm */
+  sendConfirmEmail(amt);
+
+  /* Show success state */
+  showRegistrationSuccess(amt);
+}
+
+function showRegistrationSuccess(amt) {
+  var remaining = grandTotal - amt;
+  var area = document.getElementById('s4-success');
+  if (!area) return;
+
+  /* Hide the pledge box + button above */
+  var pb = document.querySelector('#s4-body .pledge-box');
+  if (pb) pb.style.display = 'none';
+  var cb = document.getElementById('complete-btn');
+  if (cb) cb.style.display = 'none';
+
+  var successMsg = amt === 0
+    ? 'Your registration is confirmed! No payment today — use your pledge code to return and pay any time before the convention.'
+    : '$'+amt+'.00 noted. ' + (remaining > 0
+        ? 'Remaining balance: <strong>$'+remaining+'.00</strong> — you can pay this at any time using your pledge code.'
+        : 'Your registration is <strong>fully paid</strong>! See you in Houston 🎉');
+
+  area.innerHTML =
+    /* ── Success tick ── */
+    '<div class="success" style="display:block;margin-bottom:1.5rem;">'+
+      '<div class="tick">✓</div>'+
+      '<h3>Registration Confirmed!</h3>'+
+      '<p id="success-detail">'+successMsg+'</p>'+
+      '<p style="margin-top:0.6rem;font-size:0.72rem;color:rgba(245,239,224,0.35);">'+
+        'A confirmation email is on its way to <strong>'+esc(contact.em)+'</strong>'+
+      '</p>'+
+    '</div>'+
     /* ── Pledge code ── */
     '<div class="code-box" style="display:block;margin-bottom:1.5rem;">'+
       '<p class="code-lbl">Your Pledge Code — Save This</p>'+
       '<p class="code-val" id="code-display">'+currentPledgeCode+'</p>'+
       '<button class="quick" onclick="copyCode()" id="copy-btn" '+
-        'style="display:block;margin:0.4rem auto 0;padding:0.4rem 1.4rem;">'+
-        'Copy Code'+
-      '</button>'+
+        'style="display:block;margin:0.4rem auto 0;padding:0.4rem 1.4rem;">Copy Code</button>'+
       '<p class="code-note" style="margin-top:0.7rem;">'+
-        'You must enter this code in the <strong>Note / Memo</strong> field '+
-        'when paying on the giving portal — that is how we match your payment to this registration.'+
+        'Use this code (or your email) on the "Already Registered" tab to look up '+
+        'your balance and make additional payments at any time.'+
       '</p>'+
     '</div>'+
 
-    /* ── Instructions ── */
-    '<div class="pledge-box" style="margin-bottom:1.4rem;">'+
-      '<p class="pledge-lbl">How to Complete Your Payment</p>'+
-      '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);'+
-        'line-height:2.1;margin-top:0.6rem;">'+
-        '<li>Click the button below to open our giving portal</li>'+
-        '<li>Select <strong style="color:#E8C87A;">Conference</strong> as the fund</li>'+
-        '<li>Enter the amount you want to pay today (can be partial)</li>'+
-        '<li>In the <strong style="color:#E8C87A;">Note / Memo field</strong> type your pledge code: '+
-          '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.2em;">'+
-          currentPledgeCode+'</strong></li>'+
-        '<li>Complete the payment</li>'+
-      '</ol>'+
-      '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
-        'style="display:block;text-align:center;text-decoration:none;margin-top:1.2rem;">'+
-        'Open Grace Life Center Giving Portal →'+
-      '</a>'+
-    '</div>'+
-
-    /* ── Embedded iframe (with graceful fallback text) ── */
-    '<div style="margin-bottom:1.5rem;">'+
+    /* ── Breeze instructions only if they owe money ── */
+    (remaining > 0 ?
+      '<div class="pledge-box" style="margin-bottom:1.4rem;">'+
+        '<p class="pledge-lbl">How to Pay Your Balance</p>'+
+        '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.1;margin-top:0.6rem;">'+
+          '<li>Click the button below to open our giving portal</li>'+
+          '<li>Select <strong style="color:#E8C87A;">Conference</strong> as the fund</li>'+
+          '<li>Enter how much you want to pay</li>'+
+          '<li>In the <strong style="color:#E8C87A;">Note / Memo field</strong>, enter your pledge code: '+
+            '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.2em;">'+currentPledgeCode+'</strong></li>'+
+        '</ol>'+
+        '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
+          'style="display:block;text-align:center;text-decoration:none;margin-top:1.2rem;">'+
+          'Open Grace Life Center Giving Portal →'+
+        '</a>'+
+      '</div>'+
       '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.2em;'+
-        'text-transform:uppercase;color:rgba(200,168,90,0.4);text-align:center;'+
-        'margin-bottom:0.6rem;">Or pay directly in the panel below</p>'+
-      '<iframe id="breeze-frame" src="'+BREEZE_URL+'" width="100%" height="620" '+
-        'style="border:1px solid rgba(200,168,90,0.18);display:block;" '+
-        'title="Grace Life Center Giving Portal">'+
-        '<p style="color:rgba(245,239,224,0.4);padding:1rem;font-size:0.8rem;">'+
-          'Your browser does not support embedded frames. '+
-          '<a href="'+BREEZE_URL+'" target="_blank" style="color:#C8A85A;">'+
-          'Open the giving portal in a new tab →</a></p>'+
-      '</iframe>'+
-    '</div>'+
-
-    '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.35);'+
-      'line-height:1.7;margin-bottom:0.5rem;">'+
-      'Your balance will be updated within 7 days of payment.&nbsp;&nbsp;'+
-      'Questions? <a href="mailto:convention@crmusanational.org" '+
-      'style="color:var(--gold);">convention@crmusanational.org</a>'+
-    '</p>';
+        'text-transform:uppercase;color:rgba(200,168,90,0.4);text-align:center;margin-bottom:0.5rem;">'+
+        'Or pay directly below</p>'+
+      '<iframe src="'+BREEZE_URL+'" width="100%" height="600" '+
+        'style="border:1px solid rgba(200,168,90,0.18);display:block;margin-bottom:1rem;" '+
+        'title="Grace Life Center Giving Portal"></iframe>'+
+      '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.35);line-height:1.7;margin-bottom:0.5rem;">'+
+        'Balance updates within 7 days of payment.&nbsp;&nbsp;'+
+        'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">'+
+        'convention@crmusanational.org</a></p>'
+    : '');
 }
 
 function copyCode() {
@@ -2041,17 +2111,13 @@ function copyCode() {
     });
   } else {
     var el = document.getElementById('code-display');
-    if (el) {
-      var r = document.createRange(); r.selectNode(el);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-    }
+    if (el) { var r=document.createRange(); r.selectNode(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
     btn.textContent = 'Select & copy ↑';
   }
 }
 
-/* ── SAVE REGISTRATION TO SUPABASE (on entering step 4) ── */
-function saveRegistrationNow() {
+/* ── SAVE TO SUPABASE ── */
+function saveRegistrationNow(amt) {
   if (SUPA_KEY === 'YOUR_ANON_KEY_HERE') return;
   loadSupabase(function() {
     if (!_sb) return;
@@ -2062,13 +2128,36 @@ function saveRegistrationNow() {
       church       : contact.ch,  city      : contact.ci,
       tier         : activeTier(),
       total_pledged: grandTotal,
-      amount_paid  : 0,
+      amount_paid  : amt,
       attendees    : JSON.stringify(atts),
-      status       : grandTotal === 0 ? 'complete' : 'pending'
+      status       : (grandTotal === 0 || amt >= grandTotal) ? 'complete' : (amt > 0 ? 'partial' : 'pending')
     }).then(function(res){
       if (res.error) console.error('Supabase save error:', res.error);
     });
   });
+}
+
+/* ── SEND CONFIRMATION EMAIL via /api/confirm ── */
+function sendConfirmEmail(amt) {
+  if (!contact.em) return;
+  try {
+    fetch('/api/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name   : contact.fn,
+        last_name    : contact.ln,
+        email        : contact.em,
+        phone        : contact.ph,
+        church       : contact.ch,
+        pledge_code  : currentPledgeCode,
+        tier         : activeTier(),
+        total_pledged: grandTotal,
+        amount_paid  : amt,
+        attendees    : atts
+      })
+    }).catch(function(e){ console.warn('Confirm email error:', e); });
+  } catch(e) { console.warn('sendConfirmEmail error:', e); }
 }
 
 /* ── RETURNING REGISTRANT ── */

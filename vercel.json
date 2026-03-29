@@ -1,1 +1,9 @@
-{ "version": 2, "routes": [{ "src": "/(.*)", "dest": "/index.html" }] }
+{
+  "version": 2,
+  "crons": [
+    {
+      "path": "/api/remind",
+      "schedule": "0 14 * * 1"
+    }
+  ]
+}
