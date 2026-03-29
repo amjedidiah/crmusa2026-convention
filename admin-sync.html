@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CRM 2026 — Payment Sync (Admin)</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f1e35; color: #e8dfc8; min-height: 100vh; padding: 2rem 1rem; }
+.wrap { max-width: 860px; margin: 0 auto; }
+h1 { font-size: 1.3rem; color: #C8A85A; margin-bottom: 0.3rem; letter-spacing: 0.04em; }
+.sub { font-size: 0.8rem; color: rgba(232,223,200,0.45); margin-bottom: 2rem; }
+
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,168,90,0.2);
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.5rem;
+}
+.card h2 {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #C8A85A;
+  margin-bottom: 1rem;
+}
+
+label { display: block; font-size: 0.72rem; color: rgba(232,223,200,0.5); margin-bottom: 0.3rem; letter-spacing: 0.08em; }
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,168,90,0.2);
+  color: #e8dfc8;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  outline: none;
+}
+input:focus { border-color: #C8A85A; }
+
+.btn {
+  padding: 0.7rem 1.6rem;
+  background: #C8A85A;
+  border: none;
+  color: #0f1e35;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:hover { background: #E8C87A; }
+.btn-outline {
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  border: 1px solid rgba(200,168,90,0.35);
+  color: #C8A85A;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-outline:hover { background: rgba(200,168,90,0.1); }
+.btn:disabled, .btn-outline:disabled { opacity: 0.4; cursor: default; }
+
+.info-box {
+  padding: 0.9rem 1.1rem;
+  background: rgba(200,168,90,0.07);
+  border-left: 3px solid #C8A85A;
+  font-size: 0.8rem;
+  color: rgba(232,223,200,0.6);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.info-box ol { padding-left: 1.2rem; }
+.info-box li { margin-bottom: 0.3rem; }
+
+.file-drop {
+  border: 2px dashed rgba(200,168,90,0.25);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+  position: relative;
+}
+.file-drop:hover, .file-drop.over { border-color: #C8A85A; }
+.file-drop input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+.file-drop p { font-size: 0.82rem; color: rgba(232,223,200,0.4); }
+.file-drop strong { color: #C8A85A; display: block; font-size: 1rem; margin-bottom: 0.3rem; }
+
+/* Results table */
+.results-wrap { overflow-x: auto; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+thead th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  background: rgba(200,168,90,0.09);
+  color: #C8A85A;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid rgba(200,168,90,0.06);
+  color: rgba(232,223,200,0.7);
+  vertical-align: middle;
+}
+tbody tr:hover td { background: rgba(200,168,90,0.04); }
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.badge-match   { background: rgba(100,180,100,0.15); color: #7dbf80; border: 1px solid rgba(100,180,100,0.3); }
+.badge-nomatch { background: rgba(180,80,80,0.12);   color: #e09090; border: 1px solid rgba(180,80,80,0.25); }
+.badge-done    { background: rgba(200,168,90,0.12);  color: #C8A85A; border: 1px solid rgba(200,168,90,0.3); }
+
+.log {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(200,168,90,0.12);
+  padding: 0.9rem 1rem;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: rgba(232,223,200,0.55);
+  line-height: 1.8;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 0.8rem;
+}
+.log .ok  { color: #7dbf80; }
+.log .err { color: #e09090; }
+.log .inf { color: #C8A85A; }
+
+.hidden { display: none !important; }
+.stat-row { display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.stat { text-align: center; }
+.stat-n { font-size: 1.8rem; color: #E8C87A; font-weight: 300; }
+.stat-l { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(232,223,200,0.4); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>CRM 2026 — Convention Payment Sync</h1>
+  <p class="sub">Admin-only · Match Breeze giving CSV to Supabase pledge records</p>
+
+  <!-- ── STEP 1: PIN ── -->
+  <div class="card" id="pin-card">
+    <h2>Admin Access</h2>
+    <label>Enter Admin PIN</label>
+    <input type="password" id="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') checkPin()"/>
+    <button class="btn" onclick="checkPin()">Unlock →</button>
+    <p id="pin-err" style="color:#e09090;font-size:0.78rem;margin-top:0.5rem;display:none;">Incorrect PIN.</p>
+  </div>
+
+  <!-- ── MAIN CONTENT (unlocked) ── -->
+  <div id="main-content" class="hidden">
+
+    <!-- ── STEP 2: Supabase keys ── -->
+    <div class="card">
+      <h2>Step 1 — Supabase Connection</h2>
+      <p style="font-size:0.78rem;color:rgba(232,223,200,0.45);margin-bottom:1rem;">
+        Enter your Supabase <strong style="color:#C8A85A;">service role key</strong>
+        (not the anon key — the service role key bypasses RLS and is required to update records).
+        Found in: Supabase → Project Settings → API → service_role secret.
+      </p>
+      <label>Supabase Service Role Key</label>
+      <input type="password" id="sb-key" placeholder="eyJhbGci…" autocomplete="off"/>
+      <label>Supabase URL</label>
+      <input type="text"     id="sb-url" value="https://aoefpiovjcmsszxcbffi.supabase.co"/>
+      <button class="btn-outline" onclick="testSupabase()">Test Connection</button>
+      <span id="sb-status" style="margin-left:1rem;font-size:0.78rem;color:rgba(232,223,200,0.4);"></span>
+    </div>
+
+    <!-- ── STEP 3: CSV ── -->
+    <div class="card">
+      <h2>Step 2 — Import Breeze Giving CSV</h2>
+
+      <div class="info-box">
+        <strong style="color:#C8A85A;display:inline;">How to export from Breeze:</strong>
+        <ol style="margin-top:0.5rem;">
+          <li>Log into Breeze → <strong>Giving</strong> → <strong>Reports</strong></li>
+          <li>Set date range (e.g. last 30 days or all time)</li>
+          <li>Filter by fund → <strong>Conference</strong></li>
+          <li>Click <strong>Export → CSV</strong></li>
+          <li>Upload the downloaded file below</li>
+        </ol>
+      </div>
+
+      <div class="file-drop" id="file-drop">
+        <input type="file" id="csv-file" accept=".csv" onchange="handleFile(this.files[0])"/>
+        <strong>Drop CSV here or click to browse</strong>
+        <p>Breeze giving export (.csv)</p>
+      </div>
+
+      <div id="csv-status" style="font-size:0.8rem;color:rgba(232,223,200,0.45);margin-bottom:0.5rem;"></div>
+    </div>
+
+    <!-- ── STEP 4: Preview & Sync ── -->
+    <div class="card hidden" id="preview-card">
+      <h2>Step 3 — Preview &amp; Sync</h2>
+
+      <div class="stat-row" id="stat-row">
+        <div class="stat"><div class="stat-n" id="stat-total">0</div><div class="stat-l">CSV Rows</div></div>
+        <div class="stat"><div class="stat-n" id="stat-match">0</div><div class="stat-l">Matched</div></div>
+        <div class="stat"><div class="stat-n" id="stat-nomatch">0</div><div class="stat-l">No Match</div></div>
+        <div class="stat"><div class="stat-n" id="stat-amount">$0</div><div class="stat-l">Total to Apply</div></div>
+      </div>
+
+      <p style="font-size:0.78rem;color:rgba(232,223,200,0.45);margin-bottom:1rem;">
+        Rows with a 6-character pledge code in the <strong>Note/Memo</strong> column that matches
+        a record in Supabase will be synced. The <strong>amount_paid</strong> field will be
+        <em>incremented</em> — not overwritten — for each matched row.
+      </p>
+
+      <div class="results-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Donor (Breeze)</th>
+              <th>Amount</th>
+              <th>Note / Pledge Code</th>
+              <th>Status</th>
+              <th>Registrant (Supabase)</th>
+              <th>Balance After</th>
+            </tr>
+          </thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn" id="sync-btn" onclick="doSync()" disabled>Sync Matched Records →</button>
+        <button class="btn-outline" onclick="reparse()">Re-parse CSV</button>
+        <span id="sync-status" style="font-size:0.78rem;color:rgba(232,223,200,0.4);"></span>
+      </div>
+
+      <div class="log hidden" id="sync-log"></div>
+    </div>
+
+  </div><!-- /main-content -->
+</div>
+
+<script>
+/* ── PIN ── */
+var ADMIN_PIN = 'CRM2026ADMIN';   /* ← change this to your preferred PIN */
+
+function checkPin() {
+  var v = document.getElementById('pin-input').value;
+  if (v === ADMIN_PIN) {
+    document.getElementById('pin-card').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+    var saved = localStorage.getItem('crm_sb_key');
+    if (saved) document.getElementById('sb-key').value = saved;
+  } else {
+    document.getElementById('pin-err').style.display = 'block';
+  }
+}
+
+/* ── SUPABASE TEST ── */
+var _sb = null;
+function testSupabase() {
+  var url = document.getElementById('sb-url').value.trim();
+  var key = document.getElementById('sb-key').value.trim();
+  var st  = document.getElementById('sb-status');
+  st.textContent = 'Testing…'; st.style.color = 'rgba(232,223,200,0.4)';
+  loadSB(url, key, function() {
+    if (!_sb) { st.textContent = '✗ Failed to load Supabase JS'; st.style.color='#e09090'; return; }
+    _sb.from('registrations').select('id').limit(1).then(function(res) {
+      if (res.error) {
+        st.textContent = '✗ ' + res.error.message; st.style.color='#e09090';
+      } else {
+        st.textContent = '✓ Connected'; st.style.color='#7dbf80';
+        localStorage.setItem('crm_sb_key', key);
+      }
+    });
+  });
+}
+
+function loadSB(url, key, cb) {
+  if (_sb) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s.onload = function() {
+    try { _sb = supabase.createClient(url, key); } catch(e){}
+    cb();
+  };
+  s.onerror = cb;
+  document.head.appendChild(s);
+}
+
+/* ── CSV PARSING ── */
+var csvRows = [];   /* parsed rows [{date,donor,amount,note}] */
+var matchedRows = []; /* enriched with Supabase lookup */
+
+function handleFile(file) {
+  if (!file) return;
+  document.getElementById('csv-status').textContent = 'Reading ' + file.name + '…';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    parseCSV(e.target.result);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
+  if (lines.length < 2) {
+    document.getElementById('csv-status').textContent = 'Error: CSV appears empty.';
+    return;
+  }
+
+  /* Parse header — find relevant column indices */
+  var headers = splitCSVLine(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
+
+  function findCol(keywords) {
+    for (var k=0; k<keywords.length; k++) {
+      for (var i=0; i<headers.length; i++) {
+        if (headers[i].indexOf(keywords[k]) > -1) return i;
+      }
+    }
+    return -1;
+  }
+
+  var colDate   = findCol(['date']);
+  var colFirst  = findCol(['first']);
+  var colLast   = findCol(['last']);
+  var colName   = findCol(['name','person','donor']);
+  var colAmt    = findCol(['amount','gift','total']);
+  var colNote   = findCol(['note','memo','description','comment']);
+
+  if (colAmt === -1) {
+    document.getElementById('csv-status').textContent =
+      'Error: Could not find an Amount column. Headers found: ' + headers.join(', ');
+    return;
+  }
+  if (colNote === -1) {
+    document.getElementById('csv-status').textContent =
+      'Error: Could not find a Note/Memo column. Headers found: ' + headers.join(', ');
+    return;
+  }
+
+  csvRows = [];
+  for (var i=1; i<lines.length; i++) {
+    var cols = splitCSVLine(lines[i]);
+    if (cols.length < 2) continue;
+
+    var amt = parseFloat((cols[colAmt]||'').replace(/[$,]/g,''));
+    if (isNaN(amt) || amt <= 0) continue;
+
+    var donor = '';
+    if (colFirst > -1 && colLast > -1) {
+      donor = (cols[colFirst]||'').trim() + ' ' + (cols[colLast]||'').trim();
+    } else if (colName > -1) {
+      donor = (cols[colName]||'').trim();
+    }
+
+    var note = (cols[colNote]||'').trim();
+    var date = colDate > -1 ? (cols[colDate]||'').trim() : '';
+
+    csvRows.push({ date:date, donor:donor.trim(), amount:amt, note:note });
+  }
+
+  document.getElementById('csv-status').textContent =
+    '✓ Parsed ' + csvRows.length + ' giving rows from ' + lines.length + ' CSV lines.';
+  document.getElementById('csv-status').style.color = '#7dbf80';
+
+  lookupPledgeCodes();
+}
+
+function splitCSVLine(line) {
+  /* Handles quoted fields */
+  var result = [], cur = '', inQ = false;
+  for (var i=0; i<line.length; i++) {
+    var c = line[i];
+    if (c==='"') { inQ=!inQ; }
+    else if (c===',' && !inQ) { result.push(cur); cur=''; }
+    else { cur+=c; }
+  }
+  result.push(cur);
+  return result.map(function(s){ return s.replace(/^"|"$/g,''); });
+}
+
+/* ── MATCH PLEDGE CODES ── */
+function lookupPledgeCodes() {
+  /* Extract pledge codes from notes (6-char uppercase alphanumeric) */
+  var pledgeRegex = /\b([A-Z0-9]{6})\b/gi;
+  var codesToLook = [];
+  csvRows.forEach(function(r) {
+    var m = (r.note||'').toUpperCase().match(/\b([A-HJ-NP-Z2-9]{6})\b/);
+    r.pledgeCode = m ? m[1] : null;
+    if (r.pledgeCode && codesToLook.indexOf(r.pledgeCode) === -1) {
+      codesToLook.push(r.pledgeCode);
+    }
+  });
+
+  if (!codesToLook.length) {
+    renderPreview([]);
+    return;
+  }
+
+  var url = document.getElementById('sb-url').value.trim();
+  var key = document.getElementById('sb-key').value.trim();
+  loadSB(url, key, function() {
+    if (!_sb) { renderPreview([]); return; }
+    _sb.from('registrations')
+      .select('id,pledge_code,first_name,last_name,total_pledged,amount_paid,status')
+      .in('pledge_code', codesToLook)
+      .then(function(res) {
+        var regMap = {};
+        if (res.data) {
+          res.data.forEach(function(r){ regMap[r.pledge_code] = r; });
+        }
+        matchedRows = csvRows.map(function(r) {
+          return Object.assign({}, r, { reg: r.pledgeCode ? (regMap[r.pledgeCode]||null) : null });
+        });
+        renderPreview(matchedRows);
+      });
+  });
+}
+
+function reparse() {
+  document.getElementById('preview-card').classList.add('hidden');
+  document.getElementById('csv-file').value = '';
+  document.getElementById('csv-status').textContent = '';
+  csvRows = []; matchedRows = [];
+}
+
+/* ── RENDER PREVIEW TABLE ── */
+function renderPreview(rows) {
+  var totalRows  = rows.length;
+  var nMatch     = rows.filter(function(r){ return r.reg; }).length;
+  var nNoMatch   = totalRows - nMatch;
+  var totalAmt   = rows.filter(function(r){ return r.reg; })
+                       .reduce(function(s,r){ return s+r.amount; }, 0);
+
+  setText('stat-total',  totalRows);
+  setText('stat-match',  nMatch);
+  setText('stat-nomatch',nNoMatch);
+  setText('stat-amount', '$'+totalAmt.toFixed(2));
+
+  var tbody = document.getElementById('preview-body');
+  tbody.innerHTML = '';
+  rows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    var afterPaid = r.reg ? ((r.reg.amount_paid||0)+r.amount) : null;
+    var afterRem  = r.reg ? ((r.reg.total_pledged||0)-afterPaid) : null;
+    var badgeCls  = r.reg ? 'badge-match' : (r.pledgeCode ? 'badge-nomatch' : 'badge-nomatch');
+    var badgeTxt  = r.reg ? 'Match' : (r.pledgeCode ? 'No Match' : 'No Code');
+    var regName   = r.reg ? (r.reg.first_name+' '+r.reg.last_name) : '—';
+    var balAfter  = r.reg
+      ? (afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid</span>'
+                       : '$'+afterRem.toFixed(2)+' remaining')
+      : '—';
+
+    tr.innerHTML =
+      '<td>'+esc(r.date)+'</td>'+
+      '<td>'+esc(r.donor)+'</td>'+
+      '<td>$'+r.amount.toFixed(2)+'</td>'+
+      '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+
+        esc(r.pledgeCode||r.note)+'</td>'+
+      '<td><span class="badge '+badgeCls+'">'+badgeTxt+'</span></td>'+
+      '<td>'+esc(regName)+'</td>'+
+      '<td>'+balAfter+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('preview-card').classList.remove('hidden');
+  document.getElementById('sync-btn').disabled = nMatch === 0;
+}
+
+/* ── SYNC ── */
+function doSync() {
+  var url = document.getElementById('sb-url').value.trim();
+  var key = document.getElementById('sb-key').value.trim();
+  var btn = document.getElementById('sync-btn');
+  var st  = document.getElementById('sync-status');
+  var log = document.getElementById('sync-log');
+
+  btn.disabled = true;
+  btn.textContent = 'Syncing…';
+  st.textContent = '';
+  log.innerHTML = '';
+  log.classList.remove('hidden');
+
+  var toSync = matchedRows.filter(function(r){ return r.reg; });
+  if (!toSync.length) { st.textContent = 'Nothing to sync.'; btn.disabled=false; return; }
+
+  loadSB(url, key, function() {
+    var i = 0;
+    function next() {
+      if (i >= toSync.length) {
+        appendLog('<span class="ok">✓ Sync complete. ' + toSync.length + ' record(s) updated.</span>');
+        btn.textContent = '✓ Sync Complete';
+        st.textContent  = 'Done — ' + toSync.length + ' updated.';
+        /* Mark rows as done in table */
+        var badges = document.querySelectorAll('.badge-match');
+        badges.forEach(function(b){ b.className='badge badge-done'; b.textContent='Synced'; });
+        return;
+      }
+      var r = toSync[i++];
+      var newPaid = (r.reg.amount_paid||0) + r.amount;
+      var newRem  = (r.reg.total_pledged||0) - newPaid;
+      var newStatus = newRem <= 0 ? 'complete' : 'partial';
+
+      _sb.from('registrations')
+        .update({ amount_paid: newPaid, status: newStatus })
+        .eq('id', r.reg.id)
+        .then(function(res) {
+          if (res.error) {
+            appendLog('<span class="err">✗ '+r.reg.pledge_code+' — '+res.error.message+'</span>');
+          } else {
+            appendLog('<span class="ok">✓ '+r.reg.pledge_code+' — '+r.reg.first_name+' '+r.reg.last_name+
+              ' — +$'+r.amount.toFixed(2)+' — new paid: $'+newPaid.toFixed(2)+'</span>');
+            /* Also log to pledge_payments */
+            _sb.from('pledge_payments').insert({
+              registration_id: r.reg.id,
+              amount: r.amount,
+              flw_tx_ref: 'breeze-csv-'+new Date().toISOString().slice(0,10),
+              status: 'success'
+            });
+          }
+          next();
+        });
+    }
+    appendLog('<span class="inf">Starting sync of '+toSync.length+' records…</span>');
+    next();
+  });
+}
+
+/* ── UTILS ── */
+function appendLog(html) {
+  var log = document.getElementById('sync-log');
+  log.innerHTML += html + '\n';
+  log.scrollTop = log.scrollHeight;
+}
+function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Drag-and-drop on file drop zone */
+var dropZone = document.getElementById('file-drop');
+dropZone.addEventListener('dragover',  function(e){ e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('over'); });
+dropZone.addEventListener('drop', function(e){
+  e.preventDefault(); dropZone.classList.remove('over');
+  var f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+</script>
+</body>
+</html>
