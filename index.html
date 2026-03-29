@@ -1745,6 +1745,7 @@
 var SUPA_URL    = 'https://aoefpiovjcmsszxcbffi.supabase.co';
 var SUPA_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZWZwaW92amNtc3N6eGNiZmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NjU3MzUsImV4cCI6MjA5MDM0MTczNX0.4wYakjK6BvllvK6u0AelIhPbiNW-uEulh8SiNmqPlvs';
 var BREEZE_URL  = 'https://gracelifecenter.breezechms.com/give/online';
+var ZELLE_EMAIL = 'pastor@gracelifecenter.com';
 
 /* ── PRICING ── */
 var PRICING = {
@@ -2051,33 +2052,8 @@ function showRegistrationSuccess(amt) {
       '</p>'+
     '</div>'+
 
-    /* ── Breeze instructions only if they owe money ── */
-    (remaining > 0 ?
-      '<div class="pledge-box" style="margin-bottom:1.4rem;">'+
-        '<p class="pledge-lbl">How to Pay Your Balance</p>'+
-        '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.1;margin-top:0.6rem;">'+
-          '<li>Click the button below to open our giving portal</li>'+
-          '<li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>'+
-          '<li>Enter how much you want to pay</li>'+
-          '<li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter your pledge code: '+
-            '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.2em;">'+currentPledgeCode+'</strong></li>'+
-        '</ol>'+
-        '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
-          'style="display:block;text-align:center;text-decoration:none;margin-top:1.2rem;">'+
-          'Open Grace Life Center Giving Portal →'+
-        '</a>'+
-      '</div>'+
-      '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.2em;'+
-        'text-transform:uppercase;color:rgba(200,168,90,0.4);text-align:center;margin-bottom:0.5rem;">'+
-        'Or pay directly below</p>'+
-      '<iframe src="'+BREEZE_URL+'" width="100%" height="600" '+
-        'style="border:1px solid rgba(200,168,90,0.18);display:block;margin-bottom:1rem;" '+
-        'title="Grace Life Center Giving Portal"></iframe>'+
-      '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.35);line-height:1.7;margin-bottom:0.5rem;">'+
-        'Balance updates within 7 days of payment.&nbsp;&nbsp;'+
-        'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">'+
-        'convention@crmusanational.org</a></p>'
-    : '');
+    /* ── Payment options (Zelle primary, Breeze secondary) ── */
+    (remaining > 0 ? paymentBlock(remaining, currentPledgeCode) : '');
 }
 
 function copyCode() {
@@ -2166,6 +2142,81 @@ function doLookup() {
   });
 }
 
+/* ── SHARED PAYMENT INSTRUCTIONS (Zelle primary, Breeze secondary) ── */
+function paymentBlock(remaining, code) {
+  return (
+    /* ══ ZELLE (PRIMARY) ══ */
+    '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(90,180,120,0.35);background:rgba(90,180,120,0.06);">'+
+      '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
+        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;'+
+          'justify-content:center;flex-shrink:0;">'+
+          '<span style="color:#fff;font-weight:700;font-size:0.75rem;letter-spacing:0.05em;">Z</span>'+
+        '</div>'+
+        '<div>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;'+
+            'text-transform:uppercase;color:#7dbf80;">Recommended — Zelle</p>'+
+          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · No fees</p>'+
+        '</div>'+
+      '</div>'+
+      '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
+        '<li>Open your banking app and go to <strong style="color:#E8C87A;">Zelle</strong></li>'+
+        '<li>Send to: <strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.08em;">'+ZELLE_EMAIL+'</strong></li>'+
+        '<li>Enter the amount you\'d like to pay'+(remaining ? ' (balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>)' : '')+'</li>'+
+        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong>, enter your pledge code: '+
+          '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.22em;">'+code+'</strong></li>'+
+        '<li>Send — done!</li>'+
+      '</ol>'+
+      '<div style="padding:0.7rem 0.9rem;background:rgba(90,180,120,0.08);border:1px solid rgba(90,180,120,0.2);'+
+        'font-size:0.76rem;color:rgba(245,239,224,0.5);line-height:1.65;">'+
+        '📱 <strong style="color:rgba(245,239,224,0.7);">Don\'t have Zelle?</strong> '+
+        'Most US banks include it — check your banking app under "Send Money" or "Zelle."'+
+      '</div>'+
+    '</div>'+
+
+    /* ══ BREEZE (SECONDARY) ══ */
+    '<div style="margin-bottom:0.6rem;">'+
+      '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.22em;'+
+        'text-transform:uppercase;color:rgba(200,168,90,0.35);text-align:center;margin-bottom:0.8rem;">'+
+        'Prefer to pay by card?</p>'+
+      '<div class="pledge-box" style="margin-bottom:1rem;">'+
+        '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
+          '<div style="width:38px;height:38px;background:#C8A85A;border-radius:50%;display:flex;align-items:center;'+
+            'justify-content:center;flex-shrink:0;">'+
+            '<span style="color:#0B1628;font-weight:700;font-size:0.7rem;">✝</span>'+
+          '</div>'+
+          '<div>'+
+            '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;'+
+              'text-transform:uppercase;color:#C8A85A;">Credit / Debit Card</p>'+
+            '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Via Grace Life Center giving portal</p>'+
+          '</div>'+
+        '</div>'+
+        '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
+          '<li>Click the button below to open the giving portal</li>'+
+          '<li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>'+
+          '<li>Enter the amount you\'d like to pay</li>'+
+          '<li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter your pledge code: '+
+            '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.22em;">'+code+'</strong></li>'+
+        '</ol>'+
+        '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
+          'style="display:block;text-align:center;text-decoration:none;">'+
+          'Open Giving Portal →'+
+        '</a>'+
+      '</div>'+
+      '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.2em;'+
+        'text-transform:uppercase;color:rgba(200,168,90,0.3);text-align:center;margin-bottom:0.5rem;">'+
+        'Or pay by card directly below</p>'+
+      '<iframe src="'+BREEZE_URL+'" width="100%" height="560" '+
+        'style="border:1px solid rgba(200,168,90,0.15);display:block;margin-bottom:1rem;" '+
+        'title="Grace Life Center Giving Portal"></iframe>'+
+    '</div>'+
+
+    '<p style="text-align:center;font-size:0.73rem;color:rgba(245,239,224,0.3);line-height:1.8;margin-bottom:0.5rem;">'+
+      'Balance updates within 7 days.&nbsp;&nbsp;'+
+      'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">'+
+      'convention@crmusanational.org</a></p>'
+  );
+}
+
 function showBalance() {
   var r = returnRec;
   var rem = (r.total_pledged||0) - (r.amount_paid||0);
@@ -2188,38 +2239,12 @@ function showBalance() {
 
   var code = r.pledge_code || '';
   area.innerHTML =
-    /* Code reminder */
     '<div class="code-box" style="display:block;margin-bottom:1.2rem;">'+
       '<p class="code-lbl">Your Pledge Code</p>'+
       '<p class="code-val">'+esc(code)+'</p>'+
-      '<p class="code-note">Enter this in the <strong>Comments</strong> field when paying.</p>'+
+      '<p class="code-note">Include this code in your payment memo so we can match it to your registration.</p>'+
     '</div>'+
-    /* Instructions */
-    '<div class="pledge-box" style="margin-bottom:1.2rem;">'+
-      '<p class="pledge-lbl">Make a Payment</p>'+
-      '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.1;margin-top:0.5rem;">'+
-        '<li>Click the button below to open our giving portal</li>'+
-        '<li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>'+
-        '<li>Enter how much you want to pay (remaining: <strong style="color:#E8C87A;">$'+rem+'.00</strong>)</li>'+
-        '<li>In <strong style="color:#E8C87A;">Comments</strong> enter your code: '+
-          '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.2em;">'+esc(code)+'</strong></li>'+
-      '</ol>'+
-      '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
-        'style="display:block;text-align:center;text-decoration:none;margin-top:1rem;">'+
-        'Open Grace Life Center Giving Portal →'+
-      '</a>'+
-    '</div>'+
-    /* Embedded iframe */
-    '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.2em;'+
-      'text-transform:uppercase;color:rgba(200,168,90,0.4);text-align:center;margin-bottom:0.5rem;">'+
-      'Or pay below</p>'+
-    '<iframe src="'+BREEZE_URL+'" width="100%" height="560" '+
-      'style="border:1px solid rgba(200,168,90,0.18);display:block;margin-bottom:1rem;" '+
-      'title="Grace Life Center Giving Portal"></iframe>'+
-    '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.35);">'+
-      'Balance updates within 7 days of payment via admin sync.'+
-    '</p>';
-}
+    paymentBlock(rem, code);}
 
 /* ── SUPABASE LAZY LOAD ── */
 var _sb = null;
