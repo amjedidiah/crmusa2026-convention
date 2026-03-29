@@ -1677,7 +1677,8 @@ function show(n) {
     if (i <= n) { d.className = 'dot on'; }
     else        { d.className = 'dot'; }
   });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  var reg = document.getElementById('register');
+  if (reg) reg.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function toStep1() { show(1); }
@@ -1738,8 +1739,12 @@ function total() {
    ATTENDEE ROWS
 ───────────────────────────────────────────── */
 function addRow() {
-  rows.push({ id: nextId++, name: '', age: '' });
+  syncRows();                          // preserve whatever is already typed
+  var id = nextId++;
+  rows.push({ id: id, name: '', age: '' });
   renderRows();
+  var ni = document.getElementById('rn-' + id);
+  if (ni) ni.focus();
 }
 
 function removeRow(id) {
@@ -1793,9 +1798,18 @@ function renderRows() {
         : '');
     list.appendChild(div);
 
-    /* age input listener — plain assignment, no fancy framework */
+    /* age input listener */
     var ai = document.getElementById('ra-' + r.id);
     ai.addEventListener('input', function() { updatePrice(r.id); });
+
+    /* block Enter key — prevents it from clicking btn-add and wiping the row */
+    var ni = document.getElementById('rn-' + r.id);
+    [ni, ai].forEach(function(el) {
+      if (!el) return;
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); }
+      });
+    });
   });
 }
 
