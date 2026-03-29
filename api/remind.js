@@ -223,9 +223,9 @@ function buildReminderEmail(reg, remaining) {
             <ol style="margin:0;padding-left:18px;font-size:13px;
                 color:rgba(245,239,224,0.6);line-height:2.2;">
               <li>Click the button below to open the giving portal</li>
-              <li>Select <strong style="color:#E8C87A;">Conference</strong> as the fund</li>
+              <li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>
               <li>Enter any amount you'd like to pay today</li>
-              <li>In the <strong style="color:#E8C87A;">Note / Memo field</strong>, enter:
+              <li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter:
                   <strong style="color:#E8C87A;letter-spacing:3px;
                   font-family:'Courier New',monospace;">${reg.pledge_code}</strong></li>
             </ol>

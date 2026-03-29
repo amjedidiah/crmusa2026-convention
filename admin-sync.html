@@ -190,7 +190,7 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
         <ol style="margin-top:0.5rem;">
           <li>Log into Breeze → <strong>Giving</strong> → <strong>Reports</strong></li>
           <li>Set date range (e.g. last 30 days or all time)</li>
-          <li>Filter by fund → <strong>Conference</strong></li>
+          <li>Filter by fund → <strong>2026 CRM USA Conference</strong></li>
           <li>Click <strong>Export → CSV</strong></li>
           <li>Upload the downloaded file below</li>
         </ol>
@@ -217,7 +217,7 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
       </div>
 
       <p style="font-size:0.78rem;color:rgba(232,223,200,0.45);margin-bottom:1rem;">
-        Rows with a 6-character pledge code in the <strong>Note/Memo</strong> column that matches
+        Rows with a 6-character pledge code in the <strong>Comments</strong> column that matches
         a record in Supabase will be synced. The <strong>amount_paid</strong> field will be
         <em>incremented</em> — not overwritten — for each matched row.
       </p>
@@ -346,7 +346,7 @@ function parseCSV(text) {
   }
   if (colNote === -1) {
     document.getElementById('csv-status').textContent =
-      'Error: Could not find a Note/Memo column. Headers found: ' + headers.join(', ');
+      'Error: Could not find a Comments column. Headers found: ' + headers.join(', ');
     return;
   }
 

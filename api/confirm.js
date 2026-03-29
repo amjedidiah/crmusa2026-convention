@@ -65,9 +65,9 @@ export default async function handler(req, res) {
           <ol style="margin:0;padding-left:18px;font-size:13px;color:rgba(245,239,224,0.6);
               line-height:2.2;">
             <li>Visit our giving portal using the button below</li>
-            <li>Select <strong style="color:#E8C87A;">Conference</strong> as the fund</li>
+            <li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>
             <li>Enter any amount you'd like to pay today</li>
-            <li>In the <strong style="color:#E8C87A;">Note / Memo field</strong>, enter your
+            <li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter your
                 pledge code exactly: <strong style="color:#E8C87A;letter-spacing:3px;
                 font-family:'Courier New',monospace;">${pledge_code}</strong></li>
           </ol>
@@ -147,7 +147,7 @@ export default async function handler(req, res) {
             <p style="margin:0 0 8px;font-size:38px;letter-spacing:14px;color:#E8C87A;
                 font-family:'Courier New',monospace;font-weight:700;">${pledge_code}</p>
             <p style="margin:0;font-size:11px;color:rgba(245,239,224,0.38);line-height:1.7;">
-              Save this code. Enter it in the <strong>Note / Memo field</strong> when paying<br/>
+              Save this code. Enter it in the <strong>Comments field</strong> when paying<br/>
               via the giving portal, and use it to look up your balance at any time.
             </p>
           </td>
