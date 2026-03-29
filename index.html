@@ -940,148 +940,457 @@
       .cart-header { flex-direction: column; gap: 0.4rem; align-items: flex-start; }
     }
 
-    /* ── REG TABS ── */
-    .reg-tabs {
-      display: flex;
-      gap: 0;
-      margin: 0 auto 2rem;
-      max-width: 620px;
-      border: 1px solid rgba(200,168,90,0.25);
-    }
-    .reg-tab {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      background: transparent;
-      border: none;
-      color: rgba(245,239,224,0.45);
-      font-family: 'Cinzel', serif;
-      font-size: 0.6rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-    .reg-tab.active {
-      background: rgba(200,168,90,0.12);
-      color: var(--gold);
-      border-bottom: 2px solid var(--gold);
-    }
+    /* ── REGISTRATION FORM ── */
 
-    /* ── PLEDGE BOX ── */
-    .pledge-box {
-      max-width: 480px;
-      margin: 1.5rem auto 0;
-      padding: 1.4rem 1.6rem;
-      border: 1px solid rgba(200,168,90,0.22);
-      background: rgba(200,168,90,0.04);
-    }
-    .pledge-box-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.68rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 0.5rem;
-    }
-    .pledge-box-sub {
-      font-size: 0.78rem;
-      color: rgba(245,239,224,0.5);
-      line-height: 1.6;
-      margin-bottom: 1.2rem;
-    }
-    .pledge-amount-row label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      display: block;
-      margin-bottom: 0.4rem;
-    }
-    .pledge-amount-wrap {
-      display: flex;
-      align-items: center;
-      border: 1px solid rgba(200,168,90,0.3);
-      background: rgba(255,255,255,0.04);
-      max-width: 220px;
-    }
-    .pledge-dollar {
-      padding: 0.6rem 0.8rem;
-      color: var(--gold);
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem;
-    }
-    .pledge-amount-wrap input {
-      border: none;
-      background: transparent;
-      color: var(--cream);
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem;
-      padding: 0.6rem 0.5rem;
-      outline: none;
-      width: 100%;
-    }
-    .pledge-quick-btns {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.8rem;
-      flex-wrap: wrap;
-    }
-    .pledge-quick {
-      padding: 0.4rem 0.9rem;
-      background: transparent;
-      border: 1px solid rgba(200,168,90,0.35);
-      color: rgba(200,168,90,0.7);
-      font-family: 'Cinzel', serif;
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      cursor: pointer;
-    }
-    .pledge-quick:hover { background: rgba(200,168,90,0.1); color: var(--gold); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .pledge-total-note {
-      text-align: center;
-      font-size: 0.78rem;
-      color: rgba(245,239,224,0.45);
-      margin-top: 0.4rem;
-    }
+body {
+  font-family: 'Jost', sans-serif;
+  background: #0B1628;
+  color: #F5EFE0;
+  padding: 2rem 1rem;
+  min-height: 100vh;
+}
 
-    /* Pledge code display */
-    .pledge-code-box {
-      margin-top: 1.5rem;
-      padding: 1.2rem 1.5rem;
-      border: 1px solid rgba(200,168,90,0.35);
-      background: rgba(200,168,90,0.06);
-      text-align: center;
-    }
-    .pledge-code-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.6rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 0.6rem;
-    }
-    .pledge-code-value {
-      font-family: 'Cinzel', serif;
-      font-size: 2rem;
-      letter-spacing: 0.35em;
-      color: var(--gold2);
-      margin-bottom: 0.6rem;
-    }
-    .pledge-code-note {
-      font-size: 0.75rem;
-      color: rgba(245,239,224,0.45);
-      line-height: 1.6;
-    }
+.wrap { max-width: 680px; margin: 0 auto; }
 
-    /* Attendee inputs renamed selectors */
-    .attendee-row { display:flex; align-items:center; gap:0.8rem; padding:0.8rem 1rem; background:rgba(255,255,255,0.03); border:1px solid rgba(200,168,90,0.12); margin-bottom:0.5rem; }
-    .att-inputs   { display:flex; gap:0.6rem; flex:1; }
-    .att-input    { flex:1; padding:0.55rem 0.8rem; background:rgba(255,255,255,0.06); border:1px solid rgba(200,168,90,0.18); color:var(--cream); font-family:'Jost',sans-serif; font-size:0.88rem; outline:none; }
-    .att-age      { flex:0 0 75px!important; }
-    .att-input:focus { border-color:var(--gold); }
-    .att-price    { font-family:'Cormorant Garamond',serif; font-size:1.15rem; color:var(--gold2); min-width:55px; text-align:right; }
-    .att-price--free { color:#7dbf80; }
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-style: italic;
+  color: #E8C87A;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  border: 1px solid rgba(200,168,90,0.25);
+  margin-bottom: 2rem;
+}
+.tab {
+  flex: 1;
+  padding: 0.8rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(245,239,224,0.4);
+  font-family: 'Cinzel', serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tab.on {
+  background: rgba(200,168,90,0.1);
+  color: #C8A85A;
+  border-bottom: 2px solid #C8A85A;
+}
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.on { display: block; }
+
+/* ── STEP DOTS ── */
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+.dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(200,168,90,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 0.7rem;
+  color: rgba(245,239,224,0.3);
+  flex-shrink: 0;
+}
+.dot.on { border-color: #C8A85A; color: #C8A85A; background: rgba(200,168,90,0.1); }
+.dline { flex: 1; height: 1px; background: rgba(200,168,90,0.15); }
+.dlabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.dlabels span {
+  width: 36px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.52rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,239,224,0.3);
+}
+
+/* ── STEPS ── */
+.step { display: none; }
+.step.on { display: block; }
+
+.step-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  font-style: italic;
+  margin-bottom: 1.4rem;
+}
+
+/* ── FORM FIELDS ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field.full { grid-column: 1 / -1; }
+.field label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #C8A85A;
+}
+.field input {
+  padding: 0.7rem 0.9rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,168,90,0.2);
+  color: #F5EFE0;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+}
+.field input:focus { border-color: #C8A85A; }
+.field input::placeholder { color: rgba(245,239,224,0.2); }
+
+/* ── BUTTONS ── */
+.nav { display: flex; gap: 0.8rem; margin-top: 1.8rem; flex-wrap: wrap; }
+
+.btn-next {
+  padding: 0.85rem 2rem;
+  background: #C8A85A;
+  border: none;
+  color: #0B1628;
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn-next:hover { background: #E8C87A; }
+
+.btn-back {
+  padding: 0.85rem 1.4rem;
+  background: transparent;
+  border: 1px solid rgba(200,168,90,0.28);
+  color: rgba(245,239,224,0.5);
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+.btn-back:hover { border-color: #C8A85A; color: #C8A85A; }
+
+/* ── ATTENDEES ── */
+.att-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(200,168,90,0.12);
+  margin-bottom: 0.5rem;
+}
+.att-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  color: rgba(200,168,90,0.4);
+  min-width: 20px;
+}
+.att-inputs { display: flex; gap: 0.5rem; flex: 1; }
+.att-in {
+  padding: 0.5rem 0.7rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(200,168,90,0.18);
+  color: #F5EFE0;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  flex: 1;
+}
+.att-in:focus { border-color: #C8A85A; }
+.att-in::placeholder { color: rgba(245,239,224,0.2); }
+.att-age { flex: 0 0 72px !important; }
+.att-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: #E8C87A;
+  min-width: 50px;
+  text-align: right;
+}
+.att-price.free { color: #7dbf80; }
+.att-del {
+  background: none; border: none;
+  color: rgba(245,239,224,0.22);
+  cursor: pointer; padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+}
+.att-del:hover { color: #e07070; }
+
+.btn-add {
+  display: block;
+  margin: 0.4rem 0 1.2rem;
+  padding: 0.55rem 1.2rem;
+  background: transparent;
+  border: 1px dashed rgba(200,168,90,0.35);
+  color: #C8A85A;
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+}
+.btn-add:hover { background: rgba(200,168,90,0.07); border-style: solid; }
+
+/* ── CART ── */
+.cart {
+  border: 1px solid rgba(200,168,90,0.18);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.cart-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1.1rem;
+  background: rgba(200,168,90,0.07);
+  border-bottom: 1px solid rgba(200,168,90,0.12);
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #C8A85A;
+}
+.cart-who {
+  padding: 0.65rem 1.1rem;
+  font-size: 0.78rem;
+  color: rgba(245,239,224,0.45);
+  border-bottom: 1px solid rgba(200,168,90,0.07);
+}
+.cart-table { width: 100%; border-collapse: collapse; }
+.cart-table th {
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(200,168,90,0.5);
+  padding: 0.55rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(200,168,90,0.07);
+}
+.cart-table td {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.8rem;
+  color: rgba(245,239,224,0.65);
+  border-bottom: 1px solid rgba(200,168,90,0.05);
+}
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  background: rgba(200,168,90,0.05);
+  border-top: 1px solid rgba(200,168,90,0.15);
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #C8A85A;
+}
+.cart-total-amt {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 300;
+  color: #E8C87A;
+  letter-spacing: 0;
+}
+
+/* ── PLEDGE BOX ── */
+.pledge-box {
+  padding: 1.3rem 1.5rem;
+  border: 1px solid rgba(200,168,90,0.2);
+  background: rgba(200,168,90,0.04);
+  margin-bottom: 1.2rem;
+}
+.pledge-lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #C8A85A;
+  margin-bottom: 0.4rem;
+}
+.pledge-sub {
+  font-size: 0.76rem;
+  color: rgba(245,239,224,0.45);
+  line-height: 1.65;
+  margin-bottom: 1.1rem;
+}
+.pledge-row label {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #C8A85A;
+  margin-bottom: 0.35rem;
+}
+.pledge-inp-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(200,168,90,0.28);
+  background: rgba(255,255,255,0.04);
+  max-width: 200px;
+  margin-bottom: 0.8rem;
+}
+.pledge-sym {
+  padding: 0.6rem 0.75rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  color: #C8A85A;
+}
+.pledge-inp-wrap input {
+  border: none;
+  background: transparent;
+  color: #F5EFE0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  padding: 0.6rem 0.4rem;
+  outline: none;
+  width: 100%;
+}
+.quick-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.quick {
+  padding: 0.38rem 0.85rem;
+  background: transparent;
+  border: 1px solid rgba(200,168,90,0.3);
+  color: rgba(200,168,90,0.65);
+  font-family: 'Cinzel', serif;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.quick:hover { background: rgba(200,168,90,0.1); color: #C8A85A; }
+
+/* ── PAYMENT AREA ── */
+.pay-mini {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid rgba(200,168,90,0.18);
+  background: rgba(200,168,90,0.05);
+  margin-bottom: 1.2rem;
+  font-size: 0.8rem;
+  color: rgba(245,239,224,0.5);
+}
+.pay-mini-total {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  color: #E8C87A;
+}
+.pay-placeholder {
+  padding: 1.5rem;
+  border: 1px solid rgba(200,168,90,0.22);
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(245,239,224,0.45);
+  line-height: 1.7;
+}
+.pay-placeholder a { color: #C8A85A; text-decoration: none; }
+
+/* ── SUCCESS ── */
+.success {
+  display: none;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border: 1px solid rgba(200,168,90,0.22);
+  margin-top: 1rem;
+}
+.tick { font-size: 2.2rem; color: #7dbf80; margin-bottom: 0.8rem; }
+.success h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  margin-bottom: 0.7rem;
+}
+.success p { font-size: 0.82rem; color: rgba(245,239,224,0.55); line-height: 1.65; }
+
+/* ── PLEDGE CODE BOX ── */
+.code-box {
+  display: none;
+  margin-top: 1.4rem;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid rgba(200,168,90,0.32);
+  background: rgba(200,168,90,0.06);
+  text-align: center;
+}
+.code-lbl {
+  font-family: 'Cinzel', serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #C8A85A;
+  margin-bottom: 0.5rem;
+}
+.code-val {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  letter-spacing: 0.35em;
+  color: #E8C87A;
+  margin-bottom: 0.5rem;
+}
+.code-note { font-size: 0.72rem; color: rgba(245,239,224,0.4); line-height: 1.6; }
+
+/* ── RETURN PANEL ── */
+.return-lookup { max-width: 480px; margin: 0 auto; }
+.return-lookup .field { margin-bottom: 1rem; }
+.balance-box {
+  display: none;
+  border: 1px solid rgba(200,168,90,0.18);
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid rgba(200,168,90,0.06);
+  font-size: 0.82rem;
+  color: rgba(245,239,224,0.6);
+}
+.balance-row:last-child { border-bottom: none; }
+.balance-row strong { color: #F5EFE0; }
+.balance-amt { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: #E8C87A; }
+.balance-amt.paid  { color: #7dbf80; }
+.balance-amt.done  { color: #7dbf80; font-size: 0.9rem; }
+
+.error-msg {
+  display: none;
+  margin-top: 0.8rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(180,60,60,0.15);
+  border: 1px solid rgba(180,60,60,0.3);
+  font-size: 0.78rem;
+  color: #e09090;
+}
+
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+  .field.full { grid-column: 1; }
+}
+
   </style>
 </head>
 <body>
@@ -1326,202 +1635,626 @@
       </div>
       <div class="active-tier-banner" id="active-tier-banner"></div>
 
-      <!-- TAB SWITCHER -->
-      <div class="reg-tabs">
-        <button class="reg-tab active" id="tab-new"    onclick="switchTab('new')">New Registration</button>
-        <button class="reg-tab"        id="tab-return" onclick="switchTab('return')">Already Registered — Continue Paying</button>
+      <!-- FORM (from tested standalone) -->
+      <div class="wrap">
+<div class="wrap">
+  <h1>Convention Registration — Test Form</h1>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on" id="tab-new"    onclick="showTab('new')">New Registration</button>
+    <button class="tab"    id="tab-return" onclick="showTab('return')">Already Registered — Continue Paying</button>
+  </div>
+
+  <!-- ══════════════════════
+       PANEL: NEW REGISTRATION
+  ══════════════════════ -->
+  <div class="panel on" id="panel-new">
+
+    <div class="dots">
+      <div class="dot on" id="d1">1</div><div class="dline"></div>
+      <div class="dot"    id="d2">2</div><div class="dline"></div>
+      <div class="dot"    id="d3">3</div><div class="dline"></div>
+      <div class="dot"    id="d4">4</div>
+    </div>
+    <div class="dlabels">
+      <span>Contact</span><span>Attendees</span><span>Review</span><span>Payment</span>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="step on" id="s1">
+      <p class="step-title">Your Contact Information</p>
+      <div class="grid">
+        <div class="field"><label>First Name</label><input id="fn" type="text" placeholder="First name"/></div>
+        <div class="field"><label>Last Name</label><input id="ln" type="text" placeholder="Last name"/></div>
+        <div class="field full"><label>Email Address</label><input id="em" type="email" placeholder="your@email.com"/></div>
+        <div class="field"><label>Phone</label><input id="ph" type="tel" placeholder="+1 (555) 000-0000"/></div>
+        <div class="field"><label>Church / Ministry</label><input id="ch" type="text" placeholder="Your church or ministry"/></div>
+        <div class="field full"><label>City &amp; State</label><input id="ci" type="text" placeholder="e.g. Atlanta, GA"/></div>
+      </div>
+      <div class="nav">
+        <button class="btn-next" onclick="go2()">Add Attendees →</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="s2">
+      <p class="step-title">Who is Attending?</p>
+      <p style="font-size:0.78rem;color:rgba(245,239,224,0.45);margin-bottom:1rem;">Include yourself. Pricing updates automatically.</p>
+      <div id="att-list"></div>
+      <button class="btn-add" onclick="addAtt()">+ Add Another Attendee</button>
+      <div class="nav">
+        <button class="btn-back" onclick="go1()">← Back</button>
+        <button class="btn-next" onclick="go3()">Review Order →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="s3">
+      <p class="step-title">Review Your Order</p>
+      <div id="cart-area"></div>
+      <div class="nav">
+        <button class="btn-back" onclick="go2()">← Edit</button>
+        <button class="btn-next" onclick="go4()">Proceed to Payment →</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="s4">
+      <p class="step-title">Complete Payment</p>
+      <div id="pay-summary"></div>
+
+      <div class="pledge-box" id="pledge-box">
+        <p class="pledge-lbl">How much would you like to pay today?</p>
+        <p class="pledge-sub">Pay in full now, or pay a partial amount and return later. Your registration is locked in at today's tier price.</p>
+        <div class="pledge-row">
+          <label>Payment Amount (USD)</label>
+          <div class="pledge-inp-wrap">
+            <span class="pledge-sym">$</span>
+            <input type="number" id="pay-amt" min="1" placeholder="0"/>
+          </div>
+          <div class="quick-btns">
+            <button class="quick" onclick="setAmt(0.25)">25%</button>
+            <button class="quick" onclick="setAmt(0.5)">50%</button>
+            <button class="quick" onclick="setAmt(1)">Pay in Full</button>
+          </div>
+        </div>
       </div>
 
-      <!-- ══════════════════════════════════════════
-           PANEL A — NEW REGISTRATION (4-step)
-      ══════════════════════════════════════════ -->
-      <div id="panel-new">
+      <div id="pay-btn-area"></div>
 
-        <div class="step-indicator">
-          <div class="step-dot active" id="dot-1">1</div>
-          <div class="step-line"></div>
-          <div class="step-dot" id="dot-2">2</div>
-          <div class="step-line"></div>
-          <div class="step-dot" id="dot-3">3</div>
-          <div class="step-line"></div>
-          <div class="step-dot" id="dot-4">4</div>
+      <div class="success" id="new-success">
+        <div class="tick">✓</div>
+        <h3>Payment Received!</h3>
+        <p id="new-success-msg"></p>
+        <div class="code-box" id="code-box">
+          <p class="code-lbl">Your Pledge Code</p>
+          <p class="code-val" id="code-val"></p>
+          <p class="code-note">Save this code (or use your email) to return and make additional payments at any time.</p>
         </div>
-        <div class="step-labels">
-          <span>Contact</span><span>Attendees</span><span>Review</span><span>Payment</span>
+      </div>
+
+      <div class="nav" id="s4-back">
+        <button class="btn-back" onclick="go3()">← Back</button>
+      </div>
+    </div>
+
+  </div><!-- /panel-new -->
+
+  <!-- ══════════════════════
+       PANEL: RETURNING
+  ══════════════════════ -->
+  <div class="panel" id="panel-return">
+    <div class="return-lookup">
+      <p class="step-title">Find Your Registration</p>
+      <p style="font-size:0.78rem;color:rgba(245,239,224,0.45);margin-bottom:1.5rem;">Enter the email you registered with, or your pledge code, to look up your balance and make another payment.</p>
+
+      <div class="field full">
+        <label>Email or Pledge Code</label>
+        <input id="lookup-val" type="text" placeholder="email@example.com or ABCD12"/>
+      </div>
+      <button class="btn-next" onclick="doLookup()" style="width:100%;">Look Up My Registration →</button>
+      <div class="error-msg" id="lookup-err"></div>
+
+      <div class="balance-box" id="balance-box">
+        <div class="cart-hdr" style="padding:0.8rem 1.1rem;background:rgba(200,168,90,0.07);border-bottom:1px solid rgba(200,168,90,0.12);">
+          <span id="bal-name"></span>
+          <span id="bal-tier" style="font-family:'Jost',sans-serif;font-size:0.72rem;letter-spacing:0.05em;text-transform:none;color:rgba(245,239,224,0.38);"></span>
         </div>
-
-        <!-- STEP 1 -->
-        <div class="reg-step" id="step-1">
-          <h3 class="step-title">Primary Contact Information</h3>
-          <div class="reg-form-grid">
-            <div class="field-wrap">
-              <label>First Name *</label>
-              <input type="text" id="f-firstname" placeholder="First name"/>
-            </div>
-            <div class="field-wrap">
-              <label>Last Name *</label>
-              <input type="text" id="f-lastname" placeholder="Last name"/>
-            </div>
-            <div class="field-wrap full">
-              <label>Email Address *</label>
-              <input type="email" id="f-email" placeholder="your@email.com"/>
-            </div>
-            <div class="field-wrap">
-              <label>Phone Number *</label>
-              <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000"/>
-            </div>
-            <div class="field-wrap">
-              <label>Church / Organization</label>
-              <input type="text" id="f-church" placeholder="Your church or ministry"/>
-            </div>
-            <div class="field-wrap full">
-              <label>City &amp; State</label>
-              <input type="text" id="f-city" placeholder="e.g. Atlanta, GA"/>
-            </div>
-          </div>
-          <p class="field-error hidden" id="err-1">Please fill in all required fields.</p>
-          <div class="step-nav">
-            <button class="btn-step-next" onclick="goStep(2)">Continue to Attendees →</button>
-          </div>
+        <div class="balance-row">
+          <span>Total Pledged</span>
+          <span class="balance-amt" id="bal-total"></span>
         </div>
-
-        <!-- STEP 2 -->
-        <div class="reg-step hidden" id="step-2">
-          <h3 class="step-title">Add Attendees</h3>
-          <p class="step-sub">Add each person attending, including yourself. Pricing applies automatically.</p>
-          <div id="attendee-list"></div>
-          <button class="btn-add-attendee" onclick="addAttendee()">+ Add Another Attendee</button>
-          <p class="field-error hidden" id="err-2">Please add at least one attendee with a name and age.</p>
-          <div class="step-nav">
-            <button class="btn-step-back" onclick="goStep(1)">← Back</button>
-            <button class="btn-step-next" onclick="goStep(3)">Review Order →</button>
-          </div>
+        <div class="balance-row">
+          <span>Amount Paid</span>
+          <span class="balance-amt paid" id="bal-paid"></span>
         </div>
-
-        <!-- STEP 3 -->
-        <div class="reg-step hidden" id="step-3">
-          <h3 class="step-title">Order Review</h3>
-          <div id="cart-summary"></div>
-          <div class="step-nav">
-            <button class="btn-step-back" onclick="goStep(2)">← Edit Attendees</button>
-            <button class="btn-step-next" onclick="goStep(4)">Proceed to Payment →</button>
-          </div>
+        <div class="balance-row">
+          <strong>Remaining Balance</strong>
+          <span class="balance-amt" id="bal-remaining"></span>
         </div>
+      </div>
 
-        <!-- STEP 4 — PLEDGE + FLUTTERWAVE -->
-        <div class="reg-step hidden" id="step-4">
-          <h3 class="step-title">Complete Payment</h3>
-          <div id="payment-summary-mini"></div>
-
-          <!-- Pledge / partial payment box -->
-          <div class="pledge-box" id="pledge-input-box">
-            <p class="pledge-box-label">How much would you like to pay today?</p>
-            <p class="pledge-box-sub">You can pay in full now, or pay a partial amount and return later to continue. Your full registration will be locked in at today's tier price.</p>
-            <div class="pledge-amount-row">
-              <label>Payment Amount (USD)</label>
-              <div class="pledge-amount-wrap">
-                <span class="pledge-dollar">$</span>
-                <input type="number" id="pledge-pay-amount" min="1" placeholder="Enter amount" />
-              </div>
-              <div class="pledge-quick-btns">
-                <button class="pledge-quick" onclick="setQuickAmount('quarter')">25%</button>
-                <button class="pledge-quick" onclick="setQuickAmount('half')">50%</button>
-                <button class="pledge-quick" onclick="setQuickAmount('full')">Pay in Full</button>
-              </div>
+      <div id="return-pay-section" style="display:none; margin-top:1.2rem;">
+        <div class="pledge-box">
+          <p class="pledge-lbl">How much would you like to pay today?</p>
+          <div class="pledge-row">
+            <label>Payment Amount (USD)</label>
+            <div class="pledge-inp-wrap">
+              <span class="pledge-sym">$</span>
+              <input type="number" id="return-amt" min="1" placeholder="0"/>
             </div>
-          </div>
-
-          <div id="flw-btn-wrap" style="max-width:420px;margin:1.5rem auto 0;"></div>
-
-          <!-- Success / Pledge Code display -->
-          <div id="payment-success" class="hidden">
-            <div class="success-box">
-              <div class="success-icon">✓</div>
-              <h3>Payment Received!</h3>
-              <p id="success-msg"></p>
-              <div class="pledge-code-box" id="pledge-code-display" style="display:none;">
-                <p class="pledge-code-label">Your Pledge Code</p>
-                <p class="pledge-code-value" id="pledge-code-value"></p>
-                <p class="pledge-code-note">Save this code. Use it — or your email — to return and make additional payments at any time.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="step-nav" id="step4-back">
-            <button class="btn-step-back" onclick="goStep(3)">← Back</button>
-          </div>
-          <p class="register-note" style="margin-top:1.5rem;">Secured by Flutterwave &nbsp;·&nbsp; Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);opacity:0.8;">convention@crmusanational.org</a></p>
-        </div>
-
-      </div><!-- /panel-new -->
-
-      <!-- ══════════════════════════════════════════
-           PANEL B — RETURNING REGISTRANT
-      ══════════════════════════════════════════ -->
-      <div id="panel-return" style="display:none;max-width:540px;margin:0 auto;">
-        <h3 class="step-title" style="margin-bottom:1rem;">Find Your Registration</h3>
-        <p class="step-sub" style="margin-bottom:1.5rem;">Enter the email address you registered with, or your pledge code, to look up your balance and make a payment.</p>
-
-        <div id="return-lookup-form">
-          <div class="field-wrap full" style="margin-bottom:1rem;">
-            <label>Email Address or Pledge Code</label>
-            <input type="text" id="return-lookup-val" placeholder="email@example.com or pledge code"/>
-          </div>
-          <button class="btn-step-next" onclick="lookupPledge()" style="width:100%;">Look Up My Registration →</button>
-          <p class="field-error hidden" id="err-lookup" style="margin-top:0.8rem;"></p>
-        </div>
-
-        <div id="return-pledge-info" style="display:none;margin-top:2rem;">
-          <div class="cart-box">
-            <div class="cart-header">
-              <span id="rp-name"></span>
-              <span id="rp-tier-badge" class="cart-tier-badge"></span>
-            </div>
-            <div class="cart-contact" id="rp-contact"></div>
-            <table class="cart-table">
-              <tbody>
-                <tr>
-                  <td>Total Pledged</td>
-                  <td style="text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold2);" id="rp-total"></td>
-                </tr>
-                <tr>
-                  <td>Amount Paid</td>
-                  <td style="text-align:right;color:#7dbf80;font-family:'Cormorant Garamond',serif;font-size:1.1rem;" id="rp-paid"></td>
-                </tr>
-                <tr>
-                  <td><strong>Remaining Balance</strong></td>
-                  <td style="text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--gold2);font-weight:600;" id="rp-remaining"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="pledge-box" id="return-pay-box" style="margin-top:1.2rem;">
-            <p class="pledge-box-label">How much would you like to pay today?</p>
-            <div class="pledge-amount-row">
-              <label>Payment Amount (USD)</label>
-              <div class="pledge-amount-wrap">
-                <span class="pledge-dollar">$</span>
-                <input type="number" id="return-pay-amount" min="1" placeholder="Enter amount"/>
-              </div>
-              <div class="pledge-quick-btns">
-                <button class="pledge-quick" onclick="setReturnQuick('half')">Pay Half</button>
-                <button class="pledge-quick" onclick="setReturnQuick('full')">Pay in Full</button>
-              </div>
-            </div>
-          </div>
-
-          <div id="return-flw-wrap" style="max-width:420px;margin:1.2rem auto 0;"></div>
-
-          <div id="return-success" class="hidden" style="margin-top:1.5rem;">
-            <div class="success-box">
-              <div class="success-icon">✓</div>
-              <h3>Payment Applied!</h3>
-              <p id="return-success-msg"></p>
+            <div class="quick-btns">
+              <button class="quick" onclick="setReturnAmt(0.5)">Pay Half</button>
+              <button class="quick" onclick="setReturnAmt(1)">Pay in Full</button>
             </div>
           </div>
         </div>
-      </div><!-- /panel-return -->
+        <div id="return-btn-area"></div>
+        <div class="success" id="return-success">
+          <div class="tick">✓</div>
+          <h3>Payment Applied!</h3>
+          <p id="return-success-msg"></p>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panel-return -->
+
+</div><!-- .wrap -->
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+var FLW_KEY        = 'YOUR_FLUTTERWAVE_PUBLIC_KEY';
+var SUPA_URL       = 'https://aoefpiovjcmsszxcbffi.supabase.co';
+var SUPA_KEY       = 'YOUR_ANON_KEY_HERE';
+
+/* ─────────────────────────────────────────────
+   PRICING
+───────────────────────────────────────────── */
+var PRICING = {
+  earlybird: { u10:0,   u17:100, adu:200 },
+  regular:   { u10:50,  u17:150, adu:250 },
+  late:      { u10:300, u17:300, adu:300 }
+};
+var TIER_LABEL = {
+  earlybird:'Early Bird (Apr 1 – Jun 15)',
+  regular:  'Regular (Jun 16 – Jul 16)',
+  late:     'Late (Jul 17+)'
+};
+
+function activeTier() {
+  var n=new Date(), y=n.getFullYear();
+  if (n <= new Date(y,5,15)) return 'earlybird';
+  if (n <= new Date(y,6,16)) return 'regular';
+  return 'late';
+}
+function calcPrice(age) {
+  var p=PRICING[activeTier()];
+  if (age<=10) return p.u10;
+  if (age<=17) return p.u17;
+  return p.adu;
+}
+function fmt(p) { return p===0?'Free':'$'+p; }
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+var contact = {};
+var atts    = [];    /* [{id,name,age}] */
+var nextId  = 1;
+var grandTotal = 0;
+var currentPledgeCode = '';
+var returnRec = null;  /* record from Supabase lookup */
+
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+function showTab(t) {
+  document.getElementById('panel-new').className    = 'panel' + (t==='new'    ? ' on' : '');
+  document.getElementById('panel-return').className = 'panel' + (t==='return' ? ' on' : '');
+  document.getElementById('tab-new').className    = 'tab' + (t==='new'    ? ' on' : '');
+  document.getElementById('tab-return').className = 'tab' + (t==='return' ? ' on' : '');
+}
+
+/* ─────────────────────────────────────────────
+   STEP NAVIGATION
+───────────────────────────────────────────── */
+function setStep(n) {
+  ['s1','s2','s3','s4'].forEach(function(id,i) {
+    document.getElementById(id).className = 'step' + (i+1===n ? ' on' : '');
+  });
+  [1,2,3,4].forEach(function(i) {
+    var d = document.getElementById('d'+i);
+    d.className = 'dot' + (i<=n ? ' on' : '');
+  });
+  var _r=document.getElementById('register'); if(_r) _r.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function go1() { setStep(1); }
+
+function go2() {
+  contact = {
+    fn: g('fn'), ln: g('ln'), em: g('em'),
+    ph: g('ph'), ch: g('ch'), ci: g('ci')
+  };
+  if (atts.length === 0) addAtt();
+  else renderAtts();
+  setStep(2);
+}
+
+function go3() {
+  syncAtts();
+  renderCart();
+  setStep(3);
+}
+
+function go4() {
+  syncAtts();
+  grandTotal = calcTotal();
+  renderPaySummary();
+  buildPayBtn();
+  setStep(4);
+}
+
+/* ─────────────────────────────────────────────
+   ATTENDEES
+───────────────────────────────────────────── */
+function addAtt() {
+  syncAtts();
+  atts.push({ id: nextId++, name:'', age:'' });
+  renderAtts();
+  /* focus new name input */
+  var last = atts[atts.length-1];
+  var ni = document.getElementById('an-'+last.id);
+  if (ni) setTimeout(function(){ ni.focus(); }, 50);
+}
+
+function delAtt(id) {
+  syncAtts();
+  atts = atts.filter(function(a){ return a.id !== id; });
+  renderAtts();
+}
+
+function syncAtts() {
+  atts.forEach(function(a) {
+    var ni = document.getElementById('an-'+a.id);
+    var ai = document.getElementById('aa-'+a.id);
+    if (ni) a.name = ni.value;
+    if (ai) a.age  = ai.value;
+  });
+}
+
+function renderAtts() {
+  var list = document.getElementById('att-list');
+  list.innerHTML = '';
+  atts.forEach(function(a, idx) {
+    var age = parseInt(a.age);
+    var pStr = (a.age!=='' && !isNaN(age)) ? fmt(calcPrice(age)) : '';
+    var pCls = 'att-price' + (pStr==='Free' ? ' free' : '');
+
+    var row = document.createElement('div');
+    row.className = 'att-row';
+    row.id = 'ar-'+a.id;
+    row.innerHTML =
+      '<div class="att-num">'+(idx+1)+'</div>'+
+      '<div class="att-inputs">'+
+        '<input class="att-in" id="an-'+a.id+'" type="text" placeholder="Full name" value="'+esc(a.name)+'"/>'+
+        '<input class="att-in att-age" id="aa-'+a.id+'" type="number" placeholder="Age" min="0" max="120" value="'+esc(a.age)+'"/>'+
+      '</div>'+
+      '<span class="'+pCls+'" id="ap-'+a.id+'">'+pStr+'</span>'+
+      (atts.length>1 ? '<button class="att-del" onclick="delAtt('+a.id+')">✕</button>' : '');
+    list.appendChild(row);
+
+    /* wire age → price update */
+    (function(aid){
+      var ai2 = document.getElementById('aa-'+aid);
+      if (!ai2) return;
+      ai2.addEventListener('input', function() {
+        var sp = document.getElementById('ap-'+aid);
+        if (!sp) return;
+        var v = parseInt(ai2.value);
+        if (isNaN(v)||ai2.value==='') { sp.textContent=''; sp.className='att-price'; return; }
+        var p = calcPrice(v);
+        sp.textContent = fmt(p);
+        sp.className   = 'att-price'+(p===0?' free':'');
+      });
+      /* block Enter from triggering buttons */
+      var ni2 = document.getElementById('an-'+aid);
+      [ni2, ai2].forEach(function(el){
+        if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
+      });
+    })(a.id);
+  });
+}
+
+function calcTotal() {
+  return atts.reduce(function(s,a){
+    var v=parseInt(a.age);
+    return s+(!isNaN(v)&&a.age!=='' ? calcPrice(v) : 0);
+  },0);
+}
+
+/* ─────────────────────────────────────────────
+   CART
+───────────────────────────────────────────── */
+function renderCart() {
+  var t = calcTotal();
+  var rows = atts.map(function(a,i){
+    var v=parseInt(a.age), p=isNaN(v)?0:calcPrice(v);
+    return '<tr><td>'+(i+1)+'. '+esc(a.name||'Attendee')+'</td>'+
+           '<td>Age '+(a.age||'?')+'</td>'+
+           '<td style="text-align:right;font-family:\'Cormorant Garamond\',serif;font-size:1.05rem;color:#E8C87A;">'+fmt(p)+'</td></tr>';
+  }).join('');
+  document.getElementById('cart-area').innerHTML =
+    '<div class="cart">'+
+      '<div class="cart-hdr"><span>Summary</span><span style="font-family:\'Jost\',sans-serif;font-size:0.7rem;letter-spacing:0.04em;text-transform:none;color:rgba(245,239,224,0.35);">'+TIER_LABEL[activeTier()]+'</span></div>'+
+      '<div class="cart-who"><strong>'+esc((contact.fn||'')+' '+(contact.ln||''))+'</strong>'+(contact.em?' &nbsp;·&nbsp; '+esc(contact.em):'')+'</div>'+
+      '<table class="cart-table"><thead><tr><th>Attendee</th><th>Age</th><th style="text-align:right;">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="cart-total"><span>Total Due</span><span class="cart-total-amt">'+(t===0?'Free':'$'+t+'.00')+'</span></div>'+
+    '</div>';
+}
+
+/* ─────────────────────────────────────────────
+   PAYMENT STEP
+───────────────────────────────────────────── */
+function renderPaySummary() {
+  document.getElementById('pay-summary').innerHTML =
+    '<div class="pay-mini">'+
+      '<span>'+atts.length+' attendee'+(atts.length!==1?'s':'')+' &nbsp;·&nbsp; '+TIER_LABEL[activeTier()]+'</span>'+
+      '<span class="pay-mini-total">'+(grandTotal===0?'Free':'$'+grandTotal+'.00 USD')+'</span>'+
+    '</div>'+
+    '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.38);margin-bottom:0.5rem;">Your convention total: <strong style="color:rgba(245,239,224,0.7);">$'+grandTotal+'.00</strong> — pay any amount now</p>';
+  /* default = full */
+  var inp = document.getElementById('pay-amt');
+  if (inp) inp.value = grandTotal;
+  /* reset success */
+  document.getElementById('new-success').style.display = 'none';
+  document.getElementById('pledge-box').style.display  = 'block';
+  document.getElementById('s4-back').style.display     = '';
+}
+
+function setAmt(frac) {
+  var inp = document.getElementById('pay-amt');
+  if (inp) inp.value = Math.ceil(grandTotal * frac);
+}
+
+function buildPayBtn() {
+  var wrap = document.getElementById('pay-btn-area');
+  if (grandTotal === 0) {
+    wrap.innerHTML = '<button class="btn-next" style="width:100%;margin-top:0.5rem;" onclick="doFreeReg()">Complete Free Registration</button>';
+    return;
+  }
+  if (FLW_KEY === 'YOUR_FLUTTERWAVE_PUBLIC_KEY') {
+    wrap.innerHTML =
+      '<div class="pay-placeholder" style="margin-top:0.5rem;">'+
+        'Flutterwave payment loads here once your Public Key is configured.<br/>'+
+        '<a href="https://dashboard.flutterwave.com/" target="_blank">Get your Flutterwave key →</a>'+
+      '</div>';
+    return;
+  }
+  wrap.innerHTML = '<button class="btn-next" style="width:100%;margin-top:0.5rem;background:#C8A85A;color:#0B1628;" onclick="doFlwPay()">Pay Now via Flutterwave →</button>';
+}
+
+function doFreeReg() {
+  var code = makeCode();
+  currentPledgeCode = code;
+  saveNew(code, 0, null);
+  showNewSuccess(code, 0, 0);
+}
+
+function doFlwPay() {
+  var amt = parseFloat(document.getElementById('pay-amt').value||0);
+  if (!amt||amt<1) { alert('Please enter a payment amount.'); return; }
+  if (amt>grandTotal) { alert('Cannot exceed total of $'+grandTotal); return; }
+  var code = makeCode();
+  currentPledgeCode = code;
+  loadFlutterwave(function(){
+    FlutterwaveCheckout({
+      public_key: FLW_KEY,
+      tx_ref: 'crm2026-'+code+'-'+Date.now(),
+      amount: amt, currency:'USD',
+      payment_options:'card',
+      meta:{ pledge_code:code, total_pledged:grandTotal, tier:activeTier() },
+      customer:{ email:contact.em, phonenumber:contact.ph, name:(contact.fn+' '+contact.ln).trim() },
+      customizations:{ title:'CRM USA Convention 2026', description:atts.length+' attendee(s)' },
+      callback: function(d){
+        if (d.status==='successful') { saveNew(code,amt,d.transaction_id); showNewSuccess(code,amt,grandTotal-amt); }
+        else { alert('Payment not completed. Please try again.'); }
+      },
+      onclose: function(){}
+    });
+  });
+}
+
+function showNewSuccess(code, paid, remaining) {
+  document.getElementById('pledge-box').style.display  = 'none';
+  document.getElementById('pay-btn-area').innerHTML    = '';
+  document.getElementById('s4-back').style.display     = 'none';
+  var box = document.getElementById('new-success');
+  box.style.display = 'block';
+  var msg = document.getElementById('new-success-msg');
+  if (paid===0) {
+    msg.textContent = 'Free registration confirmed!';
+  } else {
+    msg.innerHTML = '$'+paid+'.00 received. Thank you, '+esc(contact.fn||'Friend')+'!'+
+      (remaining>0 ? '<br/>Remaining balance: <strong>$'+remaining+'.00</strong>' : '<br/>Fully paid — see you in Houston! 🎉');
+  }
+  if (remaining>0) {
+    document.getElementById('code-box').style.display = 'block';
+    document.getElementById('code-val').textContent   = code;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RETURNING REGISTRANT
+───────────────────────────────────────────── */
+function doLookup() {
+  var v = g('lookup-val');
+  var errEl = document.getElementById('lookup-err');
+  errEl.style.display = 'none';
+  if (!v) { showErr(errEl, 'Please enter your email or pledge code.'); return; }
+
+  if (SUPA_KEY === 'YOUR_ANON_KEY_HERE') {
+    showErr(errEl, 'Database not configured yet. Contact convention@crmusanational.org');
+    return;
+  }
+
+  loadSupabase(function(){
+    var q = _sb.from('registrations').select('*');
+    q = v.indexOf('@')>-1 ? q.eq('email', v.toLowerCase()) : q.eq('pledge_code', v.toUpperCase());
+    q.limit(1).then(function(res){
+      if (res.error||!res.data||!res.data.length) {
+        showErr(errEl,'No registration found. Check your email or pledge code.'); return;
+      }
+      returnRec = res.data[0];
+      showBalance();
+    });
+  });
+}
+
+function showBalance() {
+  var r = returnRec;
+  var rem = (r.total_pledged||0)-(r.amount_paid||0);
+  setText('bal-name', (r.first_name||'')+' '+(r.last_name||''));
+  setText('bal-tier', TIER_LABEL[r.tier]||r.tier||'');
+  setText('bal-total', '$'+(r.total_pledged||0)+'.00');
+  setText('bal-paid',  '$'+(r.amount_paid||0)+'.00');
+  var remEl = document.getElementById('bal-remaining');
+  if (rem>0) { remEl.textContent='$'+rem+'.00'; remEl.className='balance-amt'; }
+  else       { remEl.textContent='Fully Paid ✓'; remEl.className='balance-amt done'; }
+  document.getElementById('balance-box').style.display = 'block';
+
+  var rps = document.getElementById('return-pay-section');
+  if (rem<=0) { rps.style.display='none'; return; }
+  rps.style.display='block';
+  var ri = document.getElementById('return-amt');
+  if (ri) ri.value = rem;
+  loadFlutterwave(buildReturnBtn);
+}
+
+function setReturnAmt(frac) {
+  if (!returnRec) return;
+  var rem = (returnRec.total_pledged||0)-(returnRec.amount_paid||0);
+  var ri = document.getElementById('return-amt');
+  if (ri) ri.value = Math.ceil(rem*frac);
+}
+
+function buildReturnBtn() {
+  var wrap = document.getElementById('return-btn-area');
+  if (FLW_KEY==='YOUR_FLUTTERWAVE_PUBLIC_KEY') {
+    wrap.innerHTML='<div class="pay-placeholder">Payment gateway not configured yet.</div>'; return;
+  }
+  wrap.innerHTML='<button class="btn-next" style="width:100%;background:#C8A85A;color:#0B1628;margin-top:0.5rem;" onclick="doReturnPay()">Pay Now via Flutterwave →</button>';
+}
+
+function doReturnPay() {
+  if (!returnRec) return;
+  var rem = (returnRec.total_pledged||0)-(returnRec.amount_paid||0);
+  var amt = parseFloat(document.getElementById('return-amt').value||0);
+  if (!amt||amt<1)  { alert('Please enter a valid amount.'); return; }
+  if (amt>rem)      { alert('Cannot exceed remaining balance of $'+rem); return; }
+  FlutterwaveCheckout({
+    public_key:FLW_KEY,
+    tx_ref:'crm2026-ret-'+returnRec.pledge_code+'-'+Date.now(),
+    amount:amt, currency:'USD', payment_options:'card',
+    customer:{ email:returnRec.email, phonenumber:returnRec.phone||'', name:(returnRec.first_name+' '+returnRec.last_name).trim() },
+    customizations:{ title:'CRM USA 2026', description:'Pledge payment — '+returnRec.pledge_code },
+    callback: function(d){
+      if (d.status==='successful') { applyReturn(amt,d.transaction_id,d.tx_ref); }
+      else { alert('Payment not completed.'); }
+    },
+    onclose:function(){}
+  });
+}
+
+function applyReturn(amt, txId, txRef) {
+  var newPaid = (returnRec.amount_paid||0)+amt;
+  var newRem  = (returnRec.total_pledged||0)-newPaid;
+  loadSupabase(function(){
+    if (_sb && SUPA_KEY!=='YOUR_ANON_KEY_HERE') {
+      _sb.from('registrations').update({ amount_paid:newPaid, status:newRem<=0?'complete':'partial' }).eq('id',returnRec.id);
+      _sb.from('pledge_payments').insert({ registration_id:returnRec.id, amount:amt, flw_tx_id:txId, flw_tx_ref:txRef, status:'success' });
+    }
+  });
+  returnRec.amount_paid = newPaid;
+  document.getElementById('return-pay-section').style.display = 'none';
+  var box = document.getElementById('return-success');
+  box.style.display = 'block';
+  document.getElementById('return-success-msg').innerHTML =
+    '$'+amt+'.00 applied! '+
+    (newRem>0 ? 'Remaining: <strong>$'+newRem+'.00</strong>' : '<strong>Fully paid — see you in Houston! 🎉</strong>');
+}
+
+/* ─────────────────────────────────────────────
+   SUPABASE — lazy load + save
+───────────────────────────────────────────── */
+var _sb = null;
+function loadSupabase(cb) {
+  if (_sb) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s.onload = function(){
+    try { _sb = supabase.createClient(SUPA_URL, SUPA_KEY); } catch(e){}
+    cb();
+  };
+  s.onerror = cb;
+  document.head.appendChild(s);
+}
+
+function saveNew(code, paid, txId) {
+  if (SUPA_KEY==='YOUR_ANON_KEY_HERE') return;
+  loadSupabase(function(){
+    if (!_sb) return;
+    _sb.from('registrations').insert({
+      pledge_code  : code,
+      first_name   : contact.fn,   last_name  : contact.ln,
+      email        : contact.em,   phone      : contact.ph,
+      church       : contact.ch,   city       : contact.ci,
+      tier         : activeTier(), total_pledged: grandTotal,
+      amount_paid  : paid,         attendees  : JSON.stringify(atts),
+      status       : (grandTotal-paid)<=0 ? 'complete' : 'partial'
+    }).then(function(res){
+      if (!res.error && paid>0 && res.data && res.data[0]) {
+        _sb.from('pledge_payments').insert({ registration_id:res.data[0].id, amount:paid, flw_tx_id:txId, status:'success' });
+      }
+    });
+  });
+}
+
+/* ─────────────────────────────────────────────
+   FLUTTERWAVE — lazy load
+───────────────────────────────────────────── */
+function loadFlutterwave(cb) {
+  if (typeof FlutterwaveCheckout !== 'undefined') { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://checkout.flutterwave.com/v3.js';
+  s.onload = cb;
+  s.onerror = function(){ alert('Payment gateway failed to load. Check your connection.'); };
+  document.head.appendChild(s);
+}
+
+/* ─────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────── */
+function g(id)   { var el=document.getElementById(id); return el?el.value.trim():''; }
+function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setText(id,t){ var el=document.getElementById(id); if(el) el.textContent=t; }
+function showErr(el,t){ el.textContent=t; el.style.display='block'; }
+function makeCode() {
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r='';
+  for(var i=0;i<6;i++) r+=c[Math.floor(Math.random()*c.length)];
+  return r;
+}
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+addAtt();
+</script>
+      </div>
 
     </div>
   </section>
@@ -1539,585 +2272,488 @@
     <p class="footer-text" style="font-size:0.65rem;">© 2026 Charismatic Renewal Ministries. All rights reserved.</p>
   </footer>
 
-  <!-- Supabase JS -->
-  
-
   <script>
-/* ═══════════════════════════════════════════════════════════════
-   CRM USA 2026 — Convention Registration JS
-   Payment: Flutterwave (lazy-loaded at payment step)
-   Storage: Supabase (lazy-loaded at payment step)
-═══════════════════════════════════════════════════════════════ */
 
-/* ── CONFIG — replace before going live ── */
-var FLW_PUBLIC_KEY  = 'YOUR_FLUTTERWAVE_PUBLIC_KEY'; // e.g. FLWPUBK-xxxxxxxx
-var SUPABASE_URL     = 'https://aoefpiovjcmsszxcbffi.supabase.co';
-var SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+var FLW_KEY        = 'YOUR_FLUTTERWAVE_PUBLIC_KEY';
+var SUPA_URL       = 'https://aoefpiovjcmsszxcbffi.supabase.co';
+var SUPA_KEY       = 'YOUR_ANON_KEY_HERE';
 
-/* ── LAZY LOADERS ── */
-var _supabase = null;
-function loadSupabase(cb) {
-  if (_supabase) { cb(); return; }
-  var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-  s.onload = function() {
-    try { _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e){}
-    cb();
-  };
-  s.onerror = cb;
-  document.head.appendChild(s);
-}
-
-function loadFlutterwave(cb) {
-  if (typeof FlutterwaveCheckout !== 'undefined') { cb(); return; }
-  var s = document.createElement('script');
-  s.src = 'https://checkout.flutterwave.com/v3.js';
-  s.onload = cb;
-  s.onerror = function() {
-    document.getElementById('flw-btn-wrap').innerHTML =
-      '<p style="color:rgba(245,239,224,0.5);text-align:center;padding:1rem;">Payment gateway could not load. Please check your connection.<br/>Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">convention@crmusanational.org</a></p>';
-  };
-  document.head.appendChild(s);
-}
-
-/* ── NAV SCROLL ── */
-window.addEventListener('scroll', function() {
-  var nb = document.getElementById('navbar');
-  if (nb) nb.classList.toggle('scrolled', window.scrollY > 50);
-});
-
-/* ── SCROLL FADE-IN ── */
-try {
-  var obs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.about-stat, .schedule-day, .venue-item').forEach(function(el) {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(16px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    obs.observe(el);
-  });
-} catch(e) {}
-
-/* ── PRICING ── */
+/* ─────────────────────────────────────────────
+   PRICING
+───────────────────────────────────────────── */
 var PRICING = {
-  earlybird: { u10: 0,   u17: 100, adu: 200 },
-  regular:   { u10: 50,  u17: 150, adu: 250 },
-  late:      { u10: 300, u17: 300, adu: 300 }
+  earlybird: { u10:0,   u17:100, adu:200 },
+  regular:   { u10:50,  u17:150, adu:250 },
+  late:      { u10:300, u17:300, adu:300 }
 };
 var TIER_LABEL = {
-  earlybird: 'Early Bird (Apr 1 – Jun 15)',
-  regular:   'Regular (Jun 16 – Jul 16)',
-  late:      'Late (Jul 17+)'
+  earlybird:'Early Bird (Apr 1 – Jun 15)',
+  regular:  'Regular (Jun 16 – Jul 16)',
+  late:     'Late (Jul 17+)'
 };
 
-function getActiveTier() {
-  var n = new Date(), y = n.getFullYear();
-  if (n <= new Date(y, 5, 15))  return 'earlybird';
-  if (n <= new Date(y, 6, 16))  return 'regular';
+function activeTier() {
+  var n=new Date(), y=n.getFullYear();
+  if (n <= new Date(y,5,15)) return 'earlybird';
+  if (n <= new Date(y,6,16)) return 'regular';
   return 'late';
 }
-function getPrice(age) {
-  var p = PRICING[getActiveTier()];
-  if (age <= 10) return p.u10;
-  if (age <= 17) return p.u17;
+function calcPrice(age) {
+  var p=PRICING[activeTier()];
+  if (age<=10) return p.u10;
+  if (age<=17) return p.u17;
   return p.adu;
 }
-function fmtPrice(p) { return p === 0 ? 'Free' : '$' + p; }
+function fmt(p) { return p===0?'Free':'$'+p; }
 
-/* Highlight active tier */
-try {
-  var tier = getActiveTier();
-  var tm = { earlybird:'tier-earlybird', regular:'tier-regular', late:'tier-late' };
-  var te = document.getElementById(tm[tier]);
-  if (te) { te.style.outline='2px solid var(--gold)'; te.style.background='rgba(200,168,90,0.1)'; }
-  var bn = document.getElementById('active-tier-banner');
-  if (bn) { bn.textContent = '★ Currently in the ' + TIER_LABEL[tier] + ' period'; bn.style.display='block'; }
-} catch(e) {}
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+var contact = {};
+var atts    = [];    /* [{id,name,age}] */
+var nextId  = 1;
+var grandTotal = 0;
+var currentPledgeCode = '';
+var returnRec = null;  /* record from Supabase lookup */
 
-/* ── STATE ── */
-var contactData   = {};
-var attendees     = [];
-var attendeeCount = 0;
-var currentPledgeId   = null;   // uuid from Supabase after first payment
-var currentPledgeCode = null;
-var currentTotal      = 0;
-
-/* ── TAB SWITCHER ── */
-function switchTab(tab) {
-  document.getElementById('panel-new').style.display    = tab === 'new'    ? 'block' : 'none';
-  document.getElementById('panel-return').style.display = tab === 'return' ? 'block' : 'none';
-  document.getElementById('tab-new').classList.toggle('active',    tab === 'new');
-  document.getElementById('tab-return').classList.toggle('active', tab === 'return');
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+function showTab(t) {
+  document.getElementById('panel-new').className    = 'panel' + (t==='new'    ? ' on' : '');
+  document.getElementById('panel-return').className = 'panel' + (t==='return' ? ' on' : '');
+  document.getElementById('tab-new').className    = 'tab' + (t==='new'    ? ' on' : '');
+  document.getElementById('tab-return').className = 'tab' + (t==='return' ? ' on' : '');
 }
 
-/* ── STEP NAVIGATION ── */
-function goStep(n) {
-  if (n === 2) {
-    contactData = {
-      firstName: val('f-firstname'), lastName: val('f-lastname'),
-      email: val('f-email'), phone: val('f-phone'),
-      church: val('f-church'), city: val('f-city')
-    };
-    if (!contactData.firstName || !contactData.lastName || !contactData.email || !contactData.phone) {
-      show('err-1'); return;
-    }
-    hide('err-1');
-  }
-  if (n === 3) {
-    syncAttendees();
-    if (!attendees.length || attendees.some(function(a){ return !a.name.trim() || a.age === ''; })) {
-      show('err-2'); return;
-    }
-    hide('err-2');
-    renderCart();
-  }
-  if (n === 4) {
-    renderPaymentStep();
-    loadFlutterwave(renderFlwButton);
-    loadSupabase(function(){});   // pre-load quietly
-  }
-
-  [1,2,3,4].forEach(function(i) {
-    var s = document.getElementById('step-' + i);
-    var d = document.getElementById('dot-' + i);
-    if (s) s.className = 'reg-step' + (i === n ? '' : ' hidden');
-    if (d) d.className = 'step-dot' + (i <= n ? ' active' : '');
+/* ─────────────────────────────────────────────
+   STEP NAVIGATION
+───────────────────────────────────────────── */
+function setStep(n) {
+  ['s1','s2','s3','s4'].forEach(function(id,i) {
+    document.getElementById(id).className = 'step' + (i+1===n ? ' on' : '');
   });
-
-  var reg = document.getElementById('register');
-  if (reg) reg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  [1,2,3,4].forEach(function(i) {
+    var d = document.getElementById('d'+i);
+    d.className = 'dot' + (i<=n ? ' on' : '');
+  });
+  var _r=document.getElementById('register'); if(_r) _r.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* ── ATTENDEES ── */
-function addAttendee() {
-  syncAttendees();
-  var id = ++attendeeCount;
-  attendees.push({ id: id, name: '', age: '' });
-  renderAttendees();
-  var ni = document.getElementById('att-name-' + id);
-  if (ni) ni.focus();
+function go1() { setStep(1); }
+
+function go2() {
+  contact = {
+    fn: g('fn'), ln: g('ln'), em: g('em'),
+    ph: g('ph'), ch: g('ch'), ci: g('ci')
+  };
+  if (atts.length === 0) addAtt();
+  else renderAtts();
+  setStep(2);
 }
 
-function removeAttendee(id) {
-  syncAttendees();
-  attendees = attendees.filter(function(a){ return a.id !== id; });
-  renderAttendees();
+function go3() {
+  syncAtts();
+  renderCart();
+  setStep(3);
 }
 
-function syncAttendees() {
-  attendees.forEach(function(a) {
-    var ni = document.getElementById('att-name-' + a.id);
-    var ai = document.getElementById('att-age-' + a.id);
+function go4() {
+  syncAtts();
+  grandTotal = calcTotal();
+  renderPaySummary();
+  buildPayBtn();
+  setStep(4);
+}
+
+/* ─────────────────────────────────────────────
+   ATTENDEES
+───────────────────────────────────────────── */
+function addAtt() {
+  syncAtts();
+  atts.push({ id: nextId++, name:'', age:'' });
+  renderAtts();
+  /* focus new name input */
+  var last = atts[atts.length-1];
+  var ni = document.getElementById('an-'+last.id);
+  if (ni) setTimeout(function(){ ni.focus(); }, 50);
+}
+
+function delAtt(id) {
+  syncAtts();
+  atts = atts.filter(function(a){ return a.id !== id; });
+  renderAtts();
+}
+
+function syncAtts() {
+  atts.forEach(function(a) {
+    var ni = document.getElementById('an-'+a.id);
+    var ai = document.getElementById('aa-'+a.id);
     if (ni) a.name = ni.value;
     if (ai) a.age  = ai.value;
   });
 }
 
-function renderAttendees() {
-  var list = document.getElementById('attendee-list');
-  if (!list) return;
+function renderAtts() {
+  var list = document.getElementById('att-list');
   list.innerHTML = '';
-  attendees.forEach(function(a, idx) {
+  atts.forEach(function(a, idx) {
     var age = parseInt(a.age);
-    var priceStr = (a.age !== '' && !isNaN(age)) ? fmtPrice(getPrice(age)) : '';
-    var pCls = 'att-price' + (priceStr === 'Free' ? ' att-price--free' : '');
-    var div = document.createElement('div');
-    div.className = 'attendee-row';
-    div.id = 'att-' + a.id;
-    div.innerHTML =
-      '<div class="att-num">' + (idx+1) + '</div>' +
-      '<div class="att-inputs">' +
-        '<input type="text"   id="att-name-' + a.id + '" class="att-input" placeholder="Full name"  value="' + esc(a.name) + '"/>' +
-        '<input type="number" id="att-age-' + a.id  + '" class="att-input att-age" placeholder="Age" min="0" max="120" value="' + esc(a.age) + '" style="width:80px;"/>' +
-      '</div>' +
-      '<span id="att-price-' + a.id + '" class="' + pCls + '">' + priceStr + '</span>' +
-      (attendees.length > 1 ? '<button class="att-remove" onclick="removeAttendee(' + a.id + ')">✕</button>' : '');
-    list.appendChild(div);
+    var pStr = (a.age!=='' && !isNaN(age)) ? fmt(calcPrice(age)) : '';
+    var pCls = 'att-price' + (pStr==='Free' ? ' free' : '');
 
-    /* age → price live update */
-    (function(id){
-      var ai = document.getElementById('att-age-' + id);
-      if (ai) ai.addEventListener('input', function() {
-        var sp = document.getElementById('att-price-' + id);
+    var row = document.createElement('div');
+    row.className = 'att-row';
+    row.id = 'ar-'+a.id;
+    row.innerHTML =
+      '<div class="att-num">'+(idx+1)+'</div>'+
+      '<div class="att-inputs">'+
+        '<input class="att-in" id="an-'+a.id+'" type="text" placeholder="Full name" value="'+esc(a.name)+'"/>'+
+        '<input class="att-in att-age" id="aa-'+a.id+'" type="number" placeholder="Age" min="0" max="120" value="'+esc(a.age)+'"/>'+
+      '</div>'+
+      '<span class="'+pCls+'" id="ap-'+a.id+'">'+pStr+'</span>'+
+      (atts.length>1 ? '<button class="att-del" onclick="delAtt('+a.id+')">✕</button>' : '');
+    list.appendChild(row);
+
+    /* wire age → price update */
+    (function(aid){
+      var ai2 = document.getElementById('aa-'+aid);
+      if (!ai2) return;
+      ai2.addEventListener('input', function() {
+        var sp = document.getElementById('ap-'+aid);
         if (!sp) return;
-        var a2 = parseInt(ai.value);
-        if (isNaN(a2) || ai.value === '') { sp.textContent = ''; sp.className = 'att-price'; return; }
-        var p = getPrice(a2);
-        sp.textContent = fmtPrice(p);
-        sp.className   = 'att-price' + (p === 0 ? ' att-price--free' : '');
+        var v = parseInt(ai2.value);
+        if (isNaN(v)||ai2.value==='') { sp.textContent=''; sp.className='att-price'; return; }
+        var p = calcPrice(v);
+        sp.textContent = fmt(p);
+        sp.className   = 'att-price'+(p===0?' free':'');
       });
-      /* block Enter from firing buttons */
-      [document.getElementById('att-name-' + id), ai].forEach(function(el) {
-        if (el) el.addEventListener('keydown', function(e){ if (e.key==='Enter') e.preventDefault(); });
+      /* block Enter from triggering buttons */
+      var ni2 = document.getElementById('an-'+aid);
+      [ni2, ai2].forEach(function(el){
+        if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
       });
     })(a.id);
   });
 }
 
 function calcTotal() {
-  return attendees.reduce(function(s, a) {
-    var age = parseInt(a.age);
-    return s + (a.age !== '' && !isNaN(age) ? getPrice(age) : 0);
-  }, 0);
+  return atts.reduce(function(s,a){
+    var v=parseInt(a.age);
+    return s+(!isNaN(v)&&a.age!=='' ? calcPrice(v) : 0);
+  },0);
 }
 
-/* ── CART ── */
+/* ─────────────────────────────────────────────
+   CART
+───────────────────────────────────────────── */
 function renderCart() {
-  syncAttendees();
-  var tot = calcTotal();
-  var rows = attendees.map(function(a, i) {
-    var age = parseInt(a.age);
-    var p   = !isNaN(age) ? getPrice(age) : 0;
-    return '<tr>' +
-      '<td>' + (i+1) + '. ' + esc(a.name||'Attendee') + '</td>' +
-      '<td>Age ' + (a.age||'?') + '</td>' +
-      '<td style="text-align:right;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold2);">' + fmtPrice(p) + '</td>' +
-    '</tr>';
+  var t = calcTotal();
+  var rows = atts.map(function(a,i){
+    var v=parseInt(a.age), p=isNaN(v)?0:calcPrice(v);
+    return '<tr><td>'+(i+1)+'. '+esc(a.name||'Attendee')+'</td>'+
+           '<td>Age '+(a.age||'?')+'</td>'+
+           '<td style="text-align:right;font-family:\'Cormorant Garamond\',serif;font-size:1.05rem;color:#E8C87A;">'+fmt(p)+'</td></tr>';
   }).join('');
-  var tier = getActiveTier();
-  var el = document.getElementById('cart-summary');
-  if (!el) return;
-  el.innerHTML =
-    '<div class="cart-box">' +
-      '<div class="cart-header">' +
-        '<span>Registration Summary</span>' +
-        '<span class="cart-tier-badge">' + TIER_LABEL[tier] + '</span>' +
-      '</div>' +
-      '<div class="cart-contact"><strong>' + esc((contactData.firstName||'') + ' ' + (contactData.lastName||'')) + '</strong>' +
-        (contactData.email ? ' &nbsp;·&nbsp; ' + esc(contactData.email) : '') +
-        (contactData.church ? ' &nbsp;·&nbsp; ' + esc(contactData.church) : '') + '</div>' +
-      '<table class="cart-table"><thead><tr><th>Attendee</th><th>Age</th><th style="text-align:right;">Amount</th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table>' +
-      '<div class="cart-total"><span>Total Due</span>' +
-        '<span class="cart-total-amt">' + (tot === 0 ? 'Free' : '$' + tot + '.00') + '</span>' +
-      '</div>' +
+  document.getElementById('cart-area').innerHTML =
+    '<div class="cart">'+
+      '<div class="cart-hdr"><span>Summary</span><span style="font-family:\'Jost\',sans-serif;font-size:0.7rem;letter-spacing:0.04em;text-transform:none;color:rgba(245,239,224,0.35);">'+TIER_LABEL[activeTier()]+'</span></div>'+
+      '<div class="cart-who"><strong>'+esc((contact.fn||'')+' '+(contact.ln||''))+'</strong>'+(contact.em?' &nbsp;·&nbsp; '+esc(contact.em):'')+'</div>'+
+      '<table class="cart-table"><thead><tr><th>Attendee</th><th>Age</th><th style="text-align:right;">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="cart-total"><span>Total Due</span><span class="cart-total-amt">'+(t===0?'Free':'$'+t+'.00')+'</span></div>'+
     '</div>';
 }
 
-/* ── PAYMENT STEP ── */
-function renderPaymentStep() {
-  syncAttendees();
-  currentTotal = calcTotal();
-  var mini = document.getElementById('payment-summary-mini');
-  if (mini) {
-    mini.innerHTML =
-      '<div class="pay-mini">' +
-        '<span>' + attendees.length + ' attendee' + (attendees.length !== 1 ? 's' : '') +
-        ' &nbsp;·&nbsp; ' + TIER_LABEL[getActiveTier()] + '</span>' +
-        '<span class="pay-mini-total">' + (currentTotal === 0 ? 'Free' : '$' + currentTotal + '.00 USD') + '</span>' +
-      '</div>' +
-      '<p class="pledge-total-note">Total convention cost for your family: <strong>$' + currentTotal + '.00</strong></p>';
-  }
-  /* Default payment = full */
-  var inp = document.getElementById('pledge-pay-amount');
-  if (inp) inp.value = currentTotal;
-  hide('payment-success');
-  show('pledge-input-box');
-  var wrap = document.getElementById('flw-btn-wrap');
-  if (wrap) wrap.innerHTML = '<p style="text-align:center;color:rgba(245,239,224,0.4);font-size:0.8rem;padding:0.5rem;">Loading payment gateway…</p>';
+/* ─────────────────────────────────────────────
+   PAYMENT STEP
+───────────────────────────────────────────── */
+function renderPaySummary() {
+  document.getElementById('pay-summary').innerHTML =
+    '<div class="pay-mini">'+
+      '<span>'+atts.length+' attendee'+(atts.length!==1?'s':'')+' &nbsp;·&nbsp; '+TIER_LABEL[activeTier()]+'</span>'+
+      '<span class="pay-mini-total">'+(grandTotal===0?'Free':'$'+grandTotal+'.00 USD')+'</span>'+
+    '</div>'+
+    '<p style="text-align:center;font-size:0.75rem;color:rgba(245,239,224,0.38);margin-bottom:0.5rem;">Your convention total: <strong style="color:rgba(245,239,224,0.7);">$'+grandTotal+'.00</strong> — pay any amount now</p>';
+  /* default = full */
+  var inp = document.getElementById('pay-amt');
+  if (inp) inp.value = grandTotal;
+  /* reset success */
+  document.getElementById('new-success').style.display = 'none';
+  document.getElementById('pledge-box').style.display  = 'block';
+  document.getElementById('s4-back').style.display     = '';
 }
 
-function setQuickAmount(mode) {
-  var inp = document.getElementById('pledge-pay-amount');
-  if (!inp) return;
-  if (mode === 'full')    inp.value = currentTotal;
-  if (mode === 'half')    inp.value = Math.ceil(currentTotal / 2);
-  if (mode === 'quarter') inp.value = Math.ceil(currentTotal / 4);
+function setAmt(frac) {
+  var inp = document.getElementById('pay-amt');
+  if (inp) inp.value = Math.ceil(grandTotal * frac);
 }
 
-/* ── FLUTTERWAVE — NEW REGISTRATION ── */
-function renderFlwButton() {
-  var wrap = document.getElementById('flw-btn-wrap');
-  if (!wrap) return;
-
-  if (currentTotal === 0) {
-    wrap.innerHTML = '<button class="btn-step-next" style="width:100%;" onclick="completeFreeReg()">Complete Free Registration</button>';
+function buildPayBtn() {
+  var wrap = document.getElementById('pay-btn-area');
+  if (grandTotal === 0) {
+    wrap.innerHTML = '<button class="btn-next" style="width:100%;margin-top:0.5rem;" onclick="doFreeReg()">Complete Free Registration</button>';
     return;
   }
-
-  if (FLW_PUBLIC_KEY === 'YOUR_FLUTTERWAVE_PUBLIC_KEY') {
+  if (FLW_KEY === 'YOUR_FLUTTERWAVE_PUBLIC_KEY') {
     wrap.innerHTML =
-      '<div style="padding:1.5rem;border:1px solid rgba(200,168,90,0.25);text-align:center;color:rgba(245,239,224,0.55);font-size:0.82rem;line-height:1.7;">' +
-        'Flutterwave payment will appear here once your Public Key is configured.<br/><br/>' +
-        '<a href="https://dashboard.flutterwave.com/" target="_blank" style="color:var(--gold);">Get your Flutterwave Key →</a>' +
+      '<div class="pay-placeholder" style="margin-top:0.5rem;">'+
+        'Flutterwave payment loads here once your Public Key is configured.<br/>'+
+        '<a href="https://dashboard.flutterwave.com/" target="_blank">Get your Flutterwave key →</a>'+
       '</div>';
     return;
   }
-
-  wrap.innerHTML = '<button class="btn-step-next" style="width:100%;background:var(--gold);color:#0B1628;" onclick="initiateFlwPayment()">Pay Now via Flutterwave →</button>';
+  wrap.innerHTML = '<button class="btn-next" style="width:100%;margin-top:0.5rem;background:#C8A85A;color:#0B1628;" onclick="doFlwPay()">Pay Now via Flutterwave →</button>';
 }
 
-function initiateFlwPayment() {
-  var amtInput = document.getElementById('pledge-pay-amount');
-  var amt      = parseFloat(amtInput ? amtInput.value : 0);
-  if (!amt || amt < 1) { alert('Please enter a valid payment amount.'); return; }
-  if (amt > currentTotal) { alert('Payment cannot exceed the total of $' + currentTotal + '.'); return; }
-
-  var pledgeCode = generateCode();
-  currentPledgeCode = pledgeCode;
-
-  FlutterwaveCheckout({
-    public_key     : FLW_PUBLIC_KEY,
-    tx_ref         : 'crm2026-' + pledgeCode + '-' + Date.now(),
-    amount         : amt,
-    currency       : 'USD',
-    payment_options: 'card',
-    meta: {
-      pledge_code  : pledgeCode,
-      total_pledged: currentTotal,
-      tier         : getActiveTier()
-    },
-    customer: {
-      email       : contactData.email,
-      phonenumber : contactData.phone,
-      name        : (contactData.firstName + ' ' + contactData.lastName).trim()
-    },
-    customizations: {
-      title      : 'CRM USA Convention 2026',
-      description: 'Registration — ' + attendees.length + ' attendee(s)',
-      logo       : ''
-    },
-    callback: function(data) {
-      if (data.status === 'successful') {
-        savePledge(pledgeCode, amt, data.transaction_id, data.tx_ref);
-      } else {
-        alert('Payment not completed. Please try again.');
-      }
-    },
-    onclose: function() {}
-  });
+function doFreeReg() {
+  var code = makeCode();
+  currentPledgeCode = code;
+  saveNew(code, 0, null);
+  showNewSuccess(code, 0, 0);
 }
 
-function completeFreeReg() {
-  var pledgeCode = generateCode();
-  currentPledgeCode = pledgeCode;
-  savePledge(pledgeCode, 0, null, 'FREE-' + Date.now());
-}
-
-/* ── SUPABASE — SAVE PLEDGE ── */
-function savePledge(pledgeCode, amtPaid, flwTxId, flwTxRef) {
-  var remaining = currentTotal - amtPaid;
-  loadSupabase(function() {
-    if (!_supabase || SUPABASE_ANON_KEY === 'YOUR_ANON_KEY_HERE') {
-      showNewSuccess(pledgeCode, amtPaid, remaining);
-      return;
-    }
-    _supabase.from('registrations').insert({
-      pledge_code  : pledgeCode,
-      first_name   : contactData.firstName,
-      last_name    : contactData.lastName,
-      email        : contactData.email,
-      phone        : contactData.phone,
-      church       : contactData.church,
-      city         : contactData.city,
-      tier         : getActiveTier(),
-      total_pledged: currentTotal,
-      amount_paid  : amtPaid,
-      attendees    : JSON.stringify(attendees),
-      status       : remaining <= 0 ? 'complete' : 'partial'
-    }).then(function(res) {
-      if (res.error) { console.error('Supabase error:', res.error); }
-      else {
-        /* save first payment record */
-        if (amtPaid > 0 && res.data && res.data[0]) {
-          _supabase.from('pledge_payments').insert({
-            registration_id: res.data[0].id,
-            amount         : amtPaid,
-            flw_tx_id      : flwTxId || null,
-            flw_tx_ref     : flwTxRef || null,
-            status         : 'success'
-          });
-        }
-      }
-    });
-    showNewSuccess(pledgeCode, amtPaid, remaining);
-  });
-}
-
-function showNewSuccess(pledgeCode, amtPaid, remaining) {
-  hide('pledge-input-box');
-  hide('flw-btn-wrap');
-  hide('step4-back');
-  show('payment-success');
-  var msg = document.getElementById('success-msg');
-  if (msg) {
-    if (amtPaid === 0) {
-      msg.textContent = 'Your free registration has been confirmed!';
-    } else {
-      msg.innerHTML = '$' + amtPaid + '.00 received. Thank you, ' + esc(contactData.firstName) + '!';
-      if (remaining > 0) {
-        msg.innerHTML += '<br/>Remaining balance: <strong>$' + remaining + '.00</strong>';
-      } else {
-        msg.innerHTML += '<br/>Your registration is fully paid. See you in Houston!';
-      }
-    }
-  }
-  var codeDisplay = document.getElementById('pledge-code-display');
-  var codeValue   = document.getElementById('pledge-code-value');
-  if (codeDisplay && remaining > 0) {
-    codeDisplay.style.display = 'block';
-    if (codeValue) codeValue.textContent = pledgeCode;
-  }
-}
-
-/* ── RETURNING REGISTRANT ── */
-var returnPledge = null;
-
-function lookupPledge() {
-  var input = val('return-lookup-val');
-  var errEl = document.getElementById('err-lookup');
-  if (!input) { errEl.textContent = 'Please enter your email or pledge code.'; show('err-lookup'); return; }
-  hide('err-lookup');
-
-  loadSupabase(function() {
-    if (!_supabase || SUPABASE_ANON_KEY === 'YOUR_ANON_KEY_HERE') {
-      errEl.textContent = 'Database not yet configured. Please contact convention@crmusanational.org';
-      show('err-lookup'); return;
-    }
-    var query = _supabase.from('registrations').select('*');
-    /* check if it looks like an email or a code */
-    if (input.indexOf('@') > -1) {
-      query = query.eq('email', input.toLowerCase().trim());
-    } else {
-      query = query.eq('pledge_code', input.toUpperCase().trim());
-    }
-    query.limit(1).then(function(res) {
-      if (res.error || !res.data || !res.data.length) {
-        errEl.textContent = 'No registration found. Check your email or pledge code.';
-        show('err-lookup'); return;
-      }
-      returnPledge = res.data[0];
-      displayReturnPledge();
+function doFlwPay() {
+  var amt = parseFloat(document.getElementById('pay-amt').value||0);
+  if (!amt||amt<1) { alert('Please enter a payment amount.'); return; }
+  if (amt>grandTotal) { alert('Cannot exceed total of $'+grandTotal); return; }
+  var code = makeCode();
+  currentPledgeCode = code;
+  loadFlutterwave(function(){
+    FlutterwaveCheckout({
+      public_key: FLW_KEY,
+      tx_ref: 'crm2026-'+code+'-'+Date.now(),
+      amount: amt, currency:'USD',
+      payment_options:'card',
+      meta:{ pledge_code:code, total_pledged:grandTotal, tier:activeTier() },
+      customer:{ email:contact.em, phonenumber:contact.ph, name:(contact.fn+' '+contact.ln).trim() },
+      customizations:{ title:'CRM USA Convention 2026', description:atts.length+' attendee(s)' },
+      callback: function(d){
+        if (d.status==='successful') { saveNew(code,amt,d.transaction_id); showNewSuccess(code,amt,grandTotal-amt); }
+        else { alert('Payment not completed. Please try again.'); }
+      },
+      onclose: function(){}
     });
   });
 }
 
-function displayReturnPledge() {
-  var p = returnPledge;
-  var remaining = (p.total_pledged || 0) - (p.amount_paid || 0);
-  setText('rp-name',      (p.first_name || '') + ' ' + (p.last_name || ''));
-  setText('rp-tier-badge', TIER_LABEL[p.tier] || p.tier);
-  setText('rp-contact',   (p.email || '') + (p.church ? ' · ' + p.church : ''));
-  setText('rp-total',     '$' + (p.total_pledged || 0) + '.00');
-  setText('rp-paid',      '$' + (p.amount_paid || 0) + '.00');
-  setText('rp-remaining', remaining > 0 ? '$' + remaining + '.00' : 'Fully Paid ✓');
-  show('return-pledge-info');
-  var inp = document.getElementById('return-pay-amount');
-  if (inp) inp.value = remaining > 0 ? remaining : '';
-
-  if (remaining <= 0) {
-    hide('return-pay-box');
-    hide('return-flw-wrap');
+function showNewSuccess(code, paid, remaining) {
+  document.getElementById('pledge-box').style.display  = 'none';
+  document.getElementById('pay-btn-area').innerHTML    = '';
+  document.getElementById('s4-back').style.display     = 'none';
+  var box = document.getElementById('new-success');
+  box.style.display = 'block';
+  var msg = document.getElementById('new-success-msg');
+  if (paid===0) {
+    msg.textContent = 'Free registration confirmed!';
   } else {
-    loadFlutterwave(renderReturnFlwButton);
+    msg.innerHTML = '$'+paid+'.00 received. Thank you, '+esc(contact.fn||'Friend')+'!'+
+      (remaining>0 ? '<br/>Remaining balance: <strong>$'+remaining+'.00</strong>' : '<br/>Fully paid — see you in Houston! 🎉');
+  }
+  if (remaining>0) {
+    document.getElementById('code-box').style.display = 'block';
+    document.getElementById('code-val').textContent   = code;
   }
 }
 
-function setReturnQuick(mode) {
-  if (!returnPledge) return;
-  var remaining = (returnPledge.total_pledged || 0) - (returnPledge.amount_paid || 0);
-  var inp = document.getElementById('return-pay-amount');
-  if (!inp) return;
-  inp.value = mode === 'full' ? remaining : Math.ceil(remaining / 2);
-}
+/* ─────────────────────────────────────────────
+   RETURNING REGISTRANT
+───────────────────────────────────────────── */
+function doLookup() {
+  var v = g('lookup-val');
+  var errEl = document.getElementById('lookup-err');
+  errEl.style.display = 'none';
+  if (!v) { showErr(errEl, 'Please enter your email or pledge code.'); return; }
 
-function renderReturnFlwButton() {
-  var wrap = document.getElementById('return-flw-wrap');
-  if (!wrap) return;
-  if (FLW_PUBLIC_KEY === 'YOUR_FLUTTERWAVE_PUBLIC_KEY') {
-    wrap.innerHTML = '<div style="padding:1rem;border:1px solid rgba(200,168,90,0.25);text-align:center;color:rgba(245,239,224,0.5);font-size:0.8rem;">Payment gateway not configured yet.</div>';
+  if (SUPA_KEY === 'YOUR_ANON_KEY_HERE') {
+    showErr(errEl, 'Database not configured yet. Contact convention@crmusanational.org');
     return;
   }
-  wrap.innerHTML = '<button class="btn-step-next" style="width:100%;background:var(--gold);color:#0B1628;" onclick="initiateReturnPayment()">Pay Now via Flutterwave →</button>';
-}
 
-function initiateReturnPayment() {
-  if (!returnPledge) return;
-  var remaining = (returnPledge.total_pledged || 0) - (returnPledge.amount_paid || 0);
-  var amtInput  = document.getElementById('return-pay-amount');
-  var amt       = parseFloat(amtInput ? amtInput.value : 0);
-  if (!amt || amt < 1)         { alert('Please enter a valid amount.'); return; }
-  if (amt > remaining)         { alert('Amount cannot exceed remaining balance of $' + remaining); return; }
-
-  FlutterwaveCheckout({
-    public_key     : FLW_PUBLIC_KEY,
-    tx_ref         : 'crm2026-return-' + returnPledge.pledge_code + '-' + Date.now(),
-    amount         : amt,
-    currency       : 'USD',
-    payment_options: 'card',
-    customer: {
-      email       : returnPledge.email,
-      phonenumber : returnPledge.phone || '',
-      name        : (returnPledge.first_name + ' ' + returnPledge.last_name).trim()
-    },
-    customizations: {
-      title      : 'CRM USA Convention 2026',
-      description: 'Pledge payment — ' + returnPledge.pledge_code,
-      logo       : ''
-    },
-    callback: function(data) {
-      if (data.status === 'successful') {
-        applyReturnPayment(amt, data.transaction_id, data.tx_ref);
-      } else {
-        alert('Payment not completed. Please try again.');
+  loadSupabase(function(){
+    var q = _sb.from('registrations').select('*');
+    q = v.indexOf('@')>-1 ? q.eq('email', v.toLowerCase()) : q.eq('pledge_code', v.toUpperCase());
+    q.limit(1).then(function(res){
+      if (res.error||!res.data||!res.data.length) {
+        showErr(errEl,'No registration found. Check your email or pledge code.'); return;
       }
+      returnRec = res.data[0];
+      showBalance();
+    });
+  });
+}
+
+function showBalance() {
+  var r = returnRec;
+  var rem = (r.total_pledged||0)-(r.amount_paid||0);
+  setText('bal-name', (r.first_name||'')+' '+(r.last_name||''));
+  setText('bal-tier', TIER_LABEL[r.tier]||r.tier||'');
+  setText('bal-total', '$'+(r.total_pledged||0)+'.00');
+  setText('bal-paid',  '$'+(r.amount_paid||0)+'.00');
+  var remEl = document.getElementById('bal-remaining');
+  if (rem>0) { remEl.textContent='$'+rem+'.00'; remEl.className='balance-amt'; }
+  else       { remEl.textContent='Fully Paid ✓'; remEl.className='balance-amt done'; }
+  document.getElementById('balance-box').style.display = 'block';
+
+  var rps = document.getElementById('return-pay-section');
+  if (rem<=0) { rps.style.display='none'; return; }
+  rps.style.display='block';
+  var ri = document.getElementById('return-amt');
+  if (ri) ri.value = rem;
+  loadFlutterwave(buildReturnBtn);
+}
+
+function setReturnAmt(frac) {
+  if (!returnRec) return;
+  var rem = (returnRec.total_pledged||0)-(returnRec.amount_paid||0);
+  var ri = document.getElementById('return-amt');
+  if (ri) ri.value = Math.ceil(rem*frac);
+}
+
+function buildReturnBtn() {
+  var wrap = document.getElementById('return-btn-area');
+  if (FLW_KEY==='YOUR_FLUTTERWAVE_PUBLIC_KEY') {
+    wrap.innerHTML='<div class="pay-placeholder">Payment gateway not configured yet.</div>'; return;
+  }
+  wrap.innerHTML='<button class="btn-next" style="width:100%;background:#C8A85A;color:#0B1628;margin-top:0.5rem;" onclick="doReturnPay()">Pay Now via Flutterwave →</button>';
+}
+
+function doReturnPay() {
+  if (!returnRec) return;
+  var rem = (returnRec.total_pledged||0)-(returnRec.amount_paid||0);
+  var amt = parseFloat(document.getElementById('return-amt').value||0);
+  if (!amt||amt<1)  { alert('Please enter a valid amount.'); return; }
+  if (amt>rem)      { alert('Cannot exceed remaining balance of $'+rem); return; }
+  FlutterwaveCheckout({
+    public_key:FLW_KEY,
+    tx_ref:'crm2026-ret-'+returnRec.pledge_code+'-'+Date.now(),
+    amount:amt, currency:'USD', payment_options:'card',
+    customer:{ email:returnRec.email, phonenumber:returnRec.phone||'', name:(returnRec.first_name+' '+returnRec.last_name).trim() },
+    customizations:{ title:'CRM USA 2026', description:'Pledge payment — '+returnRec.pledge_code },
+    callback: function(d){
+      if (d.status==='successful') { applyReturn(amt,d.transaction_id,d.tx_ref); }
+      else { alert('Payment not completed.'); }
     },
-    onclose: function() {}
+    onclose:function(){}
   });
 }
 
-function applyReturnPayment(amt, flwTxId, flwTxRef) {
-  var newPaid      = (returnPledge.amount_paid || 0) + amt;
-  var newRemaining = (returnPledge.total_pledged || 0) - newPaid;
-  loadSupabase(function() {
-    if (_supabase && SUPABASE_ANON_KEY !== 'YOUR_ANON_KEY_HERE') {
-      _supabase.from('registrations').update({
-        amount_paid: newPaid,
-        status: newRemaining <= 0 ? 'complete' : 'partial'
-      }).eq('id', returnPledge.id);
-      _supabase.from('pledge_payments').insert({
-        registration_id: returnPledge.id,
-        amount: amt, flw_tx_id: flwTxId, flw_tx_ref: flwTxRef, status: 'success'
-      });
+function applyReturn(amt, txId, txRef) {
+  var newPaid = (returnRec.amount_paid||0)+amt;
+  var newRem  = (returnRec.total_pledged||0)-newPaid;
+  loadSupabase(function(){
+    if (_sb && SUPA_KEY!=='YOUR_ANON_KEY_HERE') {
+      _sb.from('registrations').update({ amount_paid:newPaid, status:newRem<=0?'complete':'partial' }).eq('id',returnRec.id);
+      _sb.from('pledge_payments').insert({ registration_id:returnRec.id, amount:amt, flw_tx_id:txId, flw_tx_ref:txRef, status:'success' });
     }
-    returnPledge.amount_paid = newPaid;
-    hide('return-pay-box');
-    hide('return-flw-wrap');
-    show('return-success');
-    var msg = document.getElementById('return-success-msg');
-    if (msg) {
-      msg.innerHTML = '$' + amt + '.00 applied successfully!<br/>' +
-        (newRemaining > 0
-          ? 'Remaining balance: <strong>$' + newRemaining + '.00</strong>'
-          : 'Your registration is <strong>fully paid</strong>. See you in Houston! 🎉');
-    }
+  });
+  returnRec.amount_paid = newPaid;
+  document.getElementById('return-pay-section').style.display = 'none';
+  var box = document.getElementById('return-success');
+  box.style.display = 'block';
+  document.getElementById('return-success-msg').innerHTML =
+    '$'+amt+'.00 applied! '+
+    (newRem>0 ? 'Remaining: <strong>$'+newRem+'.00</strong>' : '<strong>Fully paid — see you in Houston! 🎉</strong>');
+}
+
+/* ─────────────────────────────────────────────
+   SUPABASE — lazy load + save
+───────────────────────────────────────────── */
+var _sb = null;
+function loadSupabase(cb) {
+  if (_sb) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s.onload = function(){
+    try { _sb = supabase.createClient(SUPA_URL, SUPA_KEY); } catch(e){}
+    cb();
+  };
+  s.onerror = cb;
+  document.head.appendChild(s);
+}
+
+function saveNew(code, paid, txId) {
+  if (SUPA_KEY==='YOUR_ANON_KEY_HERE') return;
+  loadSupabase(function(){
+    if (!_sb) return;
+    _sb.from('registrations').insert({
+      pledge_code  : code,
+      first_name   : contact.fn,   last_name  : contact.ln,
+      email        : contact.em,   phone      : contact.ph,
+      church       : contact.ch,   city       : contact.ci,
+      tier         : activeTier(), total_pledged: grandTotal,
+      amount_paid  : paid,         attendees  : JSON.stringify(atts),
+      status       : (grandTotal-paid)<=0 ? 'complete' : 'partial'
+    }).then(function(res){
+      if (!res.error && paid>0 && res.data && res.data[0]) {
+        _sb.from('pledge_payments').insert({ registration_id:res.data[0].id, amount:paid, flw_tx_id:txId, status:'success' });
+      }
+    });
   });
 }
 
-/* ── UTILITIES ── */
-function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+/* ─────────────────────────────────────────────
+   FLUTTERWAVE — lazy load
+───────────────────────────────────────────── */
+function loadFlutterwave(cb) {
+  if (typeof FlutterwaveCheckout !== 'undefined') { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://checkout.flutterwave.com/v3.js';
+  s.onload = cb;
+  s.onerror = function(){ alert('Payment gateway failed to load. Check your connection.'); };
+  document.head.appendChild(s);
+}
+
+/* ─────────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────────── */
+function g(id)   { var el=document.getElementById(id); return el?el.value.trim():''; }
 function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function show(id){ var el = document.getElementById(id); if(el){ el.classList.remove('hidden'); el.style.display=''; } }
-function hide(id){ var el = document.getElementById(id); if(el){ el.classList.add('hidden'); el.style.display='none'; } }
-function setText(id, txt) { var el = document.getElementById(id); if(el) el.textContent = txt; }
-
-function generateCode() {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  var code  = '';
-  for (var i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
+function setText(id,t){ var el=document.getElementById(id); if(el) el.textContent=t; }
+function showErr(el,t){ el.textContent=t; el.style.display='block'; }
+function makeCode() {
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r='';
+  for(var i=0;i<6;i++) r+=c[Math.floor(Math.random()*c.length)];
+  return r;
 }
 
-/* Boot: initialise attendee list */
-window.addEventListener('DOMContentLoaded', function() {
-  addAttendee();
-});
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+addAtt();
+
+
+    /* ── Tier highlight ── */
+    (function(){
+      try {
+        var t = activeTier();
+        var m = {earlybird:'tier-earlybird',regular:'tier-regular',late:'tier-late'};
+        var el = document.getElementById(m[t]);
+        if (el){ el.style.outline='2px solid var(--gold)'; el.style.background='rgba(200,168,90,0.1)'; }
+        var bn = document.getElementById('active-tier-banner');
+        if (bn){ bn.textContent='★ Currently: '+TIER_LABEL[t]; bn.style.display='block'; }
+      } catch(e){}
+    })();
+    /* ── Scroll fade-in ── */
+    (function(){
+      try {
+        var obs = new IntersectionObserver(function(en){
+          en.forEach(function(e){ if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }});
+        },{threshold:0.1});
+        document.querySelectorAll('.about-stat,.schedule-day,.venue-item').forEach(function(el){
+          el.style.opacity='0'; el.style.transform='translateY(16px)';
+          el.style.transition='opacity 0.6s ease,transform 0.6s ease';
+          obs.observe(el);
+        });
+      } catch(e){}
+    })();
+    /* ── Sticky nav ── */
+    (function(){
+      var nb = document.getElementById('navbar');
+      if(nb) window.addEventListener('scroll',function(){ nb.classList.toggle('scrolled',window.scrollY>50); });
+    })();
 
   </script>
 </body>
