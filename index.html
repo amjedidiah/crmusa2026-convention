@@ -1190,13 +1190,13 @@
 
       <!-- STEP INDICATORS -->
       <div class="step-indicator">
-        <div class="step-dot active" id="dot-1">1</div>
+        <div class="step-dot active" id="dot-1" onclick="goStep(1)" title="Contact Info" style="cursor:pointer;">1</div>
         <div class="step-line"></div>
-        <div class="step-dot" id="dot-2">2</div>
+        <div class="step-dot" id="dot-2" onclick="goStep(2)" title="Attendees" style="cursor:pointer;">2</div>
         <div class="step-line"></div>
-        <div class="step-dot" id="dot-3">3</div>
+        <div class="step-dot" id="dot-3" onclick="goStep(3)" title="Review" style="cursor:pointer;">3</div>
         <div class="step-line"></div>
-        <div class="step-dot" id="dot-4">4</div>
+        <div class="step-dot" id="dot-4" onclick="goStep(4)" title="Payment" style="cursor:pointer;">4</div>
       </div>
       <div class="step-labels">
         <span>Contact</span><span>Attendees</span><span>Review</span><span>Payment</span>
@@ -1208,18 +1208,18 @@
         <div class="reg-form-grid">
           <div class="field-wrap">
             <label>First Name *</label>
-            <input type="text" id="f-firstname" placeholder="First name" />
+            <input type="text" id="f-firstname" placeholder="First name" oninput="this.style.borderColor=''" />
           </div>
           <div class="field-wrap">
             <label>Last Name *</label>
-            <input type="text" id="f-lastname" placeholder="Last name" />
+            <input type="text" id="f-lastname" placeholder="Last name" oninput="this.style.borderColor=''" />
           </div>
           <div class="field-wrap full">
             <label>Email Address *</label>
-            <input type="email" id="f-email" placeholder="your@email.com" />
+            <input type="email" id="f-email" placeholder="your@email.com" oninput="this.style.borderColor=''" />
           </div>
           <div class="field-wrap">
-            <label>Phone Number *</label>
+            <label>Phone Number</label>
             <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000" />
           </div>
           <div class="field-wrap">
@@ -1231,7 +1231,7 @@
             <input type="text" id="f-city" placeholder="e.g. Atlanta, GA" />
           </div>
         </div>
-        <p class="field-error hidden" id="err-1">Please fill in all required fields.</p>
+        <p class="field-error hidden" id="err-1">⚠ Please enter your First Name, Last Name and Email to continue.</p>
         <div class="step-nav">
           <button class="btn-step-next" onclick="goStep(2)">Continue to Attendees →</button>
         </div>
@@ -1300,12 +1300,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <!-- PayPal SDK – replace YOUR_CLIENT_ID with your live PayPal client ID -->
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.paypal.com/sdk/js?client-id=AUbDGZeigzA-etDknB9oMkPKKxvcUDcO4PApqDwF_Ia6hDFgjBE2tke-lZ4x2_CXHk56ewym204OYEcb&currency=USD"></script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.paypal.com/sdk/js?client-id=AXu_test_placeholder&currency=USD"></script>
 
   <script>
     /* ── SUPABASE ── */
     const SUPABASE_URL = 'https://aoefpiovjcmsszxcbffi.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZWZwaW92amNtc3N6eGNiZmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NjU3MzUsImV4cCI6MjA5MDM0MTczNX0.4wYakjK6BvllvK6u0AelIhPbiNW-uEulh8SiNmqPlvs'; // Replace with your anon key
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // Replace with your anon key
     const _supabase = (typeof supabase !== 'undefined')
       ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
@@ -1431,9 +1431,13 @@
       const fn = document.getElementById('f-firstname').value.trim();
       const ln = document.getElementById('f-lastname').value.trim();
       const em = document.getElementById('f-email').value.trim();
-      const ph = document.getElementById('f-phone').value.trim();
       const err = document.getElementById('err-1');
-      if (!fn || !ln || !em || !ph) {
+      // Highlight empty required fields
+      ['f-firstname','f-lastname','f-email'].forEach(id => {
+        const el = document.getElementById(id);
+        el.style.borderColor = el.value.trim() ? '' : '#e07070';
+      });
+      if (!fn || !ln || !em) {
         err.classList.remove('hidden'); return false;
       }
       err.classList.add('hidden'); return true;
