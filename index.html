@@ -2143,40 +2143,59 @@ function doLookup() {
 
 /* ── SHARED PAYMENT INSTRUCTIONS (Zelle primary, Breeze secondary) ── */
 function paymentBlock(remaining, code) {
+  var balLine = remaining ? ' — balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>' : '';
   return (
     '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(90,180,120,0.35);background:rgba(90,180,120,0.06);">'+
       '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
-        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;'+
-          'justify-content:center;flex-shrink:0;">'+
-          '<span style="color:#fff;font-weight:700;font-size:0.75rem;letter-spacing:0.05em;">Z</span>'+
-        '</div>'+
+        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span></div>'+
         '<div>'+
-          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;'+
-            'text-transform:uppercase;color:#7dbf80;">Pay via Zelle</p>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#7dbf80;">Option 1 — Pay via Zelle (Manual)</p>'+
           '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · No processing fees</p>'+
         '</div>'+
       '</div>'+
       '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
         '<li>Open your banking app and go to <strong style="color:#E8C87A;">Zelle</strong></li>'+
-        '<li>Send payment to: <strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.08em;">'+ZELLE_EMAIL+'</strong></li>'+
-        '<li>Enter the amount you would like to pay'+(remaining ? ' (balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>)' : '')+'</li>'+
-        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, enter your pledge code exactly: '+
-          '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.22em;">'+code+'</strong></li>'+
-        '<li>Send — your payment will be confirmed within 3–5 business days</li>'+
+        '<li>Send payment to: <strong style="color:#E8C87A;">'+ZELLE_EMAIL+'</strong></li>'+
+        '<li>Enter the amount you would like to pay'+balLine+'</li>'+
+        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, type your pledge code: <strong style="color:#E8C87A;letter-spacing:0.2em;">'+code+'</strong></li>'+
+        '<li>Send — confirmed within 3-5 business days</li>'+
       '</ol>'+
-      '<div style="padding:0.8rem 1rem;background:rgba(90,180,120,0.08);border:1px solid rgba(90,180,120,0.2);'+
-        'font-size:0.76rem;color:rgba(245,239,224,0.5);line-height:1.7;">'+
-        '📱 <strong style="color:rgba(245,239,224,0.75);">Don\'t have Zelle?</strong> '+
-        'Most US banks include Zelle — look for it in your banking app under "Send Money" or "Transfer." '+
-        'If your bank doesn\'t support Zelle, please contact us at '+
-        '<a href="mailto:convention@crmusanational.org" style="color:#C8A85A;">convention@crmusanational.org</a> '+
-        'to arrange an alternative.'+
-      '</div>'+
     '</div>'+
-    '<p style="text-align:center;font-size:0.73rem;color:rgba(245,239,224,0.3);line-height:1.8;margin-bottom:0.5rem;">'+
-      'Balance updates within 3–5 business days of payment.&nbsp;&nbsp;'+
-      'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">'+
-      'convention@crmusanational.org</a></p>'
+
+    '<div style="display:flex;align-items:center;gap:0.8rem;margin:0.4rem 0 1rem;">'+
+      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
+      '<span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(200,168,90,0.35);">Prefer something simpler?</span>'+
+      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
+    '</div>'+
+
+    '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(109,30,212,0.4);background:rgba(109,30,212,0.05);">'+
+      '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
+        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span></div>'+
+        '<div>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#a07ddf;">Option 2 — One-Tap Zelle Link</p>'+
+          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Your banking app opens automatically</p>'+
+        '</div>'+
+      '</div>'+
+      '<p style="font-size:0.82rem;color:rgba(245,239,224,0.55);line-height:1.75;margin-bottom:1rem;">'+
+        'Click the button below and your banking app opens automatically with payment details ready. '+
+        'Just enter the amount, add your pledge code <strong style="color:#E8C87A;letter-spacing:0.15em;">'+code+'</strong> in the memo, and send.'+
+      '</p>'+
+      '<div style="text-align:center;margin-bottom:1rem;">'+
+        '<img src=\"https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=6D1ED4&bgcolor=0B1628&data=https%3A%2F%2Fenroll.zellepay.com%2Fqr-codes%3Fdata%3DeyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9\" alt="Scan to pay via Zelle" '+
+          'style="width:140px;height:140px;border:3px solid rgba(109,30,212,0.4);border-radius:8px;" '+
+          'onerror="this.parentNode.style.display=\'none\'"/>'+
+        '<p style="font-size:0.7rem;color:rgba(245,239,224,0.28);margin:0.5rem 0 0;">📷 On desktop? Scan with your phone camera to open Zelle</p>'+
+      '</div>'+
+      '<a href=\"https://enroll.zellepay.com/qr-codes?data=eyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9\" target="_blank" '+
+        'style="display:block;text-align:center;padding:0.85rem 1.5rem;background:#6D1ED4;color:#fff;'+
+        'text-decoration:none;font-family:\'Cinzel\',serif;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">'+
+        'Open My Zelle Payment Page →'+
+      '</a>'+
+    '</div>'+
+
+    '<p style="text-align:center;font-size:0.73rem;color:rgba(245,239,224,0.28);line-height:1.8;margin-bottom:0.5rem;">'+
+      'Balance updates within 3-5 business days. '+
+      'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">convention@crmusanational.org</a></p>'
   );
 }
 
