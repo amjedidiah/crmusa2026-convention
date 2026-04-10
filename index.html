@@ -1744,7 +1744,6 @@
 /* ── CONFIG ── */
 var SUPA_URL    = 'https://aoefpiovjcmsszxcbffi.supabase.co';
 var SUPA_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZWZwaW92amNtc3N6eGNiZmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NjU3MzUsImV4cCI6MjA5MDM0MTczNX0.4wYakjK6BvllvK6u0AelIhPbiNW-uEulh8SiNmqPlvs';
-var BREEZE_URL  = 'https://gracelifecenter.breezechms.com/give/online';
 var ZELLE_EMAIL = 'crmnaexec@gmail.com';
 
 /* ── PRICING ── */
@@ -2145,7 +2144,6 @@ function doLookup() {
 /* ── SHARED PAYMENT INSTRUCTIONS (Zelle primary, Breeze secondary) ── */
 function paymentBlock(remaining, code) {
   return (
-    /* ══ ZELLE (PRIMARY) ══ */
     '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(90,180,120,0.35);background:rgba(90,180,120,0.06);">'+
       '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
         '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;'+
@@ -2154,68 +2152,34 @@ function paymentBlock(remaining, code) {
         '</div>'+
         '<div>'+
           '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;'+
-            'text-transform:uppercase;color:#7dbf80;">Recommended — Zelle</p>'+
-          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · No fees</p>'+
+            'text-transform:uppercase;color:#7dbf80;">Pay via Zelle</p>'+
+          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · No processing fees</p>'+
         '</div>'+
       '</div>'+
       '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
         '<li>Open your banking app and go to <strong style="color:#E8C87A;">Zelle</strong></li>'+
-        '<li>Send to: <strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.08em;">'+ZELLE_EMAIL+'</strong></li>'+
-        '<li>Enter the amount you\'d like to pay'+(remaining ? ' (balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>)' : '')+'</li>'+
-        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong>, enter your pledge code: '+
+        '<li>Send payment to: <strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.08em;">'+ZELLE_EMAIL+'</strong></li>'+
+        '<li>Enter the amount you would like to pay'+(remaining ? ' (balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>)' : '')+'</li>'+
+        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, enter your pledge code exactly: '+
           '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.22em;">'+code+'</strong></li>'+
-        '<li>Send — done!</li>'+
+        '<li>Send — your payment will be confirmed within 3–5 business days</li>'+
       '</ol>'+
-      '<div style="padding:0.7rem 0.9rem;background:rgba(90,180,120,0.08);border:1px solid rgba(90,180,120,0.2);'+
-        'font-size:0.76rem;color:rgba(245,239,224,0.5);line-height:1.65;">'+
-        '📱 <strong style="color:rgba(245,239,224,0.7);">Don\'t have Zelle?</strong> '+
-        'Most US banks include it — check your banking app under "Send Money" or "Zelle."'+
+      '<div style="padding:0.8rem 1rem;background:rgba(90,180,120,0.08);border:1px solid rgba(90,180,120,0.2);'+
+        'font-size:0.76rem;color:rgba(245,239,224,0.5);line-height:1.7;">'+
+        '📱 <strong style="color:rgba(245,239,224,0.75);">Don\'t have Zelle?</strong> '+
+        'Most US banks include Zelle — look for it in your banking app under "Send Money" or "Transfer." '+
+        'If your bank doesn\'t support Zelle, please contact us at '+
+        '<a href="mailto:convention@crmusanational.org" style="color:#C8A85A;">convention@crmusanational.org</a> '+
+        'to arrange an alternative.'+
       '</div>'+
     '</div>'+
-
-    /* ══ BREEZE (SECONDARY) ══ */
-    '<div style="margin-bottom:0.6rem;">'+
-      '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.22em;'+
-        'text-transform:uppercase;color:rgba(200,168,90,0.35);text-align:center;margin-bottom:0.8rem;">'+
-        'Prefer to pay by card?</p>'+
-      '<div class="pledge-box" style="margin-bottom:1rem;">'+
-        '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
-          '<div style="width:38px;height:38px;background:#C8A85A;border-radius:50%;display:flex;align-items:center;'+
-            'justify-content:center;flex-shrink:0;">'+
-            '<span style="color:#0B1628;font-weight:700;font-size:0.7rem;">✝</span>'+
-          '</div>'+
-          '<div>'+
-            '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;'+
-              'text-transform:uppercase;color:#C8A85A;">Credit / Debit Card</p>'+
-            '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Via Grace Life Center giving portal</p>'+
-          '</div>'+
-        '</div>'+
-        '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
-          '<li>Click the button below to open the giving portal</li>'+
-          '<li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>'+
-          '<li>Enter the amount you\'d like to pay</li>'+
-          '<li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter your pledge code: '+
-            '<strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.22em;">'+code+'</strong></li>'+
-        '</ol>'+
-        '<a href="'+BREEZE_URL+'" target="_blank" class="btn-next" '+
-          'style="display:block;text-align:center;text-decoration:none;">'+
-          'Open Giving Portal →'+
-        '</a>'+
-      '</div>'+
-      '<p style="font-family:\'Cinzel\',serif;font-size:0.52rem;letter-spacing:0.2em;'+
-        'text-transform:uppercase;color:rgba(200,168,90,0.3);text-align:center;margin-bottom:0.5rem;">'+
-        'Or pay by card directly below</p>'+
-      '<iframe src="'+BREEZE_URL+'" width="100%" height="560" '+
-        'style="border:1px solid rgba(200,168,90,0.15);display:block;margin-bottom:1rem;" '+
-        'title="Grace Life Center Giving Portal"></iframe>'+
-    '</div>'+
-
     '<p style="text-align:center;font-size:0.73rem;color:rgba(245,239,224,0.3);line-height:1.8;margin-bottom:0.5rem;">'+
-      'Balance updates within 7 days.&nbsp;&nbsp;'+
+      'Balance updates within 3–5 business days of payment.&nbsp;&nbsp;'+
       'Questions? <a href="mailto:convention@crmusanational.org" style="color:var(--gold);">'+
       'convention@crmusanational.org</a></p>'
   );
 }
+
 
 function showBalance() {
   var r = returnRec;
