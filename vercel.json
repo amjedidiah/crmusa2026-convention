@@ -1,6 +1,4 @@
 {
   "version": 2,
-  "crons": [
-    { "path": "/api/remind", "schedule": "0 14 * * 1" }
-  ]
+  "crons": [{ "path": "/api/remind", "schedule": "0 14 * * 1" }]
 }

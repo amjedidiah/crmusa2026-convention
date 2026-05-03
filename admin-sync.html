@@ -336,16 +336,20 @@ var reportData  = [];
 function checkPin() {
   var v = document.getElementById('pin-input').value;
   if (!v) return;
-  /* Verify against server */
-  apiCall('lookup', { value: 'ping' }, function(err) {
-    /* We check the pin by making a dummy call — if 401 it's wrong, otherwise right */
-  });
-  /* Optimistic: store and try — server returns 401 on wrong pin */
+  /* Set PIN BEFORE making the API call — the call reads PIN from this variable */
   PIN = v;
-  document.getElementById('pin-screen').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  /* Set today's date default */
-  document.getElementById('pay-date').value = new Date().toISOString().slice(0,10);
+  var btn = document.querySelector('#pin-screen .btn');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  document.getElementById('pin-err').classList.add('hidden');
+  /* Any non-401 response means the PIN is correct */
+  apiCall('lookup', { value: '__pin_check__' }, function(err) {
+    btn.disabled = false; btn.textContent = 'Enter →';
+    if (err === 'Invalid PIN') return; /* apiCall already sent user back to login */
+    /* PIN valid */
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('main-screen').classList.remove('hidden');
+    document.getElementById('pay-date').value = new Date().toISOString().slice(0,10);
+  });
 }
 
 /* ── TABS ── */
