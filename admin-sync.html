@@ -168,6 +168,7 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn on" onclick="showTab('payment')">Record Payment</button>
+      <button class="tab-btn"    onclick="showTab('zeffy')">Zeffy CSV Import</button>
       <button class="tab-btn"    onclick="showTab('report')">Pledges Report</button>
     </div>
 
@@ -240,6 +241,59 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
       </div>
 
     </div><!-- /tab-payment -->
+
+
+    <!-- ══════════════════════════════════
+         TAB: ZEFFY CSV IMPORT
+    ══════════════════════════════════ -->
+    <div class="tab-panel" id="tab-zeffy">
+
+      <div class="card">
+        <p class="card-title">How to Export from Zeffy</p>
+        <ol style="font-size:0.8rem;color:rgba(232,223,200,0.55);line-height:2.2;padding-left:1.2rem;">
+          <li>Log into Zeffy → <strong style="color:#E8C87A;">Fundraising → Payments</strong></li>
+          <li>Filter by your convention donation form and set your date range</li>
+          <li>Click <strong style="color:#E8C87A;">Export → Itemized Payments</strong></li>
+          <li>Make sure to include <strong style="color:#E8C87A;">answers to custom questions</strong> — this is where the pledge code lives</li>
+          <li>Drop the downloaded CSV file below</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Import Zeffy CSV</p>
+        <div class="drop-zone" id="z-drop-zone">
+          <input type="file" id="z-csv-file" accept=".csv" onchange="handleZeffyFile(this.files[0])"/>
+          <strong style="color:#C8A85A;display:block;font-size:1rem;margin-bottom:0.3rem;">Drop Zeffy CSV here or click to browse</strong>
+          <p style="font-size:0.8rem;color:rgba(232,223,200,0.38);">Itemized payments export (.csv)</p>
+        </div>
+        <div id="z-csv-status" style="font-size:0.8rem;margin-top:0.4rem;"></div>
+      </div>
+
+      <div class="card hidden" id="z-preview-card">
+        <p class="card-title">Preview &amp; Sync</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1rem;margin-bottom:1.2rem;">
+          <div style="text-align:center;"><div style="font-size:1.8rem;color:#E8C87A;" id="zs-total">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">CSV Rows</div></div>
+          <div style="text-align:center;"><div style="font-size:1.8rem;color:#7dbf80;" id="zs-match">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">Matched</div></div>
+          <div style="text-align:center;"><div style="font-size:1.8rem;color:#e09090;" id="zs-none">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">No Match</div></div>
+          <div style="text-align:center;"><div style="font-size:1.8rem;color:#C8A85A;" id="zs-amt">$0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">Total to Apply</div></div>
+        </div>
+        <div class="tbl-wrap" style="margin-bottom:1rem;">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Donor</th><th>Amount</th><th>Pledge Code</th><th>Status</th><th>Registrant</th><th>Balance After</th></tr>
+            </thead>
+            <tbody id="z-preview-body"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn" id="z-sync-btn" onclick="doZeffySync()" disabled>Sync Matched Records →</button>
+          <button class="btn-outline" onclick="resetZeffyCSV()">Clear &amp; Re-import</button>
+          <span id="z-sync-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+        </div>
+        <div id="z-sync-log" class="hidden" style="background:rgba(0,0,0,0.3);border:1px solid rgba(200,168,90,0.1);padding:0.9rem 1rem;font-size:0.73rem;font-family:monospace;color:rgba(232,223,200,0.5);line-height:1.9;max-height:180px;overflow-y:auto;margin-top:0.8rem;"></div>
+      </div>
+
+    </div><!-- /tab-zeffy -->
 
     <!-- ══════════════════════════════════
          TAB: REPORT
@@ -355,7 +409,7 @@ function checkPin() {
 /* ── TABS ── */
 function showTab(name) {
   document.querySelectorAll('.tab-btn').forEach(function(b,i){
-    b.className = 'tab-btn' + (['payment','report'][i]===name?' on':'');
+    b.className = 'tab-btn' + (['payment','zeffy','report'][i]===name?' on':'');
   });
   document.querySelectorAll('.tab-panel').forEach(function(p){ p.className='tab-panel'; });
   document.getElementById('tab-'+name).className = 'tab-panel on';
@@ -595,6 +649,196 @@ function setText(id, v) { var el=document.getElementById(id); if(el) el.textCont
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+/* ══════════════════════════════════════════════
+   ZEFFY CSV IMPORT
+══════════════════════════════════════════════ */
+var zCsvRows = [];
+var zMatchedRows = [];
+
+/* Drag and drop */
+var zDrop = document.getElementById('z-drop-zone');
+if (zDrop) {
+  zDrop.addEventListener('dragover',  function(e){ e.preventDefault(); zDrop.classList.add('over'); });
+  zDrop.addEventListener('dragleave', function(){ zDrop.classList.remove('over'); });
+  zDrop.addEventListener('drop', function(e){ e.preventDefault(); zDrop.classList.remove('over'); handleZeffyFile(e.dataTransfer.files[0]); });
+}
+
+function handleZeffyFile(file) {
+  if (!file) return;
+  var st = document.getElementById('z-csv-status');
+  st.textContent = 'Reading ' + file.name + '…'; st.style.color = '#C8A85A';
+  var reader = new FileReader();
+  reader.onload = function(e) { parseZeffyCSV(e.target.result); };
+  reader.readAsText(file);
+}
+
+function parseZeffyCSV(text) {
+  var st = document.getElementById('z-csv-status');
+  var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
+  if (lines.length < 2) { st.textContent = 'Error: CSV appears empty.'; st.style.color = '#e09090'; return; }
+
+  var headers = splitCSV(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
+
+  function col(kws) {
+    for (var ki=0;ki<kws.length;ki++)
+      for (var hi=0;hi<headers.length;hi++)
+        if (headers[hi].indexOf(kws[ki]) > -1) return hi;
+    return -1;
+  }
+
+  var cDate   = col(['date','created']);
+  var cFirst  = col(['first']);
+  var cLast   = col(['last']);
+  var cName   = col(['name','buyer','donor']);
+  var cAmt    = col(['amount','total','donation']);
+  var cStatus = col(['status','payment status']);
+  var cCode   = col(['registration code','pledge code','conference code','registration']);
+
+  if (cAmt === -1) { st.textContent = 'Error: No Amount column found. Headers: ' + headers.join(', '); st.style.color = '#e09090'; return; }
+  if (cCode === -1) { st.textContent = 'Error: No "Registration Code" column found. Make sure to export Itemized Payments with custom question answers. Headers: ' + headers.join(', '); st.style.color = '#e09090'; return; }
+
+  zCsvRows = [];
+  for (var i=1; i<lines.length; i++) {
+    var cols = splitCSV(lines[i]);
+    if (cols.length < 2) continue;
+    var amt = parseFloat((cols[cAmt]||'').replace(/[$,\s]/g,''));
+    if (isNaN(amt) || amt <= 0) continue;
+    var status = cStatus > -1 ? (cols[cStatus]||'').toLowerCase() : 'paid';
+    if (status.indexOf('refund') > -1 || status.indexOf('cancel') > -1 || status.indexOf('fail') > -1) {
+      zCsvRows.push({ skip:true, reason:status, date:'', donor:'', amount:amt, code:'' }); continue;
+    }
+    var donor = cFirst > -1 && cLast > -1 ? ((cols[cFirst]||'')+' '+(cols[cLast]||'')).trim() : (cols[cName]||'').trim();
+    var code  = (cols[cCode]||'').replace(/\s/g,'').toUpperCase();
+    var date  = cDate > -1 ? (cols[cDate]||'').trim() : '';
+    zCsvRows.push({ skip:false, date:date, donor:donor, amount:amt, code:code });
+  }
+
+  var valid = zCsvRows.filter(function(r){ return !r.skip; });
+  st.textContent = '✓ Parsed ' + valid.length + ' valid rows (' + (zCsvRows.length-valid.length) + ' skipped).';
+  st.style.color = '#7dbf80';
+  lookupZeffyCodes();
+}
+
+function lookupZeffyCodes() {
+  var codes = [];
+  zCsvRows.forEach(function(r){ if(!r.skip && r.code && codes.indexOf(r.code)===-1) codes.push(r.code); });
+  if (!codes.length) { renderZeffyPreview([]); return; }
+
+  /* Look up each code via /api/admin */
+  var regMap = {};
+  var pending = codes.length;
+  codes.forEach(function(code) {
+    apiCall('lookup', { value: code }, function(err, data) {
+      if (!err && data && data.registration) regMap[code] = data.registration;
+      pending--;
+      if (pending === 0) {
+        zMatchedRows = zCsvRows.map(function(r){
+          return Object.assign({}, r, { reg: (!r.skip && r.code) ? (regMap[r.code]||null) : null });
+        });
+        renderZeffyPreview(zMatchedRows);
+      }
+    });
+  });
+}
+
+function renderZeffyPreview(rows) {
+  var nMatch=0, nNone=0, nSkip=0, total=0;
+  rows.forEach(function(r){ if(r.skip) nSkip++; else if(r.reg){nMatch++;total+=r.amount;} else nNone++; });
+  document.getElementById('zs-total').textContent = rows.length;
+  document.getElementById('zs-match').textContent = nMatch;
+  document.getElementById('zs-none').textContent  = nNone;
+  document.getElementById('zs-amt').textContent   = '$'+total.toFixed(2);
+
+  var tbody = document.getElementById('z-preview-body');
+  tbody.innerHTML = '';
+  rows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    if (r.skip) {
+      tr.innerHTML = '<td>—</td><td>—</td><td>$'+r.amount.toFixed(2)+'</td><td>—</td>'+
+        '<td><span style="font-size:0.62rem;color:rgba(232,223,200,0.35);">'+esc(r.reason)+'</span></td><td>—</td><td>—</td>';
+    } else {
+      var afterPaid = r.reg ? (r.reg.amount_paid||0)+r.amount : null;
+      var afterRem  = r.reg ? (r.reg.total_pledged||0)-afterPaid : null;
+      var badgeCls  = r.reg ? 'b-match' : (r.code ? 'b-none' : 'b-skip');
+      var badgeTxt  = r.reg ? 'Match' : (r.code ? 'No Match' : 'No Code');
+      tr.innerHTML =
+        '<td>'+esc(r.date)+'</td>'+
+        '<td>'+esc(r.donor)+'</td>'+
+        '<td>$'+r.amount.toFixed(2)+'</td>'+
+        '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+esc(r.code||'—')+'</td>'+
+        '<td><span class="badge '+(r.reg?'b-complete':'b-pending')+'">'+badgeTxt+'</span></td>'+
+        '<td>'+(r.reg?esc(r.reg.first_name+' '+r.reg.last_name):'—')+'</td>'+
+        '<td>'+(r.reg?(afterRem<=0?'<span style="color:#7dbf80;">Fully Paid</span>':'$'+afterRem.toFixed(2)+' left'):'—')+'</td>';
+    }
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('z-preview-card').classList.remove('hidden');
+  document.getElementById('z-sync-btn').disabled = nMatch === 0;
+}
+
+function doZeffySync() {
+  var btn = document.getElementById('z-sync-btn');
+  var log = document.getElementById('z-sync-log');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Syncing…';
+  log.innerHTML = ''; log.classList.remove('hidden');
+  var toSync = zMatchedRows.filter(function(r){ return !r.skip && r.reg; });
+  zLog(log, 'inf', 'Starting sync of ' + toSync.length + ' record(s)…');
+  var i = 0;
+  function next() {
+    if (i >= toSync.length) {
+      zLog(log, 'ok', '✓ Done. ' + toSync.length + ' updated.');
+      btn.textContent = '✓ Complete';
+      document.getElementById('z-sync-status').textContent = 'Done — ' + toSync.length + ' updated.';
+      return;
+    }
+    var r = toSync[i++];
+    apiCall('update_payment', {
+      registration_id: r.reg.id,
+      pledge_code:     r.reg.pledge_code,
+      amount_to_add:   r.amount,
+      date_received:   r.date || new Date().toISOString().slice(0,10),
+      method:          'zeffy',
+    }, function(err, data) {
+      if (err) zLog(log, 'err', '✗ '+r.reg.pledge_code+' — '+err);
+      else     zLog(log, 'ok',  '✓ '+r.reg.pledge_code+' ('+r.reg.first_name+') +$'+r.amount.toFixed(2)+' → paid: $'+data.new_paid.toFixed(2));
+      next();
+    });
+  }
+  next();
+}
+
+function resetZeffyCSV() {
+  zCsvRows = []; zMatchedRows = [];
+  document.getElementById('z-csv-file').value = '';
+  document.getElementById('z-csv-status').textContent = '';
+  document.getElementById('z-preview-card').classList.add('hidden');
+}
+
+function zLog(el, cls, msg) {
+  var colors = {ok:'#7dbf80', err:'#e09090', inf:'#C8A85A'};
+  el.innerHTML += '<span style="color:'+colors[cls]+'">'+msg+'</span>\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+function splitCSV(line) {
+  var result=[], cur='', inQ=false;
+  for (var i=0;i<line.length;i++) {
+    var c=line[i];
+    if (c==='"') { inQ=!inQ; }
+    else if (c===',' && !inQ) { result.push(cur); cur=''; }
+    else { cur+=c; }
+  }
+  result.push(cur);
+  return result.map(function(s){ return s.replace(/^"|"$/g,'').trim(); });
+}
+
+/* Add drop-zone CSS for zeffy tab */
+document.head.insertAdjacentHTML('beforeend',
+  '<style>.drop-zone{border:2px dashed rgba(200,168,90,0.28);padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s;margin-bottom:1rem;position:relative;}.drop-zone:hover,.drop-zone.over{border-color:#C8A85A;}.drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}.b-match{background:rgba(100,180,100,0.15);color:#7dbf80;border:1px solid rgba(100,180,100,0.3);}.b-none{background:rgba(180,80,80,0.12);color:#e09090;border:1px solid rgba(180,80,80,0.25);}.b-skip{background:rgba(150,150,150,0.12);color:rgba(232,223,200,0.35);border:1px solid rgba(150,150,150,0.25);}</style>'
+);
+
 </script>
 </body>
 </html>
