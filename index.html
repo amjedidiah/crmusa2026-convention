@@ -2143,50 +2143,91 @@ function doLookup() {
 
 /* ── SHARED PAYMENT INSTRUCTIONS (Zelle primary, Breeze secondary) ── */
 function paymentBlock(remaining, code) {
-  var balLine = remaining ? ' — balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>' : '';
+  var balLine = remaining ? ' (balance: <strong style="color:#E8C87A;">$'+remaining+'.00</strong>)' : '';
   return (
-    '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(90,180,120,0.35);background:rgba(90,180,120,0.06);">'+
+
+    /* OPTION 1: Zeffy card payment */
+    '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(99,102,241,0.45);background:rgba(99,102,241,0.06);">'+
       '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
-        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span></div>'+
+        '<div style="width:38px;height:38px;background:#6366f1;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<span style="color:#fff;font-weight:800;font-size:0.7rem;">Z</span>'+
+        '</div>'+
         '<div>'+
-          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#7dbf80;">Option 1 — Pay via Zelle (Manual)</p>'+
-          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · No processing fees</p>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#a5b4fc;">Option 1 — Pay by Card via Zeffy</p>'+
+          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">100% free to ministry · Credit/Debit · Secure checkout</p>'+
         '</div>'+
       '</div>'+
-      '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.9rem;">'+
+      '<p style="font-size:0.82rem;color:rgba(245,239,224,0.55);line-height:1.75;margin-bottom:0.9rem;">'+
+        'Fill in the form below. When asked for your <strong style="color:#E8C87A;">Conference Registration Code</strong>, '+
+        'enter your pledge code: <strong style="color:#E8C87A;font-family:\'Cinzel\',serif;letter-spacing:0.18em;">'+code+'</strong>'+
+        (remaining ? '. You can pay any amount up to your balance of <strong style="color:#E8C87A;">$'+remaining+'.00</strong>.' : '.')+
+      '</p>'+
+      '<div style="position:relative;overflow:hidden;height:860px;width:100%;margin-bottom:0.5rem;">'+
+        '<iframe title="Convention Payment via Zeffy" '+
+          'src="https://www.zeffy.com/embed/donation-form/donate-to-facilitate-the-work-of-this-ministry" '+
+          'style="position:absolute;border:0;top:0;left:0;bottom:0;right:0;width:100%;height:100%;" '+
+          'allowpaymentrequest allowTransparency="true">'+
+          '<p style="padding:1rem;font-size:0.8rem;color:rgba(245,239,224,0.4);">'+
+            'Browser does not support embedded forms. '+
+            '<a href="https://www.zeffy.com/en-US/donation-form/donate-to-facilitate-the-work-of-this-ministry" target="_blank" style="color:#a5b4fc;">Open in new tab</a>'+
+          '</p>'+
+        '</iframe>'+
+      '</div>'+
+      '<a href="https://www.zeffy.com/en-US/donation-form/donate-to-facilitate-the-work-of-this-ministry" target="_blank" '+
+        'style="display:block;text-align:center;padding:0.65rem;font-size:0.7rem;color:rgba(165,180,252,0.55);text-decoration:none;letter-spacing:0.1em;">'+
+        'Open in a new tab instead →'+
+      '</a>'+
+    '</div>'+
+
+    /* DIVIDER */
+    '<div style="display:flex;align-items:center;gap:0.8rem;margin:0.2rem 0 1rem;">'+
+      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
+      '<span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(200,168,90,0.35);">Or pay via Zelle</span>'+
+      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
+    '</div>'+
+
+    /* OPTION 2: Zelle manual */
+    '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(90,180,120,0.35);background:rgba(90,180,120,0.06);">'+
+      '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
+        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span>'+
+        '</div>'+
+        '<div>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#7dbf80;">Option 2 — Pay via Zelle (Manual)</p>'+
+          '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Free · Instant · Bank transfer</p>'+
+        '</div>'+
+      '</div>'+
+      '<ol style="padding-left:1.3rem;font-size:0.82rem;color:rgba(245,239,224,0.6);line-height:2.2;margin-bottom:0.5rem;">'+
         '<li>Open your banking app and go to <strong style="color:#E8C87A;">Zelle</strong></li>'+
         '<li>Send payment to: <strong style="color:#E8C87A;">'+ZELLE_EMAIL+'</strong></li>'+
         '<li>Enter the amount you would like to pay'+balLine+'</li>'+
-        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, type your pledge code: <strong style="color:#E8C87A;letter-spacing:0.2em;">'+code+'</strong></li>'+
+        '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, enter: <strong style="color:#E8C87A;letter-spacing:0.2em;">'+code+'</strong></li>'+
         '<li>Send — confirmed within 3-5 business days</li>'+
       '</ol>'+
     '</div>'+
 
-    '<div style="display:flex;align-items:center;gap:0.8rem;margin:0.4rem 0 1rem;">'+
-      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
-      '<span style="font-family:\'Cinzel\',serif;font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(200,168,90,0.35);">Prefer something simpler?</span>'+
-      '<div style="flex:1;height:1px;background:rgba(200,168,90,0.15);"></div>'+
-    '</div>'+
-
+    /* OPTION 3: Zelle one-tap */
     '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(109,30,212,0.4);background:rgba(109,30,212,0.05);">'+
       '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.9rem;">'+
-        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span></div>'+
+        '<div style="width:38px;height:38px;background:#6D1ED4;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+
+          '<span style="color:#fff;font-weight:700;font-size:0.75rem;">Z</span>'+
+        '</div>'+
         '<div>'+
-          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#a07ddf;">Option 2 — One-Tap Zelle Link</p>'+
+          '<p style="margin:0;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:#a07ddf;">Option 3 — One-Tap Zelle Link</p>'+
           '<p style="margin:0;font-size:0.75rem;color:rgba(245,239,224,0.4);">Your banking app opens automatically</p>'+
         '</div>'+
       '</div>'+
       '<p style="font-size:0.82rem;color:rgba(245,239,224,0.55);line-height:1.75;margin-bottom:1rem;">'+
-        'Click the button below and your banking app opens automatically with payment details ready. '+
-        'Just enter the amount, add your pledge code <strong style="color:#E8C87A;letter-spacing:0.15em;">'+code+'</strong> in the memo, and send.'+
+        'Tap below and your bank app launches with payment details ready. Enter the amount, '+
+        'add <strong style="color:#E8C87A;letter-spacing:0.15em;">'+code+'</strong> in the memo, and send.'+
       '</p>'+
       '<div style="text-align:center;margin-bottom:1rem;">'+
-        '<img src=\"https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=6D1ED4&bgcolor=0B1628&data=https%3A%2F%2Fenroll.zellepay.com%2Fqr-codes%3Fdata%3DeyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9\" alt="Scan to pay via Zelle" '+
-          'style="width:140px;height:140px;border:3px solid rgba(109,30,212,0.4);border-radius:8px;" '+
+        '<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&color=6D1ED4&bgcolor=0B1628&data=https%3A%2F%2Fenroll.zellepay.com%2Fqr-codes%3Fdata%3DeyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9" '+
+          'alt="Scan to pay via Zelle" style="width:140px;height:140px;border:3px solid rgba(109,30,212,0.4);border-radius:8px;" '+
           'onerror="this.parentNode.style.display=\'none\'"/>'+
-        '<p style="font-size:0.7rem;color:rgba(245,239,224,0.28);margin:0.5rem 0 0;">📷 On desktop? Scan with your phone camera to open Zelle</p>'+
+        '<p style="font-size:0.7rem;color:rgba(245,239,224,0.28);margin:0.5rem 0 0;">📷 On desktop? Scan with your phone camera</p>'+
       '</div>'+
-      '<a href=\"https://enroll.zellepay.com/qr-codes?data=eyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9\" target="_blank" '+
+      '<a href="https://enroll.zellepay.com/qr-codes?data=eyJuYW1lIjoiQ1JNIFVTQSBOYXRpb25hbCBDb252ZW50aW9uIDIwMjYiLCJ0b2tlbiI6ImNybW5hZXhlY0BnbWFpbC5jb20iLCJ0b2tlblR5cGUiOiJFTUFJTCJ9" target="_blank" '+
         'style="display:block;text-align:center;padding:0.85rem 1.5rem;background:#6D1ED4;color:#fff;'+
         'text-decoration:none;font-family:\'Cinzel\',serif;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">'+
         'Open My Zelle Payment Page →'+
