@@ -3,286 +3,377 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CRM 2026 — Payment Sync (Admin)</title>
+<title>CRM 2026 — Admin Payment Sync</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', sans-serif; background: #0f1e35; color: #e8dfc8; min-height: 100vh; padding: 2rem 1rem; }
-.wrap { max-width: 860px; margin: 0 auto; }
-h1 { font-size: 1.3rem; color: #C8A85A; margin-bottom: 0.3rem; letter-spacing: 0.04em; }
-.sub { font-size: 0.8rem; color: rgba(232,223,200,0.45); margin-bottom: 2rem; }
+.wrap { max-width: 920px; margin: 0 auto; }
 
-.card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(200,168,90,0.2);
-  padding: 1.4rem 1.6rem;
-  margin-bottom: 1.5rem;
-}
-.card h2 {
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #C8A85A;
-  margin-bottom: 1rem;
-}
+/* Header */
+.hdr { margin-bottom: 2rem; }
+.hdr h1 { font-size: 1.4rem; color: #C8A85A; letter-spacing: 0.04em; }
+.hdr p  { font-size: 0.8rem; color: rgba(232,223,200,0.4); margin-top: 0.3rem; }
 
-label { display: block; font-size: 0.72rem; color: rgba(232,223,200,0.5); margin-bottom: 0.3rem; letter-spacing: 0.08em; }
-input[type="text"], input[type="password"] {
-  width: 100%;
-  padding: 0.65rem 0.9rem;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(200,168,90,0.2);
-  color: #e8dfc8;
-  font-size: 0.88rem;
-  margin-bottom: 1rem;
-  outline: none;
-}
-input:focus { border-color: #C8A85A; }
+/* Cards */
+.card { background: rgba(255,255,255,0.04); border: 1px solid rgba(200,168,90,0.18); padding: 1.4rem 1.6rem; margin-bottom: 1.4rem; }
+.card-title { font-size: 0.68rem; letter-spacing: 0.25em; text-transform: uppercase; color: #C8A85A; margin-bottom: 1.1rem; }
 
-.btn {
-  padding: 0.7rem 1.6rem;
-  background: #C8A85A;
-  border: none;
-  color: #0f1e35;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  cursor: pointer;
-  font-weight: 600;
+/* Tabs */
+.tabs { display: flex; border-bottom: 1px solid rgba(200,168,90,0.2); margin-bottom: 2rem; gap: 0; }
+.tab-btn {
+  padding: 0.75rem 1.5rem; background: transparent; border: none;
+  font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(232,223,200,0.38); cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
 }
+.tab-btn.on { color: #C8A85A; border-bottom-color: #C8A85A; }
+.tab-panel { display: none; }
+.tab-panel.on { display: block; }
+
+/* Form elements */
+label { display: block; font-size: 0.7rem; color: rgba(232,223,200,0.5); margin-bottom: 0.3rem; letter-spacing: 0.08em; }
+input[type="text"], input[type="password"], input[type="number"], select {
+  width: 100%; padding: 0.65rem 0.9rem;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(200,168,90,0.2);
+  color: #e8dfc8; font-size: 0.88rem; margin-bottom: 1rem; outline: none;
+}
+input:focus, select:focus { border-color: #C8A85A; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media(max-width:560px){ .field-row { grid-template-columns: 1fr; } }
+
+/* Buttons */
+.btn { padding: 0.7rem 1.6rem; background: #C8A85A; border: none; color: #0f1e35; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; font-weight: 700; }
 .btn:hover { background: #E8C87A; }
-.btn-outline {
-  padding: 0.6rem 1.2rem;
-  background: transparent;
-  border: 1px solid rgba(200,168,90,0.35);
-  color: #C8A85A;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-sm { padding: 0.5rem 1rem; font-size: 0.65rem; }
+.btn-outline { padding: 0.6rem 1.2rem; background: transparent; border: 1px solid rgba(200,168,90,0.35); color: #C8A85A; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
 .btn-outline:hover { background: rgba(200,168,90,0.1); }
-.btn:disabled, .btn-outline:disabled { opacity: 0.4; cursor: default; }
 
-.info-box {
-  padding: 0.9rem 1.1rem;
-  background: rgba(200,168,90,0.07);
-  border-left: 3px solid #C8A85A;
-  font-size: 0.8rem;
-  color: rgba(232,223,200,0.6);
-  line-height: 1.7;
-  margin-bottom: 1rem;
-}
-.info-box ol { padding-left: 1.2rem; }
-.info-box li { margin-bottom: 0.3rem; }
+/* Info box */
+.info { padding: 0.9rem 1.1rem; background: rgba(200,168,90,0.07); border-left: 3px solid #C8A85A; font-size: 0.8rem; color: rgba(232,223,200,0.6); line-height: 1.75; margin-bottom: 1rem; }
+.info ol, .info ul { padding-left: 1.2rem; }
+.info li { margin-bottom: 0.25rem; }
 
-.file-drop {
-  border: 2px dashed rgba(200,168,90,0.25);
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  margin-bottom: 1rem;
-  position: relative;
+/* File drop */
+.drop-zone {
+  border: 2px dashed rgba(200,168,90,0.28); padding: 2rem; text-align: center;
+  cursor: pointer; transition: border-color 0.2s; margin-bottom: 1rem; position: relative;
 }
-.file-drop:hover, .file-drop.over { border-color: #C8A85A; }
-.file-drop input[type="file"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer;
-  width: 100%; height: 100%;
-}
-.file-drop p { font-size: 0.82rem; color: rgba(232,223,200,0.4); }
-.file-drop strong { color: #C8A85A; display: block; font-size: 1rem; margin-bottom: 0.3rem; }
+.drop-zone:hover, .drop-zone.over { border-color: #C8A85A; }
+.drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.drop-zone strong { color: #C8A85A; display: block; font-size: 1rem; margin-bottom: 0.3rem; }
+.drop-zone p { font-size: 0.8rem; color: rgba(232,223,200,0.38); }
 
-/* Results table */
-.results-wrap { overflow-x: auto; margin-bottom: 1rem; }
-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-thead th {
-  text-align: left;
-  padding: 0.6rem 0.8rem;
-  background: rgba(200,168,90,0.09);
-  color: #C8A85A;
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-tbody td {
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid rgba(200,168,90,0.06);
-  color: rgba(232,223,200,0.7);
-  vertical-align: middle;
-}
+/* Status */
+.status { font-size: 0.8rem; margin-bottom: 0.8rem; }
+.status.ok  { color: #7dbf80; }
+.status.err { color: #e09090; }
+.status.inf { color: #C8A85A; }
+
+/* Stats row */
+.stats { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.stat-n { font-size: 1.9rem; color: #E8C87A; font-weight: 300; }
+.stat-l { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(232,223,200,0.38); }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+thead th { padding: 0.55rem 0.8rem; background: rgba(200,168,90,0.09); color: #C8A85A; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; text-align: left; white-space: nowrap; }
+tbody td { padding: 0.58rem 0.8rem; border-bottom: 1px solid rgba(200,168,90,0.05); color: rgba(232,223,200,0.68); vertical-align: middle; }
 tbody tr:hover td { background: rgba(200,168,90,0.04); }
-.badge {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.badge-match   { background: rgba(100,180,100,0.15); color: #7dbf80; border: 1px solid rgba(100,180,100,0.3); }
-.badge-nomatch { background: rgba(180,80,80,0.12);   color: #e09090; border: 1px solid rgba(180,80,80,0.25); }
-.badge-done    { background: rgba(200,168,90,0.12);  color: #C8A85A; border: 1px solid rgba(200,168,90,0.3); }
+.badge { display: inline-block; padding: 0.18rem 0.5rem; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.b-match { background: rgba(100,180,100,0.15); color: #7dbf80; border: 1px solid rgba(100,180,100,0.3); }
+.b-none  { background: rgba(180,80,80,0.12);  color: #e09090; border: 1px solid rgba(180,80,80,0.25); }
+.b-done  { background: rgba(200,168,90,0.12); color: #C8A85A; border: 1px solid rgba(200,168,90,0.3); }
+.b-skip  { background: rgba(150,150,150,0.12);color: rgba(232,223,200,0.35); border: 1px solid rgba(150,150,150,0.25); }
 
-.log {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(200,168,90,0.12);
-  padding: 0.9rem 1rem;
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: rgba(232,223,200,0.55);
-  line-height: 1.8;
-  max-height: 220px;
-  overflow-y: auto;
-  margin-top: 0.8rem;
-}
+/* Log */
+.log { background: rgba(0,0,0,0.3); border: 1px solid rgba(200,168,90,0.1); padding: 0.9rem 1rem; font-size: 0.73rem; font-family: monospace; color: rgba(232,223,200,0.5); line-height: 1.9; max-height: 200px; overflow-y: auto; margin-top: 0.8rem; }
 .log .ok  { color: #7dbf80; }
 .log .err { color: #e09090; }
 .log .inf { color: #C8A85A; }
 
 .hidden { display: none !important; }
-.stat-row { display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.stat { text-align: center; }
-.stat-n { font-size: 1.8rem; color: #E8C87A; font-weight: 300; }
-.stat-l { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(232,223,200,0.4); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>CRM 2026 — Convention Payment Sync</h1>
-  <p class="sub">Admin-only · Match Breeze giving CSV to Supabase pledge records</p>
+  <div class="hdr">
+    <h1>CRM 2026 — Admin Payment Sync</h1>
+    <p>Match Zeffy card payments and Zelle transfers to convention registrations in Supabase</p>
+  </div>
 
-  <!-- ── STEP 1: PIN ── -->
+  <!-- ── PIN ── -->
   <div class="card" id="pin-card">
-    <h2>Admin Access</h2>
+    <p class="card-title">Admin Access</p>
     <label>Enter Admin PIN</label>
-    <input type="password" id="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter') checkPin()"/>
+    <input type="password" id="pin-input" placeholder="PIN" onkeydown="if(event.key==='Enter')checkPin()"/>
     <button class="btn" onclick="checkPin()">Unlock →</button>
     <p id="pin-err" style="color:#e09090;font-size:0.78rem;margin-top:0.5rem;display:none;">Incorrect PIN.</p>
   </div>
 
-  <!-- ── MAIN CONTENT (unlocked) ── -->
-  <div id="main-content" class="hidden">
+  <!-- ── MAIN ── -->
+  <div id="main" class="hidden">
 
-    <!-- ── STEP 2: Supabase keys ── -->
+    <!-- Supabase connection -->
     <div class="card">
-      <h2>Step 1 — Supabase Connection</h2>
-      <p style="font-size:0.78rem;color:rgba(232,223,200,0.45);margin-bottom:1rem;">
-        Enter your Supabase <strong style="color:#C8A85A;">service role key</strong>
-        (not the anon key — the service role key bypasses RLS and is required to update records).
-        Found in: Supabase → Project Settings → API → service_role secret.
+      <p class="card-title">Step 1 — Supabase Connection</p>
+      <p style="font-size:0.78rem;color:rgba(232,223,200,0.42);margin-bottom:1rem;">
+        Use your <strong style="color:#C8A85A;">service role key</strong> — found in
+        Supabase → Settings → API → service_role secret.
       </p>
-      <label>Supabase Service Role Key</label>
-      <input type="password" id="sb-key" placeholder="eyJhbGci…" autocomplete="off"/>
-      <label>Supabase URL</label>
-      <input type="text"     id="sb-url" value="https://aoefpiovjcmsszxcbffi.supabase.co"/>
-      <button class="btn-outline" onclick="testSupabase()">Test Connection</button>
-      <span id="sb-status" style="margin-left:1rem;font-size:0.78rem;color:rgba(232,223,200,0.4);"></span>
+      <div class="field-row">
+        <div>
+          <label>Service Role Key</label>
+          <input type="password" id="sb-key" placeholder="eyJhbGci…" autocomplete="off"/>
+        </div>
+        <div>
+          <label>Supabase URL</label>
+          <input type="text" id="sb-url" value="https://aoefpiovjcmsszxcbffi.supabase.co"/>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="btn-outline" onclick="testSB()">Test Connection</button>
+        <span id="sb-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+      </div>
     </div>
 
-    <!-- ── STEP 3: CSV ── -->
-    <div class="card">
-      <h2>Step 2 — Import Breeze Giving CSV</h2>
-
-      <div class="info-box">
-        <strong style="color:#C8A85A;display:inline;">How to export from Breeze:</strong>
-        <ol style="margin-top:0.5rem;">
-          <li>Log into Breeze → <strong>Giving</strong> → <strong>Reports</strong></li>
-          <li>Set date range (e.g. last 30 days or all time)</li>
-          <li>Filter by fund → <strong>2026 CRM USA Conference</strong></li>
-          <li>Click <strong>Export → CSV</strong></li>
-          <li>Upload the downloaded file below</li>
-        </ol>
-      </div>
-
-      <div class="file-drop" id="file-drop">
-        <input type="file" id="csv-file" accept=".csv" onchange="handleFile(this.files[0])"/>
-        <strong>Drop CSV here or click to browse</strong>
-        <p>Breeze giving export (.csv)</p>
-      </div>
-
-      <div id="csv-status" style="font-size:0.8rem;color:rgba(232,223,200,0.45);margin-bottom:0.5rem;"></div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn on" onclick="switchTab('zeffy')">Zeffy CSV Import</button>
+      <button class="tab-btn"    onclick="switchTab('zelle')">Manual Zelle Entry</button>
+      <button class="tab-btn"    onclick="switchTab('lookup')">Look Up Registration</button>
     </div>
 
-    <!-- ── STEP 4: Preview & Sync ── -->
-    <div class="card hidden" id="preview-card">
-      <h2>Step 3 — Preview &amp; Sync</h2>
+    <!-- ══════════════════ TAB: ZEFFY ══════════════════ -->
+    <div class="tab-panel on" id="tab-zeffy">
 
-      <div class="stat-row" id="stat-row">
-        <div class="stat"><div class="stat-n" id="stat-total">0</div><div class="stat-l">CSV Rows</div></div>
-        <div class="stat"><div class="stat-n" id="stat-match">0</div><div class="stat-l">Matched</div></div>
-        <div class="stat"><div class="stat-n" id="stat-nomatch">0</div><div class="stat-l">No Match</div></div>
-        <div class="stat"><div class="stat-n" id="stat-amount">$0</div><div class="stat-l">Total to Apply</div></div>
+      <div class="card">
+        <p class="card-title">Step 2 — Export from Zeffy</p>
+        <div class="info">
+          <strong style="color:#C8A85A;">How to export from Zeffy:</strong>
+          <ol style="margin-top:0.5rem;">
+            <li>Log into Zeffy → <strong>Fundraising</strong> → <strong>Payments</strong></li>
+            <li>Filter by your convention donation form</li>
+            <li>Set date range (e.g. last 7 days or all time)</li>
+            <li>Click <strong>Export</strong> → choose <strong>Itemized Payments</strong></li>
+            <li>Make sure to include <strong>answers to custom questions</strong> — this is where the pledge code lives</li>
+            <li>Download and drop the CSV below</li>
+          </ol>
+        </div>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="csv-file" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])"/>
+          <strong>Drop Zeffy CSV here or click to browse</strong>
+          <p>Itemized payments export (.csv)</p>
+        </div>
+        <div id="csv-status" class="status"></div>
       </div>
 
-      <p style="font-size:0.78rem;color:rgba(232,223,200,0.45);margin-bottom:1rem;">
-        Rows with a 6-character pledge code in the <strong>Comments</strong> column that matches
-        a record in Supabase will be synced. The <strong>amount_paid</strong> field will be
-        <em>incremented</em> — not overwritten — for each matched row.
-      </p>
-
-      <div class="results-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Donor (Breeze)</th>
-              <th>Amount</th>
-              <th>Note / Pledge Code</th>
-              <th>Status</th>
-              <th>Registrant (Supabase)</th>
-              <th>Balance After</th>
-            </tr>
-          </thead>
-          <tbody id="preview-body"></tbody>
-        </table>
+      <div class="card hidden" id="preview-card">
+        <p class="card-title">Step 3 — Preview &amp; Sync</p>
+        <div class="stats">
+          <div><div class="stat-n" id="s-total">0</div><div class="stat-l">CSV Rows</div></div>
+          <div><div class="stat-n" id="s-match">0</div><div class="stat-l">Matched</div></div>
+          <div><div class="stat-n" id="s-none">0</div><div class="stat-l">No Match</div></div>
+          <div><div class="stat-n" id="s-skip">0</div><div class="stat-l">Skipped (refund/cancelled)</div></div>
+          <div><div class="stat-n" id="s-amt">$0</div><div class="stat-l">Total to Apply</div></div>
+        </div>
+        <p style="font-size:0.77rem;color:rgba(232,223,200,0.4);margin-bottom:0.9rem;line-height:1.65;">
+          Matched rows will <strong>increment</strong> amount_paid in Supabase — not overwrite.
+          Rows without a pledge code or with a cancelled/refunded status are skipped automatically.
+        </p>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Donor</th><th>Amount</th>
+                <th>Pledge Code (from Zeffy)</th><th>Status</th>
+                <th>Matched Registrant</th><th>Balance After</th>
+              </tr>
+            </thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:0.5rem;">
+          <button class="btn" id="sync-btn" onclick="doSync()" disabled>Sync Matched Records →</button>
+          <button class="btn-outline" onclick="resetCSV()">Clear &amp; Re-import</button>
+          <span id="sync-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+        </div>
+        <div class="log hidden" id="sync-log"></div>
       </div>
 
-      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
-        <button class="btn" id="sync-btn" onclick="doSync()" disabled>Sync Matched Records →</button>
-        <button class="btn-outline" onclick="reparse()">Re-parse CSV</button>
-        <span id="sync-status" style="font-size:0.78rem;color:rgba(232,223,200,0.4);"></span>
+    </div><!-- /tab-zeffy -->
+
+    <!-- ══════════════════ TAB: ZELLE ══════════════════ -->
+    <div class="tab-panel" id="tab-zelle">
+      <div class="card">
+        <p class="card-title">Record a Zelle Payment</p>
+        <p style="font-size:0.78rem;color:rgba(232,223,200,0.42);margin-bottom:1.2rem;">
+          Since Zelle has no CSV export, enter each payment manually here.
+          Look up the pledge code from your bank statement memo, enter the amount, and apply.
+        </p>
+
+        <div class="field-row">
+          <div>
+            <label>Pledge Code (from Zelle memo)</label>
+            <input type="text" id="z-code" placeholder="e.g. LKKB9D" style="text-transform:uppercase;"/>
+          </div>
+          <div>
+            <label>Amount Paid (USD)</label>
+            <input type="number" id="z-amt" placeholder="0.00" min="1" step="0.01"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Sender Name (optional — for your records)</label>
+            <input type="text" id="z-name" placeholder="As it appeared in Zelle"/>
+          </div>
+          <div>
+            <label>Payment Date</label>
+            <input type="text" id="z-date" placeholder="e.g. 2026-04-15"/>
+          </div>
+        </div>
+
+        <button class="btn" onclick="lookupAndApplyZelle()">Look Up &amp; Apply Payment →</button>
+
+        <div id="z-result" style="margin-top:1.2rem;display:none;">
+          <div class="card" style="margin-bottom:0;">
+            <p class="card-title">Registration Found</p>
+            <div id="z-reg-info" style="font-size:0.83rem;line-height:2;margin-bottom:1rem;"></div>
+            <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
+              <button class="btn" id="z-confirm-btn" onclick="confirmZelle()">Confirm &amp; Apply →</button>
+              <button class="btn-outline" onclick="cancelZelle()">Cancel</button>
+              <span id="z-apply-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+            </div>
+          </div>
+        </div>
+        <div id="z-error" class="status err" style="display:none;margin-top:0.8rem;"></div>
       </div>
 
-      <div class="log hidden" id="sync-log"></div>
-    </div>
+      <!-- Batch Zelle entry -->
+      <div class="card">
+        <p class="card-title">Batch Zelle Entry</p>
+        <p style="font-size:0.78rem;color:rgba(232,223,200,0.42);margin-bottom:1rem;">
+          Paste multiple payments as CSV rows: <code style="color:#C8A85A;font-size:0.78rem;">PLEDGECODE,AMOUNT,DATE,NAME</code>
+          (one per line, name optional)
+        </p>
+        <textarea id="batch-text" rows="6" placeholder="LKKB9D,200,2026-04-15,Okezie Ofoegbu&#10;B2QAR4,100,2026-04-16,John Smith"
+          style="width:100%;padding:0.7rem;background:rgba(255,255,255,0.05);border:1px solid rgba(200,168,90,0.2);
+          color:#e8dfc8;font-family:monospace;font-size:0.82rem;outline:none;resize:vertical;margin-bottom:0.8rem;"></textarea>
+        <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="parseBatch()">Preview Batch →</button>
+          <span id="batch-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+        </div>
+        <div id="batch-preview" style="margin-top:1rem;display:none;">
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Code</th><th>Amount</th><th>Date</th><th>Name</th><th>Status</th><th>Registrant</th><th>Balance After</th></tr>
+              </thead>
+              <tbody id="batch-body"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:0.8rem;margin-top:0.8rem;align-items:center;flex-wrap:wrap;">
+            <button class="btn" id="batch-btn" onclick="applyBatch()" disabled>Apply All Matched →</button>
+            <span id="batch-apply-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+          </div>
+          <div class="log hidden" id="batch-log"></div>
+        </div>
+      </div>
+    </div><!-- /tab-zelle -->
 
-  </div><!-- /main-content -->
+    <!-- ══════════════════ TAB: LOOKUP ══════════════════ -->
+    <div class="tab-panel" id="tab-lookup">
+      <div class="card">
+        <p class="card-title">Look Up a Registration</p>
+        <div class="field-row">
+          <div>
+            <label>Pledge Code or Email</label>
+            <input type="text" id="lu-val" placeholder="LKKB9D or email@example.com"/>
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:1rem;">
+            <button class="btn" onclick="doLookup()">Look Up →</button>
+          </div>
+        </div>
+        <div id="lu-result" style="display:none;">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field</th><th>Value</th></tr></thead>
+              <tbody id="lu-body"></tbody>
+            </table>
+          </div>
+          <!-- Manual adjustment -->
+          <div style="margin-top:1rem;padding:1rem;background:rgba(200,168,90,0.05);border:1px solid rgba(200,168,90,0.15);">
+            <p style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(200,168,90,0.55);margin-bottom:0.7rem;">Manual Adjustment</p>
+            <div class="field-row">
+              <div>
+                <label>Set amount_paid to ($)</label>
+                <input type="number" id="lu-amt" placeholder="0.00" min="0" step="0.01"/>
+              </div>
+              <div style="display:flex;align-items:flex-end;padding-bottom:1rem;">
+                <button class="btn btn-sm" onclick="applyManual()">Apply →</button>
+                <span id="lu-apply-status" style="margin-left:0.8rem;font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="lu-error" class="status err" style="display:none;margin-top:0.6rem;"></div>
+      </div>
+    </div><!-- /tab-lookup -->
+
+  </div><!-- /main -->
+
 </div>
 
 <script>
-/* ── PIN ── */
-var ADMIN_PIN = 'CRM2026ADMIN';   /* ← change this to your preferred PIN */
+/* ── CONFIG ── */
+var ADMIN_PIN = 'CRM2026ADMIN';
 
+/* ── STATE ── */
+var _sb = null;
+var csvRows = [];
+var matchedRows = [];
+var zelleReg = null;
+var batchRows = [];
+var luReg    = null;
+
+/* ── PIN ── */
 function checkPin() {
   var v = document.getElementById('pin-input').value;
   if (v === ADMIN_PIN) {
     document.getElementById('pin-card').classList.add('hidden');
-    document.getElementById('main-content').classList.remove('hidden');
+    document.getElementById('main').classList.remove('hidden');
     var saved = localStorage.getItem('crm_sb_key');
     if (saved) document.getElementById('sb-key').value = saved;
   } else {
     document.getElementById('pin-err').style.display = 'block';
   }
 }
+document.getElementById('pin-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkPin();
+});
 
-/* ── SUPABASE TEST ── */
-var _sb = null;
-function testSupabase() {
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
-  var st  = document.getElementById('sb-status');
+/* ── TABS ── */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    var names = ['zeffy','zelle','lookup'];
+    b.className = 'tab-btn' + (names[i] === name ? ' on' : '');
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.className = 'tab-panel'; });
+  document.getElementById('tab-'+name).className = 'tab-panel on';
+}
+
+/* ── SUPABASE ── */
+function testSB() {
+  var url = g('sb-url'), key = g('sb-key');
+  var st = document.getElementById('sb-status');
   st.textContent = 'Testing…'; st.style.color = 'rgba(232,223,200,0.4)';
   loadSB(url, key, function() {
-    if (!_sb) { st.textContent = '✗ Failed to load Supabase JS'; st.style.color='#e09090'; return; }
+    if (!_sb) { st.textContent = '✗ Failed to load library'; st.style.color = '#e09090'; return; }
     _sb.from('registrations').select('id').limit(1).then(function(res) {
-      if (res.error) {
-        st.textContent = '✗ ' + res.error.message; st.style.color='#e09090';
-      } else {
-        st.textContent = '✓ Connected'; st.style.color='#7dbf80';
-        localStorage.setItem('crm_sb_key', key);
-      }
+      if (res.error) { st.textContent = '✗ ' + res.error.message; st.style.color = '#e09090'; }
+      else { st.textContent = '✓ Connected'; st.style.color = '#7dbf80'; localStorage.setItem('crm_sb_key', key); }
     });
   });
 }
@@ -291,187 +382,139 @@ function loadSB(url, key, cb) {
   if (_sb) { cb(); return; }
   var s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-  s.onload = function() {
-    try { _sb = supabase.createClient(url, key); } catch(e){}
-    cb();
-  };
+  s.onload = function() { try { _sb = supabase.createClient(url, key); } catch(e){} cb(); };
   s.onerror = cb;
   document.head.appendChild(s);
 }
 
-/* ── CSV PARSING ── */
-var csvRows = [];   /* parsed rows [{date,donor,amount,note}] */
-var matchedRows = []; /* enriched with Supabase lookup */
+function ensureSB(cb) {
+  var url = g('sb-url'), key = g('sb-key');
+  if (!key) { alert('Please enter your Supabase service role key first.'); return; }
+  loadSB(url, key, cb);
+}
+
+/* ══════════════════════════════════════════════
+   ZEFFY CSV
+══════════════════════════════════════════════ */
+var dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover',  function(e){ e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('over'); });
+dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.classList.remove('over'); handleFile(e.dataTransfer.files[0]); });
 
 function handleFile(file) {
   if (!file) return;
-  document.getElementById('csv-status').textContent = 'Reading ' + file.name + '…';
+  setStatus('csv-status', 'Reading ' + file.name + '…', 'inf');
   var reader = new FileReader();
-  reader.onload = function(e) {
-    parseCSV(e.target.result);
-  };
+  reader.onload = function(e) { parseCSV(e.target.result); };
   reader.readAsText(file);
 }
 
 function parseCSV(text) {
   var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
-  if (lines.length < 2) {
-    document.getElementById('csv-status').textContent = 'Error: CSV appears empty.';
-    return;
-  }
+  if (lines.length < 2) { setStatus('csv-status', 'Error: CSV appears empty.', 'err'); return; }
 
-  /* Parse header — find relevant column indices */
-  var headers = splitCSVLine(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
+  var headers = splitCSV(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
 
-  function findCol(keywords) {
-    for (var k=0; k<keywords.length; k++) {
-      for (var i=0; i<headers.length; i++) {
-        if (headers[i].indexOf(keywords[k]) > -1) return i;
-      }
-    }
+  function col(kws) {
+    for (var ki=0;ki<kws.length;ki++)
+      for (var hi=0;hi<headers.length;hi++)
+        if (headers[hi].indexOf(kws[ki]) > -1) return hi;
     return -1;
   }
 
-  var colDate   = findCol(['date']);
-  var colFirst  = findCol(['first']);
-  var colLast   = findCol(['last']);
-  var colName   = findCol(['name','person','donor']);
-  var colAmt    = findCol(['amount','gift','total']);
-  var colNote   = findCol(['note','memo','description','comment']);
+  var cDate   = col(['date','created']);
+  var cFirst  = col(['first']);
+  var cLast   = col(['last']);
+  var cName   = col(['name','buyer','donor']);
+  var cAmt    = col(['amount','total','donation']);
+  var cStatus = col(['status','payment status']);
+  /* Zeffy puts custom question answers as column headers verbatim */
+  var cCode   = col(['registration code','pledge code','conference code','registration']);
 
-  if (colAmt === -1) {
-    document.getElementById('csv-status').textContent =
-      'Error: Could not find an Amount column. Headers found: ' + headers.join(', ');
-    return;
-  }
-  if (colNote === -1) {
-    document.getElementById('csv-status').textContent =
-      'Error: Could not find a Comments column. Headers found: ' + headers.join(', ');
-    return;
-  }
+  if (cAmt === -1) { setStatus('csv-status', 'Error: No Amount column found. Headers: ' + headers.join(', '), 'err'); return; }
+  if (cCode === -1) { setStatus('csv-status', 'Warning: No "Registration Code" column found — check that you exported Itemized Payments with custom question answers included. Headers: ' + headers.join(', '), 'err'); return; }
 
   csvRows = [];
   for (var i=1; i<lines.length; i++) {
-    var cols = splitCSVLine(lines[i]);
+    var cols = splitCSV(lines[i]);
     if (cols.length < 2) continue;
-
-    var amt = parseFloat((cols[colAmt]||'').replace(/[$,]/g,''));
+    var rawAmt = (cols[cAmt]||'').replace(/[$,\s]/g,'');
+    var amt = parseFloat(rawAmt);
     if (isNaN(amt) || amt <= 0) continue;
-
+    var status = cStatus > -1 ? (cols[cStatus]||'').toLowerCase().trim() : 'paid';
+    /* Skip refunds/cancelled */
+    if (status.indexOf('refund') > -1 || status.indexOf('cancel') > -1 || status.indexOf('fail') > -1) {
+      csvRows.push({ skip:true, reason: status, date:'', donor:'', amount:amt, code:'' });
+      continue;
+    }
     var donor = '';
-    if (colFirst > -1 && colLast > -1) {
-      donor = (cols[colFirst]||'').trim() + ' ' + (cols[colLast]||'').trim();
-    } else if (colName > -1) {
-      donor = (cols[colName]||'').trim();
-    }
-
-    var note = (cols[colNote]||'').trim();
-    var date = colDate > -1 ? (cols[colDate]||'').trim() : '';
-
-    csvRows.push({ date:date, donor:donor.trim(), amount:amt, note:note });
+    if (cFirst > -1 && cLast > -1) donor = ((cols[cFirst]||'')+' '+(cols[cLast]||'')).trim();
+    else if (cName > -1)            donor = (cols[cName]||'').trim();
+    var code = (cols[cCode]||'').replace(/\s/g,'').toUpperCase();
+    var date = cDate > -1 ? (cols[cDate]||'').trim() : '';
+    csvRows.push({ skip:false, date:date, donor:donor, amount:amt, code:code, status:status });
   }
 
-  document.getElementById('csv-status').textContent =
-    '✓ Parsed ' + csvRows.length + ' giving rows from ' + lines.length + ' CSV lines.';
-  document.getElementById('csv-status').style.color = '#7dbf80';
-
-  lookupPledgeCodes();
+  var valid = csvRows.filter(function(r){ return !r.skip; });
+  setStatus('csv-status', '✓ Parsed ' + valid.length + ' valid rows (' + (csvRows.length - valid.length) + ' skipped).', 'ok');
+  lookupCodes();
 }
 
-function splitCSVLine(line) {
-  /* Handles quoted fields */
-  var result = [], cur = '', inQ = false;
-  for (var i=0; i<line.length; i++) {
-    var c = line[i];
-    if (c==='"') { inQ=!inQ; }
-    else if (c===',' && !inQ) { result.push(cur); cur=''; }
-    else { cur+=c; }
-  }
-  result.push(cur);
-  return result.map(function(s){ return s.replace(/^"|"$/g,''); });
-}
-
-/* ── MATCH PLEDGE CODES ── */
-function lookupPledgeCodes() {
-  /* Extract pledge codes from notes (6-char uppercase alphanumeric) */
-  var pledgeRegex = /\b([A-Z0-9]{6})\b/gi;
-  var codesToLook = [];
-  csvRows.forEach(function(r) {
-    var m = (r.note||'').toUpperCase().match(/\b([A-HJ-NP-Z2-9]{6})\b/);
-    r.pledgeCode = m ? m[1] : null;
-    if (r.pledgeCode && codesToLook.indexOf(r.pledgeCode) === -1) {
-      codesToLook.push(r.pledgeCode);
-    }
-  });
-
-  if (!codesToLook.length) {
-    renderPreview([]);
-    return;
-  }
-
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
-  loadSB(url, key, function() {
-    if (!_sb) { renderPreview([]); return; }
+function lookupCodes() {
+  var codes = [];
+  csvRows.forEach(function(r){ if (!r.skip && r.code && codes.indexOf(r.code) === -1) codes.push(r.code); });
+  if (!codes.length) { renderPreview([]); return; }
+  ensureSB(function() {
     _sb.from('registrations')
-      .select('id,pledge_code,first_name,last_name,total_pledged,amount_paid,status')
-      .in('pledge_code', codesToLook)
+      .select('id,pledge_code,first_name,last_name,email,total_pledged,amount_paid,status')
+      .in('pledge_code', codes)
       .then(function(res) {
-        var regMap = {};
-        if (res.data) {
-          res.data.forEach(function(r){ regMap[r.pledge_code] = r; });
-        }
-        matchedRows = csvRows.map(function(r) {
-          return Object.assign({}, r, { reg: r.pledgeCode ? (regMap[r.pledgeCode]||null) : null });
+        var map = {};
+        if (res.data) res.data.forEach(function(r){ map[r.pledge_code] = r; });
+        matchedRows = csvRows.map(function(r){
+          return Object.assign({}, r, { reg: (!r.skip && r.code) ? (map[r.code]||null) : null });
         });
         renderPreview(matchedRows);
       });
   });
 }
 
-function reparse() {
-  document.getElementById('preview-card').classList.add('hidden');
-  document.getElementById('csv-file').value = '';
-  document.getElementById('csv-status').textContent = '';
-  csvRows = []; matchedRows = [];
-}
-
-/* ── RENDER PREVIEW TABLE ── */
 function renderPreview(rows) {
-  var totalRows  = rows.length;
-  var nMatch     = rows.filter(function(r){ return r.reg; }).length;
-  var nNoMatch   = totalRows - nMatch;
-  var totalAmt   = rows.filter(function(r){ return r.reg; })
-                       .reduce(function(s,r){ return s+r.amount; }, 0);
-
-  setText('stat-total',  totalRows);
-  setText('stat-match',  nMatch);
-  setText('stat-nomatch',nNoMatch);
-  setText('stat-amount', '$'+totalAmt.toFixed(2));
+  var nMatch = 0, nNone = 0, nSkip = 0, total = 0;
+  rows.forEach(function(r){
+    if (r.skip)      nSkip++;
+    else if (r.reg)  { nMatch++; total += r.amount; }
+    else             nNone++;
+  });
+  setText('s-total', rows.length);
+  setText('s-match', nMatch);
+  setText('s-none',  nNone);
+  setText('s-skip',  nSkip);
+  setText('s-amt',   '$' + total.toFixed(2));
 
   var tbody = document.getElementById('preview-body');
   tbody.innerHTML = '';
   rows.forEach(function(r) {
     var tr = document.createElement('tr');
-    var afterPaid = r.reg ? ((r.reg.amount_paid||0)+r.amount) : null;
-    var afterRem  = r.reg ? ((r.reg.total_pledged||0)-afterPaid) : null;
-    var badgeCls  = r.reg ? 'badge-match' : (r.pledgeCode ? 'badge-nomatch' : 'badge-nomatch');
-    var badgeTxt  = r.reg ? 'Match' : (r.pledgeCode ? 'No Match' : 'No Code');
-    var regName   = r.reg ? (r.reg.first_name+' '+r.reg.last_name) : '—';
-    var balAfter  = r.reg
-      ? (afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid</span>'
-                       : '$'+afterRem.toFixed(2)+' remaining')
-      : '—';
-
-    tr.innerHTML =
-      '<td>'+esc(r.date)+'</td>'+
-      '<td>'+esc(r.donor)+'</td>'+
-      '<td>$'+r.amount.toFixed(2)+'</td>'+
-      '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+
-        esc(r.pledgeCode||r.note)+'</td>'+
-      '<td><span class="badge '+badgeCls+'">'+badgeTxt+'</span></td>'+
-      '<td>'+esc(regName)+'</td>'+
-      '<td>'+balAfter+'</td>';
+    if (r.skip) {
+      tr.innerHTML = '<td>—</td><td>—</td><td>$'+r.amount.toFixed(2)+'</td><td>—</td>'+
+        '<td><span class="badge b-skip">'+esc(r.reason)+'</span></td><td>—</td><td>—</td>';
+    } else {
+      var afterPaid = r.reg ? (r.reg.amount_paid||0) + r.amount : null;
+      var afterRem  = r.reg ? (r.reg.total_pledged||0) - afterPaid : null;
+      var badgeCls  = r.reg ? 'b-match' : (r.code ? 'b-none' : 'b-skip');
+      var badgeTxt  = r.reg ? 'Match' : (r.code ? 'No Match' : 'No Code');
+      var regName   = r.reg ? esc(r.reg.first_name + ' ' + r.reg.last_name) : '—';
+      var balAfter  = r.reg ? (afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid ✓</span>' : '$'+afterRem.toFixed(2)+' left') : '—';
+      tr.innerHTML =
+        '<td>'+esc(r.date)+'</td>'+
+        '<td>'+esc(r.donor)+'</td>'+
+        '<td>$'+r.amount.toFixed(2)+'</td>'+
+        '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+esc(r.code||'—')+'</td>'+
+        '<td><span class="badge '+badgeCls+'">'+badgeTxt+'</span></td>'+
+        '<td>'+regName+'</td>'+
+        '<td>'+balAfter+'</td>';
+    }
     tbody.appendChild(tr);
   });
 
@@ -479,83 +522,286 @@ function renderPreview(rows) {
   document.getElementById('sync-btn').disabled = nMatch === 0;
 }
 
-/* ── SYNC ── */
 function doSync() {
-  var url = document.getElementById('sb-url').value.trim();
-  var key = document.getElementById('sb-key').value.trim();
   var btn = document.getElementById('sync-btn');
-  var st  = document.getElementById('sync-status');
   var log = document.getElementById('sync-log');
-
-  btn.disabled = true;
-  btn.textContent = 'Syncing…';
-  st.textContent = '';
-  log.innerHTML = '';
-  log.classList.remove('hidden');
-
-  var toSync = matchedRows.filter(function(r){ return r.reg; });
-  if (!toSync.length) { st.textContent = 'Nothing to sync.'; btn.disabled=false; return; }
-
-  loadSB(url, key, function() {
-    var i = 0;
-    function next() {
-      if (i >= toSync.length) {
-        appendLog('<span class="ok">✓ Sync complete. ' + toSync.length + ' record(s) updated.</span>');
-        btn.textContent = '✓ Sync Complete';
-        st.textContent  = 'Done — ' + toSync.length + ' updated.';
-        /* Mark rows as done in table */
-        var badges = document.querySelectorAll('.badge-match');
-        badges.forEach(function(b){ b.className='badge badge-done'; b.textContent='Synced'; });
-        return;
-      }
-      var r = toSync[i++];
-      var newPaid = (r.reg.amount_paid||0) + r.amount;
-      var newRem  = (r.reg.total_pledged||0) - newPaid;
-      var newStatus = newRem <= 0 ? 'complete' : 'partial';
-
-      _sb.from('registrations')
-        .update({ amount_paid: newPaid, status: newStatus })
-        .eq('id', r.reg.id)
-        .then(function(res) {
-          if (res.error) {
-            appendLog('<span class="err">✗ '+r.reg.pledge_code+' — '+res.error.message+'</span>');
-          } else {
-            appendLog('<span class="ok">✓ '+r.reg.pledge_code+' — '+r.reg.first_name+' '+r.reg.last_name+
-              ' — +$'+r.amount.toFixed(2)+' — new paid: $'+newPaid.toFixed(2)+'</span>');
-            /* Also log to pledge_payments */
-            _sb.from('pledge_payments').insert({
-              registration_id: r.reg.id,
-              amount: r.amount,
-              flw_tx_ref: 'breeze-csv-'+new Date().toISOString().slice(0,10),
-              status: 'success'
-            });
-          }
-          next();
-        });
+  btn.disabled = true; btn.textContent = 'Syncing…';
+  log.innerHTML = ''; log.classList.remove('hidden');
+  var toSync = matchedRows.filter(function(r){ return !r.skip && r.reg; });
+  appendLog(log, 'inf', 'Starting sync of ' + toSync.length + ' record(s)…');
+  var i = 0;
+  function next() {
+    if (i >= toSync.length) {
+      appendLog(log, 'ok', '✓ Done. ' + toSync.length + ' record(s) updated.');
+      btn.textContent = '✓ Sync Complete';
+      setText('sync-status', 'Done — ' + toSync.length + ' updated.');
+      document.querySelectorAll('#preview-body .b-match').forEach(function(b){ b.className='badge b-done'; b.textContent='Synced'; });
+      return;
     }
-    appendLog('<span class="inf">Starting sync of '+toSync.length+' records…</span>');
-    next();
+    var r = toSync[i++];
+    var newPaid = (r.reg.amount_paid||0) + r.amount;
+    var newRem  = (r.reg.total_pledged||0) - newPaid;
+    _sb.from('registrations').update({
+      amount_paid: newPaid,
+      status: newRem <= 0 ? 'complete' : 'partial'
+    }).eq('id', r.reg.id).then(function(res) {
+      if (res.error) appendLog(log, 'err', '✗ ' + r.reg.pledge_code + ' — ' + res.error.message);
+      else           appendLog(log, 'ok',  '✓ ' + r.reg.pledge_code + ' — ' + r.reg.first_name + ' ' + r.reg.last_name + ' +$' + r.amount.toFixed(2) + ' → paid: $' + newPaid.toFixed(2));
+      /* Log to pledge_payments */
+      _sb.from('pledge_payments').insert({
+        registration_id: r.reg.id, amount: r.amount,
+        flw_tx_ref: 'zeffy-csv-' + new Date().toISOString().slice(0,10), status: 'success'
+      });
+      next();
+    });
+  }
+  next();
+}
+
+function resetCSV() {
+  csvRows = []; matchedRows = [];
+  document.getElementById('csv-file').value = '';
+  document.getElementById('csv-status').textContent = '';
+  document.getElementById('preview-card').classList.add('hidden');
+  document.getElementById('sync-log').classList.add('hidden');
+}
+
+/* ══════════════════════════════════════════════
+   ZELLE SINGLE ENTRY
+══════════════════════════════════════════════ */
+function lookupAndApplyZelle() {
+  var code = g('z-code').toUpperCase();
+  var amt  = parseFloat(g('z-amt')||0);
+  var errEl = document.getElementById('z-error');
+  document.getElementById('z-result').style.display = 'none';
+  errEl.style.display = 'none';
+  if (!code) { errEl.textContent = 'Please enter a pledge code.'; errEl.style.display = 'block'; return; }
+  if (!amt || amt <= 0) { errEl.textContent = 'Please enter a valid amount.'; errEl.style.display = 'block'; return; }
+  ensureSB(function() {
+    _sb.from('registrations').select('*').eq('pledge_code', code).limit(1).then(function(res) {
+      if (res.error || !res.data || !res.data.length) {
+        errEl.textContent = 'No registration found for code: ' + code; errEl.style.display = 'block'; return;
+      }
+      zelleReg = res.data[0];
+      var rem = (zelleReg.total_pledged||0) - (zelleReg.amount_paid||0);
+      var newPaid = (zelleReg.amount_paid||0) + amt;
+      var newRem  = (zelleReg.total_pledged||0) - newPaid;
+      document.getElementById('z-reg-info').innerHTML =
+        '<strong style="color:#E8C87A;">' + esc(zelleReg.first_name + ' ' + zelleReg.last_name) + '</strong><br/>' +
+        'Email: ' + esc(zelleReg.email) + '<br/>' +
+        'Church: ' + esc(zelleReg.church||'—') + '<br/>' +
+        'Total Pledged: $' + (zelleReg.total_pledged||0) + '.00<br/>' +
+        'Currently Paid: $' + (zelleReg.amount_paid||0) + '.00<br/>' +
+        'Current Balance: <strong style="color:#E8C87A;">$' + rem.toFixed(2) + '</strong><br/><br/>' +
+        'Applying payment of: <strong style="color:#7dbf80;">$' + amt.toFixed(2) + '</strong><br/>' +
+        'New paid total: <strong>$' + newPaid.toFixed(2) + '</strong><br/>' +
+        'New balance: <strong style="color:' + (newRem <= 0 ? '#7dbf80' : '#E8C87A') + ';">' +
+        (newRem <= 0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) + '</strong>';
+      document.getElementById('z-result').style.display = 'block';
+    });
+  });
+}
+
+function confirmZelle() {
+  if (!zelleReg) return;
+  var amt    = parseFloat(g('z-amt')||0);
+  var newPaid = (zelleReg.amount_paid||0) + amt;
+  var newRem  = (zelleReg.total_pledged||0) - newPaid;
+  var btn    = document.getElementById('z-confirm-btn');
+  var st     = document.getElementById('z-apply-status');
+  btn.disabled = true; btn.textContent = 'Applying…';
+  _sb.from('registrations').update({
+    amount_paid: newPaid,
+    status: newRem <= 0 ? 'complete' : 'partial'
+  }).eq('id', zelleReg.id).then(function(res) {
+    if (res.error) { st.textContent = '✗ ' + res.error.message; st.style.color = '#e09090'; btn.disabled = false; btn.textContent = 'Confirm & Apply →'; return; }
+    _sb.from('pledge_payments').insert({
+      registration_id: zelleReg.id, amount: amt,
+      flw_tx_ref: 'zelle-manual-' + (g('z-date')||new Date().toISOString().slice(0,10)), status: 'success'
+    });
+    st.textContent = '✓ Applied — new paid total: $' + newPaid.toFixed(2);
+    st.style.color = '#7dbf80';
+    btn.textContent = '✓ Done';
+    zelleReg = null;
+    /* Clear inputs */
+    ['z-code','z-amt','z-name','z-date'].forEach(function(id){ document.getElementById(id).value = ''; });
+    setTimeout(function(){ document.getElementById('z-result').style.display = 'none'; }, 3000);
+  });
+}
+
+function cancelZelle() {
+  zelleReg = null;
+  document.getElementById('z-result').style.display = 'none';
+}
+
+/* ══════════════════════════════════════════════
+   ZELLE BATCH
+══════════════════════════════════════════════ */
+function parseBatch() {
+  var text = document.getElementById('batch-text').value.trim();
+  var lines = text.split('\n').filter(function(l){ return l.trim(); });
+  if (!lines.length) { setText('batch-status', 'No rows entered.'); return; }
+  var parsed = lines.map(function(line) {
+    var parts = line.split(',').map(function(s){ return s.trim(); });
+    return {
+      code:   (parts[0]||'').toUpperCase(),
+      amount: parseFloat(parts[1]||0),
+      date:   parts[2]||'',
+      name:   parts[3]||'',
+      reg:    null
+    };
+  }).filter(function(r){ return r.code && r.amount > 0; });
+
+  if (!parsed.length) { setText('batch-status', 'No valid rows. Format: CODE,AMOUNT,DATE,NAME'); return; }
+  batchRows = parsed;
+
+  var codes = batchRows.map(function(r){ return r.code; });
+  ensureSB(function() {
+    _sb.from('registrations')
+      .select('id,pledge_code,first_name,last_name,total_pledged,amount_paid')
+      .in('pledge_code', codes)
+      .then(function(res) {
+        var map = {};
+        if (res.data) res.data.forEach(function(r){ map[r.pledge_code] = r; });
+        batchRows.forEach(function(r){ r.reg = map[r.code]||null; });
+        renderBatch();
+      });
+  });
+}
+
+function renderBatch() {
+  var nMatch = batchRows.filter(function(r){ return r.reg; }).length;
+  var tbody = document.getElementById('batch-body');
+  tbody.innerHTML = '';
+  batchRows.forEach(function(r) {
+    var afterPaid = r.reg ? (r.reg.amount_paid||0)+r.amount : null;
+    var afterRem  = r.reg ? (r.reg.total_pledged||0)-afterPaid : null;
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="font-family:monospace;color:#E8C87A;">'+esc(r.code)+'</td>'+
+      '<td>$'+r.amount.toFixed(2)+'</td>'+
+      '<td>'+esc(r.date)+'</td>'+
+      '<td>'+esc(r.name)+'</td>'+
+      '<td><span class="badge '+(r.reg?'b-match':'b-none')+'">'+(r.reg?'Match':'No Match')+'</span></td>'+
+      '<td>'+(r.reg?esc(r.reg.first_name+' '+r.reg.last_name):'—')+'</td>'+
+      '<td>'+(r.reg?(afterRem<=0?'<span style="color:#7dbf80;">Fully Paid</span>':'$'+afterRem.toFixed(2)+' left'):'—')+'</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('batch-preview').style.display = 'block';
+  document.getElementById('batch-btn').disabled = nMatch === 0;
+  setText('batch-status', nMatch + ' of ' + batchRows.length + ' matched.');
+}
+
+function applyBatch() {
+  var btn = document.getElementById('batch-btn');
+  var log = document.getElementById('batch-log');
+  btn.disabled = true; btn.textContent = 'Applying…';
+  log.innerHTML = ''; log.classList.remove('hidden');
+  var toSync = batchRows.filter(function(r){ return r.reg; });
+  var i = 0;
+  function next() {
+    if (i >= toSync.length) {
+      appendLog(log, 'ok', '✓ Done. ' + toSync.length + ' applied.');
+      btn.textContent = '✓ Done';
+      setText('batch-apply-status', 'Done — ' + toSync.length + ' applied.');
+      return;
+    }
+    var r = toSync[i++];
+    var newPaid = (r.reg.amount_paid||0) + r.amount;
+    var newRem  = (r.reg.total_pledged||0) - newPaid;
+    _sb.from('registrations').update({
+      amount_paid: newPaid,
+      status: newRem <= 0 ? 'complete' : 'partial'
+    }).eq('id', r.reg.id).then(function(res) {
+      if (res.error) appendLog(log, 'err', '✗ '+r.code+' — '+res.error.message);
+      else {
+        appendLog(log, 'ok', '✓ '+r.code+' ('+r.reg.first_name+') +$'+r.amount.toFixed(2)+' → paid: $'+newPaid.toFixed(2));
+        _sb.from('pledge_payments').insert({ registration_id:r.reg.id, amount:r.amount, flw_tx_ref:'zelle-batch-'+(r.date||new Date().toISOString().slice(0,10)), status:'success' });
+      }
+      next();
+    });
+  }
+  next();
+}
+
+/* ══════════════════════════════════════════════
+   LOOKUP TAB
+══════════════════════════════════════════════ */
+function doLookup() {
+  var v = g('lu-val');
+  var errEl = document.getElementById('lu-error');
+  errEl.style.display = 'none';
+  document.getElementById('lu-result').style.display = 'none';
+  if (!v) { errEl.textContent = 'Enter a pledge code or email.'; errEl.style.display = 'block'; return; }
+  ensureSB(function() {
+    var q = _sb.from('registrations').select('*');
+    q = v.indexOf('@') > -1 ? q.eq('email', v.toLowerCase().trim()) : q.eq('pledge_code', v.toUpperCase().trim());
+    q.limit(1).then(function(res) {
+      if (res.error || !res.data || !res.data.length) {
+        errEl.textContent = 'No registration found.'; errEl.style.display = 'block'; return;
+      }
+      luReg = res.data[0];
+      var rem = (luReg.total_pledged||0) - (luReg.amount_paid||0);
+      var rows = [
+        ['Name', esc(luReg.first_name+' '+luReg.last_name)],
+        ['Email', esc(luReg.email)],
+        ['Church', esc(luReg.church||'—')],
+        ['City', esc(luReg.city||'—')],
+        ['Pledge Code', '<span style="font-family:monospace;color:#E8C87A;letter-spacing:0.15em;">'+esc(luReg.pledge_code)+'</span>'],
+        ['Tier', esc(luReg.tier||'—')],
+        ['Status', esc(luReg.status||'—')],
+        ['Total Pledged', '$'+(luReg.total_pledged||0)+'.00'],
+        ['Amount Paid', '<span style="color:#7dbf80;">$'+(luReg.amount_paid||0)+'.00</span>'],
+        ['Balance', '<span style="color:'+(rem>0?'#E8C87A':'#7dbf80')+';">'+(rem>0?'$'+rem.toFixed(2)+' remaining':'Fully Paid ✓')+'</span>'],
+        ['Registered', esc((luReg.created_at||'').slice(0,10))],
+      ];
+      var tbody = document.getElementById('lu-body');
+      tbody.innerHTML = rows.map(function(r){ return '<tr><td style="color:rgba(232,223,200,0.45);white-space:nowrap;">'+r[0]+'</td><td>'+r[1]+'</td></tr>'; }).join('');
+      document.getElementById('lu-amt').value = luReg.amount_paid || 0;
+      document.getElementById('lu-result').style.display = 'block';
+    });
+  });
+}
+
+function applyManual() {
+  if (!luReg) return;
+  var amt = parseFloat(g('lu-amt')||0);
+  var st  = document.getElementById('lu-apply-status');
+  var newRem = (luReg.total_pledged||0) - amt;
+  _sb.from('registrations').update({
+    amount_paid: amt,
+    status: newRem <= 0 ? 'complete' : (amt > 0 ? 'partial' : 'pending')
+  }).eq('id', luReg.id).then(function(res) {
+    if (res.error) { st.textContent = '✗ ' + res.error.message; st.style.color = '#e09090'; }
+    else { st.textContent = '✓ Updated — amount_paid set to $' + amt.toFixed(2); st.style.color = '#7dbf80'; luReg.amount_paid = amt; }
   });
 }
 
 /* ── UTILS ── */
-function appendLog(html) {
-  var log = document.getElementById('sync-log');
-  log.innerHTML += html + '\n';
-  log.scrollTop = log.scrollHeight;
-}
-function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function g(id) { var el=document.getElementById(id); return el?el.value.trim():''; }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-/* Drag-and-drop on file drop zone */
-var dropZone = document.getElementById('file-drop');
-dropZone.addEventListener('dragover',  function(e){ e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('over'); });
-dropZone.addEventListener('drop', function(e){
-  e.preventDefault(); dropZone.classList.remove('over');
-  var f = e.dataTransfer.files[0];
-  if (f) handleFile(f);
-});
+function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function setStatus(id, msg, cls) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'status' + (cls?' '+cls:'');
+}
+function appendLog(el, cls, msg) {
+  el.innerHTML += '<span class="'+cls+'">'+msg+'</span>\n';
+  el.scrollTop = el.scrollHeight;
+}
+function splitCSV(line) {
+  var result=[], cur='', inQ=false;
+  for (var i=0;i<line.length;i++) {
+    var c=line[i];
+    if (c==='"') { inQ=!inQ; }
+    else if (c===',' && !inQ) { result.push(cur); cur=''; }
+    else { cur+=c; }
+  }
+  result.push(cur);
+  return result.map(function(s){ return s.replace(/^"|"$/g,'').trim(); });
+}
 </script>
 </body>
 </html>
