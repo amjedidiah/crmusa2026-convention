@@ -2023,11 +2023,12 @@ function showRegistrationSuccess(amt) {
   var cb = document.getElementById('complete-btn');
   if (cb) cb.style.display = 'none';
 
-  var successMsg = amt === 0
-    ? 'Your registration is confirmed! No payment today — use your pledge code to return and pay any time before the convention.'
-    : '$'+amt+'.00 noted. ' + (remaining > 0
-        ? 'Remaining balance: <strong>$'+remaining+'.00</strong> — you can pay this at any time using your pledge code.'
-        : 'Your registration is <strong>fully paid</strong>! See you in Houston 🎉');
+  /* amount_paid is always 0 at registration — payment not yet received */
+  var successMsg = grandTotal === 0
+    ? 'Your registration is confirmed — your spot is free! We look forward to seeing you in Houston.'
+    : 'Your registration is confirmed for <strong style="color:#E8C87A;">$'+grandTotal+'.00</strong>. '+
+      'Please complete your payment of <strong style="color:#E8C87A;">$'+amt+'.00</strong> using the '+
+      'Zelle or Zeffy instructions below. Your balance will be updated within 3–5 business days once your payment is received.';
 
   area.innerHTML =
     /* ── Success tick ── */
@@ -2072,6 +2073,10 @@ function copyCode() {
 
 /* ── SAVE TO SUPABASE ── */
 function saveRegistrationNow(amt) {
+  /* NOTE: amount_paid is always saved as 0 at registration time.
+     Zelle and Zeffy payments are manual — no money has been received
+     yet when the registrant clicks "Complete Registration."
+     The admin portal updates amount_paid when payment is confirmed. */
   if (SUPA_KEY === 'YOUR_ANON_KEY_HERE') return;
   loadSupabase(function() {
     if (!_sb) return;
@@ -2082,9 +2087,9 @@ function saveRegistrationNow(amt) {
       church       : contact.ch,  city      : contact.ci,
       tier         : activeTier(),
       total_pledged: grandTotal,
-      amount_paid  : amt,
+      amount_paid  : 0,
       attendees    : JSON.stringify(atts),
-      status       : (grandTotal === 0 || amt >= grandTotal) ? 'complete' : (amt > 0 ? 'partial' : 'pending')
+      status       : grandTotal === 0 ? 'complete' : 'pending'
     }).then(function(res){
       if (res.error) console.error('Supabase save error:', res.error);
     });

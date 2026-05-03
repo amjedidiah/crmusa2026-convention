@@ -105,16 +105,11 @@ export default async function handler(req, res) {
 
   /* ── Status summary line ── */
   let statusLine;
-  if (paid === 0) {
-    statusLine = `You are registered with <strong style="color:#E8C87A;">$0 paid today</strong>. 
-      Use your pledge code to return and pay your balance at any time before the convention.`;
-  } else if (remaining === 0) {
-    statusLine = `We have received your full payment of 
-      <strong style="color:#7dbf80;">$${paid}.00</strong>. 
-      Your registration is complete!`;
+  /* amount_paid is always 0 at registration — payment confirmed by admin later */
+  if (total === 0) {
+    statusLine = `Your registration is <strong style="color:#7dbf80;">free</strong> — we look forward to seeing you in Houston!`;
   } else {
-    statusLine = `We have received <strong style="color:#7dbf80;">$${paid}.00</strong> from you today. 
-      Your remaining balance is <strong style="color:#E8C87A;">$${remaining}.00</strong>.`;
+    statusLine = `Your registration is confirmed for a total of <strong style="color:#E8C87A;">$${total}.00</strong>. Please complete your payment using the Zelle or Zeffy instructions below — your balance will be updated within 3–5 business days once we receive your payment.`;
   }
 
   /* ── HTML email ── */
