@@ -6,7 +6,7 @@
 ───────────────────────────────────────────────────────────────────── */
 
 const FROM_ADDRESS = 'pastor@gracelifecenter.com';
-const REPLY_TO     = 'convention@crmusanational.org';
+const REPLY_TO     = 'mok2003@gmail.com';
 const BREEZE_URL   = 'https://gracelifecenter.breezechms.com/give/online';
 const SITE_URL     = 'https://crmusa2026-convention.vercel.app';
 

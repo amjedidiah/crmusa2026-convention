@@ -5,7 +5,22 @@
 ───────────────────────────────────────────────────────────────────── */
 
 const FROM_ADDRESS  = 'pastor@gracelifecenter.com';
-const REPLY_TO      = 'convention@crmusanational.org';
+const REPLY_TO      = 'mok2003@gmail.com';
+const NOTIFY_LIST   = [
+  'Jessybenn@yahoo.com',
+  'modims2@yahoo.com',
+  'pastortonycbz@yahoo.com',
+  'soinikori@gmail.com',
+  'pastorpeter.crmnano@gmail.com',
+  'emekaok@hotmail.com',
+  'inyeredave@gmail.com',
+  'emekaok77@gmail.com',
+  'pastor@gracelifecenter.com',
+  'mike.u.ekwem@gmail.com',
+  'fellyokey@gmail.com',
+  'mok2003@gmail.com',
+  'ezekwennap@gmail.com',
+];
 const BREEZE_URL    = 'https://gracelifecenter.breezechms.com/give/online';
 const SITE_URL      = 'https://crmusa2026-convention.vercel.app';
 
@@ -267,6 +282,47 @@ export default async function handler(req, res) {
     console.error('Resend error:', errText);
     return res.status(500).json({ error: 'Email send failed', detail: errText });
   }
+
+  /* ── Send staff notification ── */
+  const notifyHtml = `
+    <div style="font-family:Arial,sans-serif;padding:24px;background:#f5f5f5;">
+      <h2 style="color:#0B1628;margin:0 0 16px;">New Convention Registration</h2>
+      <table style="background:#fff;border-collapse:collapse;width:100%;max-width:500px;">
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;width:140px;">Name</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;font-weight:bold;">\${fullName}</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Email</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;">\${email}</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Church</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;">\${esc(church || '—')}</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Pledge Code</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;font-family:monospace;font-size:18px;color:#C8A85A;letter-spacing:4px;">\${pledge_code}</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Tier</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;">\${esc(tierLabel)}</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Total Pledged</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;">$\${total}.00</td></tr>
+        <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">Paid Today</td>
+            <td style="padding:10px 16px;border-bottom:1px solid #eee;color:green;">$\${paid}.00</td></tr>
+        <tr><td style="padding:10px 16px;color:#666;">Balance</td>
+            <td style="padding:10px 16px;color:\${remaining > 0 ? '#C8A85A' : 'green'};">\${remaining > 0 ? '$'+remaining+'.00 remaining' : 'Fully Paid'}</td></tr>
+        <tr><td style="padding:10px 16px;border-top:1px solid #eee;color:#666;">Attendees</td>
+            <td style="padding:10px 16px;border-top:1px solid #eee;">\${attList.length} person(s)</td></tr>
+      </table>
+    </div>`;
+
+  await fetch('https://api.resend.com/emails', {
+    method : 'POST',
+    headers: {
+      'Authorization': \`Bearer \${process.env.RESEND_API_KEY}\`,
+      'Content-Type' : 'application/json',
+    },
+    body: JSON.stringify({
+      from   : \`CRM 2026 Convention <\${FROM_ADDRESS}>\`,
+      to     : NOTIFY_LIST,
+      reply_to: REPLY_TO,
+      subject: \`New Registration: \${fullName} — Code \${pledge_code}\`,
+      html   : notifyHtml,
+    }),
+  }).catch(e => console.warn('Notify send error:', e));
 
   return res.status(200).json({ ok: true });
 }
