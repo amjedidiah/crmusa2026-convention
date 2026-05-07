@@ -51,7 +51,45 @@
         margin-bottom: 1.2rem;
       }
 
-      /* Tabs */
+      /* Quick Zelle — registration preview when pledge is already satisfied ($0 due) */
+      .sz-result-inner {
+        background: rgba(200, 168, 90, 0.06);
+      }
+      .sz-result-inner.sz-reg-fully-paid {
+        background: #14241c;
+        border-color: rgba(125, 191, 128, 0.42);
+        box-shadow: inset 0 0 0 1px rgba(58, 122, 74, 0.25);
+      }
+      .sz-result-inner.sz-reg-fully-paid .card-title {
+        color: #b8e8bc;
+      }
+      .sz-reg-zero-callout {
+        margin: 0 0 1rem 0;
+        padding: 0.75rem 0.95rem;
+        background: #152a1f;
+        border: 1px solid #2d5a40;
+      }
+      .sz-reg-zero-badge {
+        display: inline-block;
+        font-size: 0.58rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #dff3e3;
+        background: #1e3d28;
+        border: 1px solid #3a7a4a;
+        padding: 0.2rem 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .sz-reg-zero-callout-p {
+        margin: 0;
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: #dff3e3;
+      }
+      .sz-reg-balance-zero {
+        color: #7dbf80;
+      }
       .tabs {
         display: flex;
         flex-wrap: wrap;
@@ -768,10 +806,16 @@
             </button>
             <div id="sz-result" style="display: none; margin-top: 1rem">
               <div
-                class="card"
-                style="margin-bottom: 0; background: rgba(200, 168, 90, 0.06)"
+                class="card sz-result-inner"
+                id="sz-result-inner"
+                style="margin-bottom: 0"
               >
-                <p class="card-title">Registration Found</p>
+                <p class="card-title" id="sz-result-title">Registration Found</p>
+                <div
+                  id="sz-step-banner"
+                  class="hidden msg msg-inf"
+                  style="margin-bottom: 0.75rem; font-size: 0.76rem"
+                ></div>
                 <div
                   id="sz-reg-info"
                   style="

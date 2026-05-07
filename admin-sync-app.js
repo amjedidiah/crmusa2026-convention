@@ -604,38 +604,29 @@ function refreshZelleDupIfPreviewOpen() {
 function initStaffPaymentForms() {
   syncLookupStep1Button();
   syncSzLookupButtonState();
-  ["sz-code", "sz-amt"].forEach(function (id) {
-    let el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("input", syncSzLookupButtonState);
-      el.addEventListener("change", syncSzLookupButtonState);
-    }
-  });
+  let szCodeEl = document.getElementById("sz-code");
+  if (szCodeEl) {
+    szCodeEl.addEventListener("input", function () {
+      invalidateZellePreviewIfLookupKeyChanged();
+      syncSzLookupButtonState();
+    });
+    szCodeEl.addEventListener("change", syncSzLookupButtonState);
+  }
   let szAmt = document.getElementById("sz-amt");
   if (szAmt) {
     szAmt.addEventListener("input", function () {
-      if (
-        document.getElementById("sz-result").style.display !== "none" &&
-        szReg
-      ) {
-        refreshZelleDupIfPreviewOpen();
-      }
+      syncSzLookupButtonState();
+      refreshQuickZellePreviewAfterEdit();
+    });
+    szAmt.addEventListener("change", function () {
+      syncSzLookupButtonState();
+      refreshQuickZellePreviewAfterEdit();
     });
   }
   let szDate = document.getElementById("sz-date");
   if (szDate) {
     szDate.addEventListener("change", function () {
-      let confirmBtn = document.getElementById("sz-confirm-btn");
-      if (confirmBtn) {
-        confirmBtn.disabled =
-          !String(szDate.value || "").trim() || szConfirmBusy;
-      }
-      if (
-        document.getElementById("sz-result").style.display !== "none" &&
-        szReg
-      ) {
-        refreshZelleDupIfPreviewOpen();
-      }
+      refreshQuickZellePreviewAfterEdit();
     });
   }
   ["pay-amt", "pay-date", "pay-method", "pay-notes"].forEach(function (id) {
@@ -1426,6 +1417,223 @@ function zLog(el, cls, msg) {
    ZELLE — SINGLE / BATCH
 ══════════════════════════════════════════════ */
 let szReg = null;
+/** Normalized pledge/email string used for the open preview; if the code field diverges, preview clears. */
+let szLookupKey = null;
+
+function clearZelleSinglePreview() {
+  szReg = null;
+  szLookupKey = null;
+  let res = document.getElementById("sz-result");
+  if (res) res.style.display = "none";
+  let dup = document.getElementById("sz-dup-warn");
+  if (dup) {
+    dup.classList.add("hidden");
+    dup.textContent = "";
+  }
+  let ban = document.getElementById("sz-step-banner");
+  if (ban) {
+    ban.classList.add("hidden");
+    ban.textContent = "";
+    ban.classList.remove("msg-inf", "msg-warn", "msg-err", "msg-ok");
+  }
+  let st = document.getElementById("sz-status");
+  if (st) {
+    st.textContent = "";
+    st.style.color = "rgba(232,223,200,0.38)";
+  }
+  syncSzConfirmButtonState();
+  syncSzLookupButtonState();
+  resetSzResultCardShell();
+}
+
+function invalidateZellePreviewIfLookupKeyChanged() {
+  if (!szReg || szLookupKey == null) return;
+  let typed = document.getElementById("sz-code")?.value.trim().toUpperCase() || "";
+  if (!typed) {
+    clearZelleSinglePreview();
+    return;
+  }
+  if (typed !== szLookupKey) {
+    clearZelleSinglePreview();
+  }
+}
+
+/** Callout when pledge total is met (nothing left to pay on file). */
+function buildZelleZeroBalanceCallout(reg, hasValidAmount) {
+  let pled = regTotalPledged(reg);
+  let paid = regAmountPaid(reg);
+  let rem = Math.max(0, pled - paid);
+  if (!(pled > 0 && rem <= 0.005)) return "";
+  let body = hasValidAmount
+    ? "Balance on file is <strong>$0.00</strong>. The amount you apply is an <strong>extra</strong> deposit and only posts after you confirm overpayment."
+    : "Balance on file is <strong>$0.00</strong>. Enter the amount received to preview the line; recording will require overpayment confirmation.";
+  return (
+    '<div class="sz-reg-zero-callout" role="status">' +
+    '<span class="sz-reg-zero-badge">$0 due — pledge satisfied</span>' +
+    '<p class="sz-reg-zero-callout-p">' +
+    body +
+    "</p>" +
+    "</div>"
+  );
+}
+
+function resetSzResultCardShell() {
+  let inner = document.getElementById("sz-result-inner");
+  let titleEl = document.getElementById("sz-result-title");
+  if (inner) inner.classList.remove("sz-reg-fully-paid");
+  if (titleEl) titleEl.textContent = "Registration Found";
+}
+
+function syncSzResultCardShell() {
+  let inner = document.getElementById("sz-result-inner");
+  let titleEl = document.getElementById("sz-result-title");
+  if (!inner || !szReg) {
+    resetSzResultCardShell();
+    return;
+  }
+  let pled = regTotalPledged(szReg);
+  let paid = regAmountPaid(szReg);
+  let rem = Math.max(0, pled - paid);
+  let zero = pled > 0 && rem <= 0.005;
+  inner.classList.toggle("sz-reg-fully-paid", zero);
+  if (titleEl) {
+    titleEl.textContent = zero
+      ? "Registration Found — $0 balance (fully paid on pledge)"
+      : "Registration Found";
+  }
+}
+
+/** HTML for name/church + balance lines (amount comes from the live field). */
+function buildQuickZelleRegInfoHtml(reg, amt) {
+  let top =
+    '<strong style="color:#E8C87A;font-size:1rem;">' +
+    esc(reg.first_name + " " + reg.last_name) +
+    "</strong><br/>" +
+    "Email: " +
+    esc(reg.email) +
+    " &nbsp;·&nbsp; Church: " +
+    esc(reg.church || "—") +
+    "<br/>";
+  if (!Number.isFinite(amt) || amt <= 0) {
+    let co = buildZelleZeroBalanceCallout(reg, false);
+    return (
+      top +
+      co +
+      '<p class="msg msg-inf" style="margin:0.7rem 0 0 0;font-size:0.78rem;padding:0.55rem 0.75rem;">Enter a valid <strong>Amount Received</strong> to refresh the balance preview.</p>'
+    );
+  }
+  let pled = regTotalPledged(reg);
+  let paid = regAmountPaid(reg);
+  let rem = Math.max(0, pled - paid);
+  let newRem = pled - (paid + amt);
+  let newBalColor = "rgba(232,223,200,0.35)";
+  let newBalLabel = "—";
+  if (pled > 0) {
+    if (newRem <= 0) {
+      newBalColor = "#7dbf80";
+      newBalLabel = "Fully Paid ✓";
+    } else {
+      newBalColor = "#E8C87A";
+      newBalLabel = "$" + newRem.toFixed(2);
+    }
+  }
+  let co = buildZelleZeroBalanceCallout(reg, true);
+  let curBalHtml =
+    pled > 0 && rem <= 0.005
+      ? 'Current balance: <strong class="sz-reg-balance-zero">$' +
+        rem.toFixed(2) +
+        " — fully paid on pledge</strong><br/>"
+      : 'Current balance: <strong style="color:#E8C87A;">$' +
+        rem.toFixed(2) +
+        "</strong><br/>";
+  return (
+    top +
+    co +
+    curBalHtml +
+    'Payment to apply: <strong style="color:#7dbf80;">$' +
+    amt.toFixed(2) +
+    "</strong><br/>" +
+    'New balance after: <strong style="color:' +
+    newBalColor +
+    ';">' +
+    newBalLabel +
+    "</strong>"
+  );
+}
+
+function updateQuickZelleStepBanner() {
+  let ban = document.getElementById("sz-step-banner");
+  if (!ban) return;
+  let res = document.getElementById("sz-result");
+  if (!szReg || !res || res.style.display === "none") {
+    ban.classList.add("hidden");
+    ban.textContent = "";
+    return;
+  }
+  let amt = Number.parseFloat(document.getElementById("sz-amt")?.value || 0);
+  let amtOk = Number.isFinite(amt) && amt > 0;
+  let pled = regTotalPledged(szReg);
+  let paid = regAmountPaid(szReg);
+  let rem = Math.max(0, pled - paid);
+
+  ban.classList.remove("hidden", "msg-inf", "msg-warn", "msg-err", "msg-ok");
+  ban.classList.add("msg");
+
+  if (!amtOk) {
+    ban.classList.add("msg-inf");
+    ban.textContent =
+      "Enter the amount received and the received date before recording.";
+    return;
+  }
+  if (pled > 0 && rem <= 0.005) {
+    ban.classList.add("msg-warn");
+    ban.textContent =
+      "Pledge is already satisfied on file. Confirm only if this deposit is real — you will approve it as overpayment.";
+    return;
+  }
+  if (pled > 0 && amt > rem + 0.01) {
+    ban.classList.add("msg-inf");
+    ban.textContent =
+      "This amount is above the remaining balance; you will be asked to confirm overpayment when you record.";
+    return;
+  }
+  if (pled > 0) {
+    ban.classList.add("msg-inf");
+    ban.textContent =
+      "Remaining balance before this deposit: $" + rem.toFixed(2) + ".";
+    return;
+  }
+  ban.classList.add("msg-inf");
+  ban.textContent =
+    "No pledge total on file for this tier. You can still record this deposit if you confirm.";
+}
+
+function syncSzConfirmButtonState() {
+  let btn = document.getElementById("sz-confirm-btn");
+  if (!btn) return;
+  let res = document.getElementById("sz-result");
+  let previewOpen = res && res.style.display !== "none";
+  let dateOk = !!String(
+    document.getElementById("sz-date")?.value || "",
+  ).trim();
+  let amt = Number.parseFloat(document.getElementById("sz-amt")?.value || 0);
+  let amtOk = Number.isFinite(amt) && amt > 0;
+  btn.disabled =
+    szConfirmBusy || !szReg || !previewOpen || !dateOk || !amtOk;
+}
+
+function refreshQuickZellePreviewAfterEdit() {
+  if (!szReg) return;
+  let res = document.getElementById("sz-result");
+  if (!res || res.style.display === "none") return;
+  let amt = Number.parseFloat(document.getElementById("sz-amt")?.value || 0);
+  let info = document.getElementById("sz-reg-info");
+  if (info) info.innerHTML = buildQuickZelleRegInfoHtml(szReg, amt);
+  updateQuickZelleStepBanner();
+  refreshZelleDupIfPreviewOpen();
+  syncSzConfirmButtonState();
+  syncSzResultCardShell();
+}
 
 function buildZelleSingleExternalRef(
   regId,
@@ -1479,6 +1687,7 @@ function singleZelleLookup() {
   if (szLookupBusy || szConfirmBusy) return;
 
   szReg = null;
+  szLookupKey = null;
   let lookupBtn = document.getElementById("sz-lookup-btn");
   szLookupBusy = true;
   syncSzLookupButtonState();
@@ -1496,50 +1705,11 @@ function singleZelleLookup() {
         return;
       }
       szReg = list[0];
-      let pled = regTotalPledged(szReg);
-      let paid = regAmountPaid(szReg);
-      let rem = Math.max(0, pled - paid);
-      let newPaid = paid + amt;
-      let newRem = pled - newPaid;
-      let newBalColor = "rgba(232,223,200,0.35)";
-      let newBalLabel = "—";
-      if (pled > 0) {
-        if (newRem <= 0) {
-          newBalColor = "#7dbf80";
-          newBalLabel = "Fully Paid ✓";
-        } else {
-          newBalColor = "#E8C87A";
-          newBalLabel = "$" + newRem.toFixed(2);
-        }
-      }
-      document.getElementById("sz-reg-info").innerHTML =
-        '<strong style="color:#E8C87A;font-size:1rem;">' +
-        esc(szReg.first_name + " " + szReg.last_name) +
-        "</strong><br/>" +
-        "Email: " +
-        esc(szReg.email) +
-        " &nbsp;·&nbsp; Church: " +
-        esc(szReg.church || "—") +
-        "<br/>" +
-        'Current balance: <strong style="color:#E8C87A;">$' +
-        rem.toFixed(2) +
-        "</strong><br/>" +
-        'Payment to apply: <strong style="color:#7dbf80;">$' +
-        amt.toFixed(2) +
-        "</strong><br/>" +
-        'New balance after: <strong style="color:' +
-        newBalColor +
-        ';">' +
-        newBalLabel +
-        "</strong>";
+      szLookupKey = code;
       document.getElementById("sz-result").style.display = "block";
+      refreshQuickZellePreviewAfterEdit();
 
       let dateStr = document.getElementById("sz-date").value;
-      let confirmBtn = document.getElementById("sz-confirm-btn");
-      let dateOk = !!String(dateStr || "").trim();
-      if (confirmBtn) {
-        confirmBtn.disabled = !dateOk || szConfirmBusy;
-      }
 
       return staffJson(
         "/api/admin/registration-payments?registration_id=" +
@@ -1559,13 +1729,7 @@ function singleZelleLookup() {
         lookupBtn.textContent = "Look Up & Preview →";
       }
       syncSzLookupButtonState();
-      let confirmBtn = document.getElementById("sz-confirm-btn");
-      if (confirmBtn && szReg) {
-        let dateOk = !!String(
-          document.getElementById("sz-date")?.value || "",
-        ).trim();
-        confirmBtn.disabled = !dateOk || szConfirmBusy;
-      }
+      syncSzConfirmButtonState();
     });
 }
 
@@ -1668,6 +1832,8 @@ function confirmSingleZelle() {
           : " — Balance: $" + data.new_balance.toFixed(2));
       st.style.color = "#7dbf80";
       szReg = null;
+      szLookupKey = null;
+      resetSzResultCardShell();
       ["sz-code", "sz-amt", "sz-name"].forEach(function (id) {
         document.getElementById(id).value = "";
       });
@@ -1675,6 +1841,12 @@ function confirmSingleZelle() {
       if (dupWarn) {
         dupWarn.classList.add("hidden");
         dupWarn.textContent = "";
+      }
+      let stepBan = document.getElementById("sz-step-banner");
+      if (stepBan) {
+        stepBan.classList.add("hidden");
+        stepBan.textContent = "";
+        stepBan.classList.remove("msg-inf", "msg-warn", "msg-err", "msg-ok");
       }
       setTimeout(function () {
         document.getElementById("sz-result").style.display = "none";
@@ -1694,24 +1866,13 @@ function confirmSingleZelle() {
       if (cancelBtn) cancelBtn.disabled = false;
       setZelleInputsDisabled(false);
       syncSzLookupButtonState();
+      syncSzConfirmButtonState();
     });
 }
 
 function cancelSingleZelle() {
   if (szConfirmBusy) return;
-  szReg = null;
-  document.getElementById("sz-result").style.display = "none";
-  let dupWarn = document.getElementById("sz-dup-warn");
-  if (dupWarn) {
-    dupWarn.classList.add("hidden");
-    dupWarn.textContent = "";
-  }
-  let st = document.getElementById("sz-status");
-  if (st) {
-    st.textContent = "";
-    st.style.color = "rgba(232,223,200,0.38)";
-  }
-  syncSzLookupButtonState();
+  clearZelleSinglePreview();
 }
 
 function parseBatch() {
