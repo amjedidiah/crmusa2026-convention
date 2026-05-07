@@ -178,7 +178,7 @@ export async function sendConfirmationEmails(payload) {
           '<p style="margin:0 0 8px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(125,191,128,0.7);">Your secure registration link</p>' +
           '<p style="margin:0 0 16px;font-size:13px;color:rgba(245,239,224,0.65);line-height:1.75;">' +
             'Bookmark or save this link to check your balance and payment options without entering your pledge code. ' +
-            'The link expires in 30 days; you can request a fresh link from the convention site using your email and pledge code.' +
+            'The link expires in 7 days; you can request a fresh link from the convention site using your email and pledge code.' +
           '</p>' +
           '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:12px 28px;background:#7dbf80;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">View registration &amp; balance</a>' +
         '</td></tr>' +
@@ -378,7 +378,7 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
       '<p style="margin:0 0 18px;font-size:15px;color:rgba(245,239,224,0.8);">Hello ' + greeting + ',</p>' +
       '<p style="margin:0 0 22px;font-size:14px;color:rgba(245,239,224,0.65);line-height:1.75;">' +
         'Here is your secure link to view your convention registration summary and balance. ' +
-        'This link expires in 30 days.' +
+        'This link expires in 7 days.' +
       '</p>' +
       '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:14px 32px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Open my registration</a>' +
       '<p style="margin:28px 0 0;font-size:12px;color:rgba(245,239,224,0.35);line-height:1.8;">' +

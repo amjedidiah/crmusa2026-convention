@@ -9,6 +9,9 @@ export async function staffApplyRegistrationPayment({
   notes,
   rawPayload,
   createdBy,
+  createdByStaffUserId,
+  createdByStaffEmail,
+  importBatchId,
   allowOverpayment,
 }) {
   return supabaseRestRequest("POST", "rpc/staff_apply_registration_payment", {
@@ -21,6 +24,9 @@ export async function staffApplyRegistrationPayment({
       p_notes: notes ?? null,
       p_raw_payload: rawPayload ?? {},
       p_created_by: createdBy ?? null,
+      p_created_by_staff_user_id: createdByStaffUserId ?? null,
+      p_created_by_staff_email: createdByStaffEmail ?? null,
+      p_import_batch_id: importBatchId ?? null,
       p_allow_overpayment: !!allowOverpayment,
     },
   });

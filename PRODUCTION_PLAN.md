@@ -75,7 +75,7 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] response: always generic success text to avoid account enumeration
 - [x] Implement tokens that:
   - [x] contain registration id and `lookup_token_version`
-  - [x] expire after 30 days
+  - [x] expire after 7 days
   - [x] are reissuable without changing the registration record
   - [x] are revocable by incrementing `lookup_token_version`
 - [x] Add rate limiting to `POST /api/register` and `POST /api/lookup-request` using a server-side store such as Upstash Redis.
@@ -150,9 +150,9 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] readable table typography and density on desktop
   - [x] usable mobile/tablet fallback behavior where needed
   - [x] consistent status badges, alerts, and row-level feedback
-- [ ] **Audit trail for staff payment actions:** Log Supabase Auth staff user id (`sub`) and email when available for every `registration_payments` insert from manual entry or Zeffy import apply; include registration id, payment id/source, and timestamp in structured logs.
-- [ ] **Durable attribution (optional but recommended):** Add nullable `created_by_staff_user_id` and/or `created_by_staff_email` on `registration_payments` (migration + writes from staff routes) so reconciliation and disputes do not depend only on log retention. For imports, also log a single **batch identifier** (e.g. request id or timestamp + staff id) to correlate many rows.
-- [ ] Document in the operational runbook how to trace a payment event back to a staff member and which logs/tables to use for reconciliation audits.
+- [x] **Audit trail for staff payment actions:** Log Supabase Auth staff user id (`sub`) and email when available for every `registration_payments` insert from manual entry or Zeffy import apply; include registration id, payment id/source, and timestamp in structured logs.
+- [x] **Durable attribution (optional but recommended):** Add nullable `created_by_staff_user_id` and/or `created_by_staff_email` on `registration_payments` (migration + writes from staff routes) so reconciliation and disputes do not depend only on log retention. For imports, also log a single **batch identifier** (e.g. request id or timestamp + staff id) to correlate many rows.
+- [x] Document in the operational runbook how to trace a payment event back to a staff member and which logs/tables to use for reconciliation audits.
 
 ### Phase 5: Operations, Deployment, and Hardening
 
@@ -174,17 +174,17 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] `STAFF_EMAIL_ALLOWLIST` or an equivalent allowlist source
   - [x] `STAFF_ORIGINS` / `STAFF_ORIGIN` (optional; staff `/api/admin/*` CORS allowlist; defaults from `SITE_URL` when unset)
 - [x] Add structured server logs keyed by registration id and payment id.
-- [ ] **Staff identity in payment logs:** Extend manual entry and import-apply paths so structured logs always include staff Auth `sub` and email when present (see Phase 4 audit checklist).
+- [x] **Staff identity in payment logs:** Extend manual entry and import-apply paths so structured logs always include staff Auth `sub` and email when present (see Phase 4 audit checklist).
 - [x] Add an operational runbook for:
   - [x] registration failures
   - [x] email delivery failures
   - [x] Zeffy import mismatch handling
   - [x] manual payment corrections
   - [x] reminder job failures
-  - [ ] **staff payment disputes and reconciliation:** how to correlate `registration_payments` rows and structured logs with a staff member and time window
+  - [x] **staff payment disputes and reconciliation:** how to correlate `registration_payments` rows and structured logs with a staff member and time window
 - [x] Verify database backups and establish a pre-launch smoke checklist covering register, lookup, admin payment update, import, and reminder cron auth.
 - [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 npm run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query.
-- [ ] Extend integration tests to cover **`POST /api/register` persistence** against local Supabase (e.g. inserted row, pledge code, totals)—**primary automated pre-launch gate** for registration. Staff JWT-protected routes may remain validated via manual checks plus HTTP smoke **401** coverage unless extended later.
+- [x] Extend integration tests to cover **`POST /api/register` persistence** against local Supabase (e.g. inserted row, pledge code, totals)—**primary automated pre-launch gate** for registration. Staff JWT-protected routes may remain validated via manual checks plus HTTP smoke **401** coverage unless extended later.
 - [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `npm run test:smoke-http`) for core route status codes without browser automation. **Pre-launch:** run smoke against the **release candidate URL**; strengthen assertions when feasible (e.g. response body shape, pledge code on successful register—not only status codes).
 - [x] Run **unit tests in CI** on push/PR (`.github/workflows/ci.yml`).
 - [x] Adopt a right-sized automated testing strategy:
@@ -298,7 +298,7 @@ Complete the **Manual Tests** sections below before production launch and **reco
 - [x] pending → partial → complete via two RPC calls (mixed `zelle_manual` / `zeffy` sources)
 - [x] partial seed registration → complete with one RPC (exact remainder)
 - [x] reminder candidate query shape (`status in pending/partial`)
-- [ ] `POST /api/register` persists a registration row with expected pledge code / totals against local Supabase (**planned**—primary automated gate for registration; track with Phase 5 integration item)
+- [x] `POST /api/register` persists a registration row with expected pledge code / totals against local Supabase (**primary automated gate** for registration)
 
 **HTTP smoke — `SMOKE_BASE_URL=… npm run test:smoke-http` (`test/smoke-http.mjs`; status codes only, no secrets)**
 

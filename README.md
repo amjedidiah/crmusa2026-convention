@@ -49,6 +49,7 @@ supabase status      # API URL, anon key, service_role key — copy into .env.lo
 - `supabase/migrations/202605070002_staff_apply_registration_payment.sql` — atomic payment RPC
 - `supabase/migrations/202605070003_staff_apply_return_payment_id.sql` — RPC response includes `payment_id` for ops logs
 - `supabase/migrations/202605080001_registration_payments_restrict_and_docs.sql` — `ON DELETE RESTRICT` on payment rows + constraint comments (also upgrades older DBs that used CASCADE)
+- `supabase/migrations/202605080002_payment_audit_attribution.sql` — durable staff attribution columns, import batch ids, updated payment RPC
 
 **Typical loop:** `supabase start` → change SQL → `supabase db reset` (recreates DB from all migrations + `seed.sql`) → run `npm test` and, when ready, `RUN_INTEGRATION=1 npm run test:integration` with `.env.local` pointing at that instance.
 
@@ -204,11 +205,11 @@ UPSTASH_REDIS_REST_TOKEN=...
 
 **Repo docs (all at repo root):** [OPERATIONS.md](./OPERATIONS.md) (runbook + log fields), [.env.example](./.env.example) (env template), [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) (phases, staff payment audit checklist, allowlist/offboarding, **Pre-launch verification and sign-off**, full test plan).
 
-- **Structured logs:** Handlers emit single-line JSON (see [OPERATIONS.md](./OPERATIONS.md)) with `registration_id` and `payment_id` where applicable. Search Vercel logs by `event` (for example `payment.manual_applied`, `register.persisted`). **Planned:** staff Auth identity on manual/import payment paths and optional DB columns—tracked in [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) Phase 4–5.
+- **Structured logs:** Handlers emit single-line JSON (see [OPERATIONS.md](./OPERATIONS.md)) with `registration_id`, `payment_id`, `payment_source`, and, on payment routes, staff Auth identity plus `import_batch_id` where applicable. Search Vercel logs by `event` (for example `payment.manual_applied`, `payment.zeffy_row_applied`, `register.persisted`).
 - **Staff admin responses:** Staff APIs return registrant PII by design for reconciliation—never log full response bodies; see [OPERATIONS.md](./OPERATIONS.md) → *Staff admin API responses (PII)*.
 - **Env template:** Copy [.env.example](./.env.example) when onboarding; production keys live in Vercel / Supabase dashboards only.
 - **Unit tests:** `npm test` — pricing, validation, tokens, Zeffy CSV helpers (runs on push/PR via [`ci.yml`](./.github/workflows/ci.yml)).
-- **DB integration (opt-in):** `RUN_INTEGRATION=1 npm run test:integration` — calls Supabase REST/RPC directly (same paths as the payment RPC used by manual + Zeffy apply). Loads `.env.local` then `.env` via [`dotenv`](https://github.com/motdotla/dotenv) in [`test/load-env.mjs`](./test/load-env.mjs). Does **not** exercise staff JWT auth or HTTP framing for admin/Zeffy preview routes. **`POST /api/register` persistence** in integration tests is **planned** as the primary automated gate for registration—see [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) → Test Plan → Integration / Phase 5.
+- **DB integration (opt-in):** `RUN_INTEGRATION=1 npm run test:integration` — calls Supabase REST/RPC directly for payment workflows and exercises `POST /api/register` persistence through the handler against local Supabase. Loads `.env.local` then `.env` via [`dotenv`](https://github.com/motdotla/dotenv) in [`test/load-env.mjs`](./test/load-env.mjs). Does **not** exercise staff JWT auth or HTTP framing for admin/Zeffy preview routes.
 - **HTTP smoke (opt-in):** against a running deployment or `vercel dev`:
 
   ```bash

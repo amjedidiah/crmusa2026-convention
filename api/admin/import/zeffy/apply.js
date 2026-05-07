@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import { staffApplyRegistrationPayment, rpcErrorMessage } from '../../../_lib/apply-payment.js';
 import { normalizeReceivedAt } from '../../../_lib/dates.js';
 import { serverLog } from '../../../_lib/server-log.js';
@@ -27,6 +29,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'items_required' });
   }
 
+  const importBatchId = `zeffy-${new Date().toISOString()}-${crypto.randomUUID()}`;
   const results = [];
 
   for (let i = 0; i < items.length; i += 1) {
@@ -47,7 +50,11 @@ export default async function handler(req, res) {
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
+        import_batch_id: importBatchId,
         row_index: i,
+        payment_source: 'zeffy',
+        staff_user_id: staff.userId,
+        staff_email: staff.email,
         detail: 'missing_registration_id_or_external_ref',
       });
       continue;
@@ -63,8 +70,12 @@ export default async function handler(req, res) {
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
+        import_batch_id: importBatchId,
         row_index: i,
         registration_id: rid,
+        payment_source: 'zeffy',
+        staff_user_id: staff.userId,
+        staff_email: staff.email,
         detail: 'invalid_registration_id_format',
       });
       continue;
@@ -80,8 +91,12 @@ export default async function handler(req, res) {
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
+        import_batch_id: importBatchId,
         registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
+        payment_source: 'zeffy',
+        staff_user_id: staff.userId,
+        staff_email: staff.email,
         detail: 'invalid_amount_cents',
       });
       continue;
@@ -104,8 +119,12 @@ export default async function handler(req, res) {
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
+        import_batch_id: importBatchId,
         registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
+        payment_source: 'zeffy',
+        staff_user_id: staff.userId,
+        staff_email: staff.email,
         detail: 'registration_not_found',
       });
       continue;
@@ -120,6 +139,9 @@ export default async function handler(req, res) {
       notes: notes != null ? String(notes) : null,
       rawPayload: { import: 'zeffy_csv', row_index: i },
       createdBy: staff.email,
+      createdByStaffUserId: staff.userId,
+      createdByStaffEmail: staff.email,
+      importBatchId,
       allowOverpayment: !!confirmOverpayment,
     });
 
@@ -133,8 +155,12 @@ export default async function handler(req, res) {
       });
       serverLog('error', 'payment.zeffy_apply_row_failed', {
         route: '/api/admin/import/zeffy/apply',
+        import_batch_id: importBatchId,
         registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
+        payment_source: 'zeffy',
+        staff_user_id: staff.userId,
+        staff_email: staff.email,
         detail: msg,
       });
       continue;
@@ -143,9 +169,12 @@ export default async function handler(req, res) {
     const payload = Array.isArray(result.data) ? result.data[0] : result.data;
     serverLog('info', 'payment.zeffy_row_applied', {
       route: '/api/admin/import/zeffy/apply',
+      import_batch_id: importBatchId,
       registration_id: rid,
       payment_id: payload?.payment_id || null,
       payment_external_ref: String(externalRef).trim(),
+      payment_source: 'zeffy',
+      staff_user_id: staff.userId,
       staff_email: staff.email,
     });
     results.push({
@@ -162,8 +191,11 @@ export default async function handler(req, res) {
 
   serverLog('info', 'payment.zeffy_apply_batch_complete', {
     route: '/api/admin/import/zeffy/apply',
+    import_batch_id: importBatchId,
     applied: okCount,
     failed: failCount,
+    payment_source: 'zeffy',
+    staff_user_id: staff.userId,
     staff_email: staff.email,
   });
 

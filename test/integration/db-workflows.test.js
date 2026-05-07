@@ -1,6 +1,7 @@
 /**
  * Opt-in DB integration tests (Supabase REST + RPC via service role).
- * Does not invoke Vercel route handlers or staff JWT auth.
+ * Most tests hit REST/RPC directly; register persistence exercises /api/register
+ * against the same local Supabase instance with Resend mocked.
  *
  * Run: RUN_INTEGRATION=1 npm run test:integration
  * Requires: migrations + seed, `.env.local` with SUPABASE_URL, SUPABASE_SERVICE_KEY, LOOKUP_TOKEN_SECRET.
@@ -13,7 +14,12 @@ import test from 'node:test';
 
 import '../load-env.mjs';
 
+import registerHandler from '../../api/register.js';
 import { staffApplyRegistrationPayment } from '../../api/_lib/apply-payment.js';
+import {
+  activeTierForDate,
+  calculateRegistrationTotalCents,
+} from '../../api/_lib/registration.js';
 import { createLookupToken, verifyLookupToken } from '../../api/_lib/tokens.js';
 import { supabaseRestRequest } from '../../api/_lib/supabase.js';
 
@@ -38,6 +44,64 @@ function requireEnvOrSkip() {
     return false;
   }
   return true;
+}
+
+function createMockRes() {
+  return {
+    statusCode: 200,
+    body: undefined,
+    headers: {},
+    setHeader(name, value) {
+      this.headers[name.toLowerCase()] = value;
+    },
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.body = payload;
+      return this;
+    },
+    end(payload) {
+      this.body = payload;
+      return this;
+    },
+  };
+}
+
+async function withMockedResend(run) {
+  const originalFetch = globalThis.fetch;
+  const resendCalls = [];
+  globalThis.fetch = async function mockFetch(input, init) {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input?.url;
+    if (url === 'https://api.resend.com/emails') {
+      resendCalls.push(init?.body ? JSON.parse(init.body) : {});
+      return new Response(JSON.stringify({ id: `re_mock_${resendCalls.length}` }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return originalFetch(input, init);
+  };
+  try {
+    return await run(resendCalls);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+async function deleteRegistrationIfPresent(id) {
+  if (!id) return;
+  const dr = await supabaseRestRequest(
+    'DELETE',
+    `registrations?id=eq.${encodeURIComponent(id)}`
+  );
+  assert.ok(dr.ok, `cleanup DELETE failed for registration ${id}: ${JSON.stringify(dr.data)}`);
 }
 
 async function resetSeedPendingRegistration() {
@@ -121,6 +185,104 @@ test(
 );
 
 test(
+  'integration: POST /api/register persists registration with expected pledge code / totals',
+  { skip: !requireEnvOrSkip() },
+  async () => {
+    const attendees = [
+      { name: 'Integration Adult', age: 40 },
+      { name: 'Integration Child', age: 9 },
+    ];
+    const expectedTier = activeTierForDate();
+    const expectedTotal = calculateRegistrationTotalCents(attendees, expectedTier);
+    const uniqueEmail = `integration.register.${Date.now()}@example.com`;
+    const prevSiteUrl = process.env.SITE_URL;
+    const prevResendKey = process.env.RESEND_API_KEY;
+    let insertedId = null;
+    let responseBody = null;
+
+    process.env.SITE_URL = 'https://integration.example.test';
+    process.env.RESEND_API_KEY = 'integration-resend-key';
+
+    try {
+      await withMockedResend(async (resendCalls) => {
+        const req = {
+          method: 'POST',
+          headers: {},
+          body: {
+            contact: {
+              first_name: 'Integration',
+              last_name: 'Register',
+              email: uniqueEmail,
+              phone: '555-0199',
+              church: 'Integration Chapel',
+              city: 'Houston',
+            },
+            attendees,
+          },
+        };
+        const res = createMockRes();
+
+        await registerHandler(req, res);
+
+        assert.equal(res.statusCode, 201);
+        assert.equal(res.body?.ok, true);
+        assert.equal(res.body?.registration?.tier, expectedTier);
+        assert.equal(res.body?.registration?.total_cents, expectedTotal);
+        assert.equal(res.body?.registration?.amount_paid_cents, 0);
+        assert.equal(res.body?.registration?.remaining_cents, expectedTotal);
+        assert.equal(res.body?.registration?.status, 'pending');
+        assert.match(res.body?.registration?.pledge_code, /^[A-HJ-NP-Z2-9]{6}$/);
+        assert.match(
+          res.body?.registration?.lookup_url,
+          /^https:\/\/integration\.example\.test\/#return\?token=/
+        );
+        assert.equal(res.body?.email?.confirm_sent, true);
+        assert.equal(res.body?.email?.notification_sent, true);
+        assert.equal(resendCalls.length, 2);
+        assert.ok(
+          resendCalls.some((call) => Array.isArray(call.to) && call.to.includes(uniqueEmail))
+        );
+
+        insertedId = res.body.registration.id;
+        responseBody = res.body;
+      });
+
+      const persisted = await supabaseRestRequest(
+        'GET',
+        `registrations?id=eq.${encodeURIComponent(insertedId)}&select=id,pledge_code,first_name,last_name,email,email_normalized,tier,total_cents,amount_paid_cents,status,lookup_token_version,attendees_json,metadata&limit=1`
+      );
+      assert.equal(persisted.ok, true);
+      const row = persisted.data?.[0];
+      assert.ok(row);
+      assert.equal(row.email, uniqueEmail);
+      assert.equal(row.email_normalized, uniqueEmail);
+      assert.equal(row.tier, expectedTier);
+      assert.equal(row.total_cents, expectedTotal);
+      assert.equal(row.amount_paid_cents, 0);
+      assert.equal(row.status, 'pending');
+      assert.equal(row.lookup_token_version, 1);
+      assert.equal(row.metadata?.source, 'public-site');
+      assert.deepEqual(row.attendees_json, attendees);
+
+      const tokenRaw = String(responseBody?.registration?.lookup_url || '').split('#return?token=')[1];
+      assert.ok(tokenRaw, 'lookup token should be present in lookup_url');
+      const verified = verifyLookupToken(decodeURIComponent(tokenRaw), {
+        secret: process.env.LOOKUP_TOKEN_SECRET,
+      });
+      assert.equal(verified.valid, true);
+      assert.equal(verified.payload.registration_id, insertedId);
+      assert.equal(verified.payload.lookup_token_version, row.lookup_token_version);
+    } finally {
+      if (prevSiteUrl === undefined) delete process.env.SITE_URL;
+      else process.env.SITE_URL = prevSiteUrl;
+      if (prevResendKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = prevResendKey;
+      await deleteRegistrationIfPresent(insertedId);
+    }
+  }
+);
+
+test(
   'integration: staff_apply_registration_payment and duplicate_external_ref',
   { skip: !requireEnvOrSkip() },
   async () => {
@@ -135,6 +297,8 @@ test(
       notes: 'integration test',
       rawPayload: { test: true },
       createdBy: 'integration-test',
+      createdByStaffUserId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      createdByStaffEmail: 'integration.staff@example.com',
       allowOverpayment: false,
     });
 
@@ -142,6 +306,17 @@ test(
     const payload = Array.isArray(first.data) ? first.data[0] : first.data;
     assert.ok(payload.payment_id);
     assert.equal(payload.amount_paid_cents, 100);
+
+    const paymentRow = await supabaseRestRequest(
+      'GET',
+      `registration_payments?registration_id=eq.${SEED_PENDING_ID}&external_ref=eq.${encodeURIComponent(INTEGRATION_MANUAL_REF)}&select=created_by,created_by_staff_user_id,created_by_staff_email,import_batch_id,source&limit=1`
+    );
+    assert.equal(paymentRow.ok, true);
+    assert.equal(paymentRow.data?.[0]?.created_by, 'integration-test');
+    assert.equal(paymentRow.data?.[0]?.created_by_staff_user_id, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    assert.equal(paymentRow.data?.[0]?.created_by_staff_email, 'integration.staff@example.com');
+    assert.equal(paymentRow.data?.[0]?.import_batch_id, null);
+    assert.equal(paymentRow.data?.[0]?.source, 'zelle_manual');
 
     const second = await staffApplyRegistrationPayment({
       registrationId: SEED_PENDING_ID,

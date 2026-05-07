@@ -15,6 +15,10 @@ Server routes emit **one JSON object per line** to stdout/stderr (searchable in 
 | `registration_id` | UUID when known |
 | `payment_id` | UUID from `staff_apply_registration_payment` when a row was inserted |
 | `payment_external_ref` | Idempotency key (`source` + `external_ref` in DB) when `payment_id` is not yet known or for context |
+| `payment_source` | Payment origin such as `zelle_manual`, `zelle`, or `zeffy` |
+| `staff_user_id` | Supabase Auth `sub` for the authenticated staff user when payment routes write or batch-import |
+| `staff_email` | Allowlisted staff email captured alongside the payment route log |
+| `import_batch_id` | Shared batch identifier for multi-row imports so related Zeffy apply rows can be correlated |
 | `detail` | Short non-PII diagnostic (errors); truncate upstream bodies here |
 
 **Do not** rely on logs for PII; registrant email appears only in legacy reminder failure payloads—prefer registration id when investigating.
@@ -50,6 +54,15 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 
 1. Prefer recording **adjustment** payments with clear `notes` and a fresh `external_ref` rather than editing rows by hand (service role only).
 2. If aggregates drift from payment rows, restore from `registration_payments` sums and fix with a controlled SQL fix in Supabase (maintenance window), not from the public site.
+
+## Staff payment disputes and reconciliation
+
+1. Start with the most stable identifier you have: `payment_id`, `payment_external_ref`, `registration_id`, or `import_batch_id`.
+2. Query `registration_payments` in Supabase and inspect `source`, `external_ref`, `received_at`, `created_at`, `created_by_staff_user_id`, `created_by_staff_email`, and `import_batch_id`. Legacy rows created before the Phase 4/5 audit migration may only have the older `created_by` text field.
+3. Search structured logs for `payment.manual_applied`, `payment.zeffy_row_applied`, `payment.manual_failed`, or `payment.zeffy_apply_batch_complete` using `payment_id`, `registration_id`, or `import_batch_id`.
+4. For Zeffy imports, use `import_batch_id` to pull the full set of rows from the same apply request, then confirm the acting staff user from `staff_user_id` / `staff_email` in logs and the same attribution columns in `registration_payments`.
+5. Reconcile the registration aggregate by comparing `registrations.amount_paid_cents` to the sum of non-voided `registration_payments.amount_cents` for that `registration_id`. If they diverge, fix from payment rows, not from memory or email threads.
+6. For an access-review question, correlate `created_by_staff_user_id` / `created_by_staff_email` with Supabase Auth and your allowlist deployment history to confirm the operator and time window.
 
 ## Reminder job failures
 

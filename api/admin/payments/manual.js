@@ -87,6 +87,8 @@ export default async function handler(req, res) {
         payment_source: source,
       },
       createdBy: staff.email,
+      createdByStaffUserId: staff.userId,
+      createdByStaffEmail: staff.email,
       allowOverpayment: !!confirmOverpayment,
     });
   } catch (err) {
@@ -94,6 +96,8 @@ export default async function handler(req, res) {
       route: "/api/admin/payments/manual",
       registration_id: registrationId,
       payment_external_ref: externalRef,
+      payment_source: source,
+      staff_user_id: staff.userId,
       staff_email: staff.email,
       detail: err?.message,
     });
@@ -106,6 +110,9 @@ export default async function handler(req, res) {
       route: "/api/admin/payments/manual",
       registration_id: registrationId,
       payment_external_ref: externalRef,
+      payment_source: source,
+      staff_user_id: staff.userId,
+      staff_email: staff.email,
       detail: msg,
       rpc_payload:
         typeof result.data === "string"
@@ -139,6 +146,8 @@ export default async function handler(req, res) {
     registration_id: registrationId,
     payment_id: payload?.payment_id || null,
     payment_external_ref: externalRef,
+    payment_source: source,
+    staff_user_id: staff.userId,
     staff_email: staff.email,
   });
   return res.status(200).json({
