@@ -555,8 +555,11 @@ function lookupReg() {
 }
 
 function renderRegCard(r) {
-  var remaining = (r.total_pledged||0) - (r.amount_paid||0);
-  var pct = r.total_pledged > 0 ? Math.round(((r.amount_paid||0)/r.total_pledged)*100) : 0;
+  var pled = regTotalPledged(r);
+  var paid = parseFloat(r.amount_paid);
+  paid = isFinite(paid) ? paid : 0;
+  var remaining = Math.max(0, pled - paid);
+  var pct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
   document.getElementById('reg-display').innerHTML =
     '<div class="pledge-code">'+esc(r.pledge_code)+'</div>'+
     '<div class="reg-name">'+esc(r.first_name+' '+r.last_name)+'</div>'+
@@ -566,10 +569,11 @@ function renderRegCard(r) {
       '<span class="reg-lbl">City</span>        <span class="reg-val">'+esc(r.city||'—')+'</span>'+
       '<span class="reg-lbl">Tier</span>        <span class="reg-val">'+esc(r.tier||'—')+'</span>'+
     '</div>'+
-    '<div class="balance-row"><span class="lbl">Total Pledged</span>   <span class="val">$'+(r.total_pledged||0)+'.00</span></div>'+
-    '<div class="balance-row"><span class="lbl">Amount Paid</span>    <span class="val val-paid">$'+(r.amount_paid||0)+'.00</span></div>'+
+    '<div class="balance-row"><span class="lbl">Total Pledged</span>   <span class="val">$'+pled.toFixed(2)+'</span></div>'+
+    '<div class="balance-row"><span class="lbl">Amount Paid</span>    <span class="val val-paid">$'+paid.toFixed(2)+'</span></div>'+
     '<div class="balance-row"><span class="lbl">Remaining Balance</span>'+
-      '<span class="val '+(remaining<=0?'val-full':'val-due')+'">'+(remaining<=0?'Fully Paid ✓':'$'+remaining.toFixed(2))+'</span></div>'+
+      '<span class="val '+(pled>0&&remaining<=0?'val-full':'val-due')+'">'+
+      (pled>0&&remaining<=0?'Fully Paid ✓':'$'+remaining.toFixed(2))+'</span></div>'+
     '<div style="margin-top:0.8rem;">'+
       '<div style="display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(232,223,200,0.4);margin-bottom:0.3rem;">'+
         '<span>Payment progress</span><span>'+pct+'%</span>'+
@@ -598,7 +602,10 @@ function recordPayment() {
 
   if (!amt || amt <= 0) { showMsg('pay-msg', 'Please enter a valid amount.', 'err'); return; }
 
-  var remaining = (currentReg.total_pledged||0) - (currentReg.amount_paid||0);
+  var pled = regTotalPledged(currentReg);
+  var paid = parseFloat(currentReg.amount_paid);
+  paid = isFinite(paid) ? paid : 0;
+  var remaining = Math.max(0, pled - paid);
   if (amt > remaining + 0.01) {
     if (!confirm('Amount ($'+amt.toFixed(2)+') exceeds remaining balance ($'+remaining.toFixed(2)+'). Continue?')) return;
   }
@@ -657,8 +664,10 @@ function loadReport() {
 function renderReport(rows) {
   var totalPledged = 0, totalPaid = 0, nComplete = 0, nPartialPending = 0;
   rows.forEach(function(r){
-    totalPledged += r.total_pledged||0;
-    totalPaid    += r.amount_paid||0;
+    var tp = regTotalPledged(r);
+    totalPledged += tp;
+    var ap = parseFloat(r.amount_paid); ap = isFinite(ap)?ap:0;
+    totalPaid    += ap;
     if (r.status==='complete') nComplete++;
     else nPartialPending++;
   });
@@ -679,8 +688,10 @@ function renderReport(rows) {
   var tbody = document.getElementById('report-body');
   tbody.innerHTML = '';
   rows.forEach(function(r) {
-    var rem = (r.total_pledged||0)-(r.amount_paid||0);
-    var rPct = r.total_pledged > 0 ? Math.round(((r.amount_paid||0)/r.total_pledged)*100) : 0;
+    var pled = regTotalPledged(r);
+    var paid = parseFloat(r.amount_paid); paid = isFinite(paid)?paid:0;
+    var rem = Math.max(0, pled - paid);
+    var rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
     var badgeCls = r.status==='complete'?'b-complete':(r.status==='partial'?'b-partial':'b-pending');
     var tr = document.createElement('tr');
     tr.innerHTML =
@@ -690,9 +701,9 @@ function renderReport(rows) {
       '<td>'+esc(r.church||'—')+'</td>'+
       '<td>'+esc(r.city||'—')+'</td>'+
       '<td>'+esc(r.tier||'—')+'</td>'+
-      '<td>$'+(r.total_pledged||0)+'.00</td>'+
-      '<td style="color:#7dbf80;">$'+(r.amount_paid||0)+'.00</td>'+
-      '<td style="color:'+(rem<=0?'#7dbf80':'#E8C87A')+';">'+(rem<=0?'Paid ✓':'$'+rem.toFixed(2))+'</td>'+
+      '<td>$'+pled.toFixed(2)+'</td>'+
+      '<td style="color:#7dbf80;">$'+paid.toFixed(2)+'</td>'+
+      '<td style="color:'+(pled>0&&rem<=0?'#7dbf80':'#E8C87A')+';">'+(pled>0&&rem<=0?'Paid ✓':'$'+rem.toFixed(2))+'</td>'+
       '<td>'+
         '<div style="display:flex;align-items:center;gap:0.4rem;">'+
           '<div style="background:rgba(255,255,255,0.07);height:4px;width:60px;border-radius:2px;">'+
@@ -712,11 +723,13 @@ function downloadCSV() {
   if (!reportData.length) return;
   var headers = ['Pledge Code','First Name','Last Name','Email','Phone','Church','City','Tier','Total Pledged','Amount Paid','Balance','Status','Registered'];
   var rows = reportData.map(function(r) {
-    var bal = (r.total_pledged||0)-(r.amount_paid||0);
+    var pled = regTotalPledged(r);
+    var paid = parseFloat(r.amount_paid); paid = isFinite(paid)?paid:0;
+    var bal = Math.max(0, pled - paid);
     return [
       r.pledge_code, r.first_name, r.last_name, r.email, r.phone||'',
       r.church||'', r.city||'', r.tier||'',
-      r.total_pledged||0, r.amount_paid||0, bal.toFixed(2),
+      pled.toFixed(2), paid.toFixed(2), bal.toFixed(2),
       r.status||'', (r.created_at||'').slice(0,10)
     ].map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
   });
@@ -741,6 +754,13 @@ function showMsg(id, msg, type) {
 function setText(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function regTotalPledged(reg) {
+  if (!reg) return 0;
+  var raw = (reg.total_pledged != null && reg.total_pledged !== '') ? reg.total_pledged : reg.total_amount;
+  var t = parseFloat(raw);
+  return isFinite(t) ? t : 0;
 }
 
 /* ══════════════════════════════════════════════
@@ -851,10 +871,14 @@ function renderZeffyPreview(rows) {
       tr.innerHTML = '<td>—</td><td>—</td><td>$'+r.amount.toFixed(2)+'</td><td>—</td>'+
         '<td><span style="font-size:0.62rem;color:rgba(232,223,200,0.35);">'+esc(r.reason)+'</span></td><td>—</td><td>—</td>';
     } else {
-      var afterPaid = r.reg ? (r.reg.amount_paid||0)+r.amount : null;
-      var afterRem  = r.reg ? (r.reg.total_pledged||0)-afterPaid : null;
+      var pled = r.reg ? regTotalPledged(r.reg) : 0;
+      var afterPaid = r.reg ? ((parseFloat(r.reg.amount_paid)||0)+r.amount) : null;
+      var afterRem  = r.reg ? (pled - afterPaid) : null;
       var badgeCls  = r.reg ? 'b-match' : (r.code ? 'b-none' : 'b-skip');
       var badgeTxt  = r.reg ? 'Match' : (r.code ? 'No Match' : 'No Code');
+      var balTd = !r.reg
+        ? '—'
+        : (pled > 0 && afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid</span>' : '$' + afterRem.toFixed(2) + ' left');
       tr.innerHTML =
         '<td>'+esc(r.date)+'</td>'+
         '<td>'+esc(r.donor)+'</td>'+
@@ -862,7 +886,7 @@ function renderZeffyPreview(rows) {
         '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+esc(r.code||'—')+'</td>'+
         '<td><span class="badge '+(r.reg?'b-complete':'b-pending')+'">'+badgeTxt+'</span></td>'+
         '<td>'+(r.reg?esc(r.reg.first_name+' '+r.reg.last_name):'—')+'</td>'+
-        '<td>'+(r.reg?(afterRem<=0?'<span style="color:#7dbf80;">Fully Paid</span>':'$'+afterRem.toFixed(2)+' left'):'—')+'</td>';
+        '<td>'+balTd+'</td>';
     }
     tbody.appendChild(tr);
   });
@@ -949,16 +973,19 @@ function singleZelleLookup() {
   apiCall('lookup', { value: code }, function(err, data) {
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     szReg = data.registration;
-    var rem     = (szReg.total_pledged||0) - (szReg.amount_paid||0);
-    var newPaid = (szReg.amount_paid||0) + amt;
-    var newRem  = (szReg.total_pledged||0) - newPaid;
+    var pled = regTotalPledged(szReg);
+    var paid = parseFloat(szReg.amount_paid);
+    paid = isFinite(paid) ? paid : 0;
+    var rem     = Math.max(0, pled - paid);
+    var newPaid = paid + amt;
+    var newRem  = pled - newPaid;
     document.getElementById('sz-reg-info').innerHTML =
       '<strong style="color:#E8C87A;font-size:1rem;">' + esc(szReg.first_name + ' ' + szReg.last_name) + '</strong><br/>' +
       'Email: ' + esc(szReg.email) + ' &nbsp;·&nbsp; Church: ' + esc(szReg.church||'—') + '<br/>' +
       'Current balance: <strong style="color:#E8C87A;">$' + rem.toFixed(2) + '</strong><br/>' +
       'Payment to apply: <strong style="color:#7dbf80;">$' + amt.toFixed(2) + '</strong><br/>' +
-      'New balance after: <strong style="color:' + (newRem<=0?'#7dbf80':'#E8C87A') + ';">' +
-        (newRem<=0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) + '</strong>';
+      'New balance after: <strong style="color:' + (pled > 0 && newRem<=0?'#7dbf80':'#E8C87A') + ';">' +
+        (pled > 0 && newRem<=0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) + '</strong>';
     document.getElementById('sz-result').style.display = 'block';
   });
 }
@@ -1046,9 +1073,15 @@ function renderBatchPreview() {
   var tbody = document.getElementById('batch-body');
   tbody.innerHTML = '';
   batchRows.forEach(function(r) {
-    var afterPaid = r.reg ? (r.reg.amount_paid||0) + r.amount : null;
-    var afterRem  = r.reg ? (r.reg.total_pledged||0) - afterPaid : null;
+    var pled = r.reg ? regTotalPledged(r.reg) : 0;
+    var afterPaid = r.reg ? ((parseFloat(r.reg.amount_paid)||0) + r.amount) : null;
+    var afterRem  = r.reg ? (pled - afterPaid) : null;
     var tr = document.createElement('tr');
+    var balCell = !r.reg
+      ? '—'
+      : (pled > 0 && afterRem <= 0
+          ? '<span style="color:#7dbf80;">Fully Paid ✓</span>'
+          : '$' + afterRem.toFixed(2) + ' left');
     tr.innerHTML =
       '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">' + esc(r.code) + '</td>' +
       '<td>$' + r.amount.toFixed(2) + '</td>' +
@@ -1056,7 +1089,7 @@ function renderBatchPreview() {
       '<td>' + esc(r.name || '—') + '</td>' +
       '<td><span class="badge ' + (r.reg ? 'b-complete' : 'b-pending') + '">' + (r.reg ? 'Match' : 'No Match') + '</span></td>' +
       '<td>' + (r.reg ? esc(r.reg.first_name + ' ' + r.reg.last_name) : '—') + '</td>' +
-      '<td>' + (r.reg ? (afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid ✓</span>' : '$' + afterRem.toFixed(2) + ' left') : '—') + '</td>';
+      '<td>' + balCell + '</td>';
     tbody.appendChild(tr);
   });
 

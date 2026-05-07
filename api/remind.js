@@ -16,6 +16,20 @@ const TIER_LABELS = {
   late      : 'Late (Jul 17+)',
 };
 
+function pledgedTotalUSD(reg) {
+  const raw =
+    reg.total_pledged != null && reg.total_pledged !== ''
+      ? reg.total_pledged
+      : reg.total_amount;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function amountPaidUSD(reg) {
+  const n = Number(reg.amount_paid);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default async function handler(req, res) {
   /* ── Auth: Vercel cron sends Authorization header automatically.
         Also accept ?secret= for manual testing.            ── */
@@ -40,7 +54,7 @@ export default async function handler(req, res) {
   }
 
   const supaRes = await fetch(
-    `${supaUrl}/rest/v1/registrations?status=in.(pending,partial)&total_pledged=gt.0&select=*`,
+    `${supaUrl}/rest/v1/registrations?status=in.(pending,partial)&select=*`,
     {
       headers: {
         'apikey'       : supaKey,
@@ -68,10 +82,12 @@ export default async function handler(req, res) {
   const errors = [];
 
   for (const reg of registrations) {
-    const remaining = (reg.total_pledged || 0) - (reg.amount_paid || 0);
+    const total = pledgedTotalUSD(reg);
+    const paid = amountPaidUSD(reg);
+    const remaining = Math.max(0, total - paid);
     if (remaining <= 0 || !reg.email) { skipped++; continue; }
 
-    const html = buildReminderEmail(reg, remaining);
+    const html = buildReminderEmail(reg, remaining, total, paid);
 
     const resendRes = await fetch('https://api.resend.com/emails', {
       method : 'POST',
@@ -106,9 +122,7 @@ export default async function handler(req, res) {
 }
 
 /* ── Build reminder email HTML ── */
-function buildReminderEmail(reg, remaining) {
-  const paid      = reg.amount_paid || 0;
-  const total     = reg.total_pledged || 0;
+function buildReminderEmail(reg, remaining, total, paid) {
   const pct       = total > 0 ? Math.round((paid / total) * 100) : 0;
   const tierLabel = TIER_LABELS[reg.tier] || reg.tier || '';
   const firstName = reg.first_name || 'Friend';

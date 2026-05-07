@@ -2087,6 +2087,7 @@ function saveRegistrationNow(amt) {
       church       : contact.ch,  city      : contact.ci,
       tier         : activeTier(),
       total_pledged: grandTotal,
+      total_amount : grandTotal,
       amount_paid  : 0,
       attendees    : JSON.stringify(atts),
       status       : grandTotal === 0 ? 'complete' : 'pending'
@@ -2248,19 +2249,27 @@ function paymentBlock(remaining, code) {
 
 function showBalance() {
   var r = returnRec;
-  var rem = (r.total_pledged||0) - (r.amount_paid||0);
+  var b = registrationMoney(r);
   setText('bal-name',  (r.first_name||'')+' '+(r.last_name||''));
   setText('bal-tier',  TIER_LABEL[r.tier]||r.tier||'');
-  setText('bal-total', '$'+(r.total_pledged||0)+'.00');
-  setText('bal-paid',  '$'+(r.amount_paid||0)+'.00');
+  setText('bal-total', '$'+b.total+'.00');
+  setText('bal-paid',  '$'+b.paid+'.00');
   var remEl = document.getElementById('bal-remaining');
-  if (rem > 0) { remEl.textContent='$'+rem+'.00'; remEl.className='balance-amt'; }
-  else         { remEl.textContent='Fully Paid ✓'; remEl.className='balance-amt done'; }
+  if (b.total > 0 && b.remaining > 0) {
+    remEl.textContent = '$'+b.remaining+'.00';
+    remEl.className = 'balance-amt';
+  } else if (b.total > 0 && b.remaining <= 0) {
+    remEl.textContent = 'Fully Paid ✓';
+    remEl.className = 'balance-amt done';
+  } else {
+    remEl.textContent = '$0.00';
+    remEl.className = 'balance-amt';
+  }
   document.getElementById('balance-box').style.display = 'block';
 
   var rps = document.getElementById('return-pay-section');
   if (!rps) return;
-  if (rem <= 0) { rps.style.display='none'; return; }
+  if (!(b.total > 0 && b.remaining > 0)) { rps.style.display='none'; return; }
 
   rps.style.display = 'block';
   var area = document.getElementById('return-breeze-area');
@@ -2273,7 +2282,7 @@ function showBalance() {
       '<p class="code-val">'+esc(code)+'</p>'+
       '<p class="code-note">Include this code in your payment memo so we can match it to your registration.</p>'+
     '</div>'+
-    paymentBlock(rem, code);}
+    paymentBlock(b.remaining, code);}
 
 /* ── SUPABASE LAZY LOAD ── */
 var _sb = null;
@@ -2293,6 +2302,20 @@ function loadSupabase(cb) {
 function g(id)     { var el=document.getElementById(id); return el?el.value.trim():''; }
 function esc(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function setText(id,t){ var el=document.getElementById(id); if(el) el.textContent=t; }
+
+function registrationMoney(r) {
+  if (!r) return { total: 0, paid: 0, remaining: 0 };
+  var rawT = (r.total_pledged != null && r.total_pledged !== '')
+    ? r.total_pledged
+    : r.total_amount;
+  var t = parseFloat(rawT);
+  if (!isFinite(t)) t = 0;
+  var p = parseFloat(r.amount_paid);
+  if (!isFinite(p)) p = 0;
+  var rem = Math.max(0, t - p);
+  return { total: t, paid: p, remaining: rem };
+}
+
 function showErr(el,t){ el.textContent=t; el.style.display='block'; }
 function makeCode() {
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r='';
