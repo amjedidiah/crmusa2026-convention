@@ -25,7 +25,7 @@ if ! command -v git &> /dev/null; then
   exit 1
 fi
 
-# ── STEP 1: Patch the two secret keys into index.html ──
+# ── STEP 1: Patch the current public anon key into index.html ──
 echo -e "${YELLOW}Step 1: Configuring secret keys...${NC}"
 echo ""
 
@@ -35,44 +35,34 @@ if [ -z "$SUPABASE_KEY" ]; then
   exit 1
 fi
 
-read -p "  Enter your PayPal LIVE Client ID (from developer.paypal.com): " PAYPAL_ID
-if [ -z "$PAYPAL_ID" ]; then
-  echo -e "${YELLOW}WARNING: No PayPal Client ID entered. PayPal checkout will show placeholder mode.${NC}"
-  PAYPAL_ID="AXu_test_placeholder"
-fi
-
 # Patch index.html in-place
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS sed
   sed -i '' "s|YOUR_ANON_KEY_HERE|$SUPABASE_KEY|g" index.html
-  sed -i '' "s|AXu_test_placeholder|$PAYPAL_ID|g" index.html
 else
   # Linux sed
   sed -i "s|YOUR_ANON_KEY_HERE|$SUPABASE_KEY|g" index.html
-  sed -i "s|AXu_test_placeholder|$PAYPAL_ID|g" index.html
 fi
 
 echo -e "${GREEN}  ✓ Keys patched into index.html${NC}"
 echo ""
 
-# ── STEP 2: Supabase SQL reminder ──
+# ── STEP 2: Supabase migration reminder ──
 echo -e "${YELLOW}Step 2: Supabase database setup${NC}"
 echo ""
-echo "  Have you already run supabase_migration.sql in Supabase?"
+echo "  Have you already applied the versioned migrations in supabase/migrations?"
 read -p "  [y/N]: " RAN_SQL
 
 if [[ ! "$RAN_SQL" =~ ^[Yy]$ ]]; then
   echo ""
   echo "  ──────────────────────────────────────────────"
   echo "  ACTION REQUIRED before continuing:"
-  echo "  1. Go to https://supabase.com/dashboard"
-  echo "  2. Open project: crmusa2026-convention"
-  echo "  3. Click SQL Editor → New Query"
-  echo "  4. Paste contents of supabase_migration.sql"
-  echo "  5. Click Run"
+  echo "  1. Review the files in supabase/migrations"
+  echo "  2. Apply them to your target Supabase project"
+  echo "  3. Seed sample data only if this is a non-production environment"
   echo "  ──────────────────────────────────────────────"
   echo ""
-  read -p "  Press ENTER once you have run the SQL, then we will continue..."
+  read -p "  Press ENTER once the migrations have been applied, then we will continue..."
 fi
 echo -e "${GREEN}  ✓ Supabase database confirmed${NC}"
 echo ""

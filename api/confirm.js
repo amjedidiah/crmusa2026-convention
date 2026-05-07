@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────
    /api/confirm  —  Registration confirmation + staff notification
-   Called by browser immediately after registration saves to Supabase.
+   Reused by /api/register after persistence succeeds and available as a
+   standalone compatibility endpoint for manual confirmation sends.
    POST body may include total_pledged and/or total_amount (legacy column).
 ───────────────────────────────────────────────────────────────────── */
 
@@ -31,18 +32,14 @@ const TIER_LABELS = {
   late:      'Late (Jul 17+)',
 };
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function sendConfirmationEmails(payload) {
   const {
     first_name, last_name, email, phone, church,
     pledge_code, tier, total_pledged, total_amount, amount_paid, attendees,
-  } = req.body || {};
+  } = payload || {};
 
   if (!email || !pledge_code) {
-    return res.status(400).json({ error: 'Missing email or pledge_code' });
+    throw new Error('Missing email or pledge_code');
   }
 
   const paidNum = Number(amount_paid);
@@ -281,7 +278,7 @@ export default async function handler(req, res) {
     console.log('[confirm] Staff notification sent OK to', NOTIFY_LIST.length, 'recipients');
   }
 
-  return res.status(200).json({
+  return {
     ok              : true,
     confirmSent     : confirmResult.status === 'fulfilled',
     notificationSent: notifyResult.status === 'fulfilled',
@@ -289,7 +286,26 @@ export default async function handler(req, res) {
       confirmResult.status === 'rejected' ? confirmResult.reason : null,
       notifyResult.status  === 'rejected' ? notifyResult.reason  : null,
     ].filter(Boolean),
-  });
+  };
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!req.body?.email || !req.body?.pledge_code) {
+    return res.status(400).json({ error: 'Missing email or pledge_code' });
+  }
+
+  try {
+    const result = await sendConfirmationEmails(req.body || {});
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : 'Could not send confirmation email.',
+    });
+  }
 }
 
 function notifyRow(label, value) {

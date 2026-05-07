@@ -1,0 +1,69 @@
+import { normalizeEmail } from './registration.js';
+
+export function isBlank(value) {
+  return String(value || '').trim() === '';
+}
+
+export function validateContact(contact) {
+  const candidate = contact || {};
+  const errors = {};
+
+  if (isBlank(candidate.first_name)) errors.first_name = 'First name is required.';
+  if (isBlank(candidate.last_name)) errors.last_name = 'Last name is required.';
+
+  const email = normalizeEmail(candidate.email);
+  if (!email) {
+    errors.email = 'Email is required.';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = 'Email must be valid.';
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    normalized: {
+      first_name: String(candidate.first_name || '').trim(),
+      last_name: String(candidate.last_name || '').trim(),
+      email: String(candidate.email || '').trim(),
+      email_normalized: email,
+      phone: String(candidate.phone || '').trim(),
+      church: String(candidate.church || '').trim(),
+      city: String(candidate.city || '').trim(),
+    },
+  };
+}
+
+export function validateAttendees(attendees) {
+  const rows = Array.isArray(attendees) ? attendees : [];
+  const errors = [];
+  const normalized = rows.map((attendee, index) => {
+    const candidate = attendee || {};
+    const name = String(candidate.name || '').trim();
+    const age = Number(candidate.age);
+    const rowErrors = {};
+
+    if (!name) rowErrors.name = 'Attendee name is required.';
+    if (!Number.isInteger(age) || age < 0 || age > 120) {
+      rowErrors.age = 'Attendee age must be an integer between 0 and 120.';
+    }
+
+    if (Object.keys(rowErrors).length > 0) {
+      errors.push({ index, errors: rowErrors });
+    }
+
+    return {
+      name,
+      age: Number.isFinite(age) ? age : candidate.age,
+    };
+  });
+
+  if (normalized.length === 0) {
+    errors.push({ index: -1, errors: { attendees: 'At least one attendee is required.' } });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    normalized,
+  };
+}
