@@ -892,6 +892,41 @@ function loadReport() {
     });
 }
 
+/** True when pledge total is positive and amount paid exceeds it (overpayment on file). */
+function registrationIsOverpaidRow(pled, paid) {
+  return pled > 0.005 && paid > pled + 0.005;
+}
+
+/** Balance column copy + color for pledges report table. */
+function reportBalanceCell(pled, paid) {
+  if (registrationIsOverpaidRow(pled, paid)) {
+    let over = paid - pled;
+    return {
+      text: "Overpaid by $" + over.toFixed(2),
+      color: "#9dd3ff",
+    };
+  }
+  let rem = Math.max(0, pled - paid);
+  if (pled > 0 && rem <= 0.005) {
+    return { text: "Paid ✓", color: "#7dbf80" };
+  }
+  return { text: "$" + rem.toFixed(2), color: "#E8C87A" };
+}
+
+/** Balance string for CSV / PDF when overpaid vs due. */
+function reportBalanceExport(pled, paid, opts) {
+  let pdf = opts?.pdf;
+  if (registrationIsOverpaidRow(pled, paid)) {
+    let n = (paid - pled).toFixed(2);
+    return pdf ? "Overpaid by $" + n : "Overpaid by " + n;
+  }
+  let rem = Math.max(0, pled - paid);
+  if (pled > 0 && rem <= 0.005) {
+    return "Paid";
+  }
+  return pdf ? "$" + rem.toFixed(2) : rem.toFixed(2);
+}
+
 function renderReport(rows) {
   let totalPledged = 0;
   let totalPaid = 0;
@@ -922,10 +957,15 @@ function renderReport(rows) {
   rows.forEach(function (r) {
     let pled = regTotalPledged(r);
     let paid = regAmountPaid(r);
-    let rem = Math.max(0, pled - paid);
     let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
+    let overpaid = registrationIsOverpaidRow(pled, paid);
+    let balCell = reportBalanceCell(pled, paid);
     let badgeCls = "b-pending";
-    if (r.status === "complete") {
+    let badgeText = r.status || "pending";
+    if (overpaid) {
+      badgeCls = "b-overpaid";
+      badgeText = "overpaid";
+    } else if (r.status === "complete") {
       badgeCls = "b-complete";
     } else if (r.status === "partial") {
       badgeCls = "b-partial";
@@ -958,9 +998,9 @@ function renderReport(rows) {
       paid.toFixed(2) +
       "</td>" +
       '<td style="color:' +
-      (pled > 0 && rem <= 0 ? "#7dbf80" : "#E8C87A") +
+      balCell.color +
       ';">' +
-      (pled > 0 && rem <= 0 ? "Paid ✓" : "$" + rem.toFixed(2)) +
+      esc(balCell.text) +
       "</td>" +
       "<td>" +
       '<div style="display:flex;align-items:center;gap:0.4rem;">' +
@@ -977,7 +1017,7 @@ function renderReport(rows) {
       '<td><span class="badge ' +
       badgeCls +
       '">' +
-      esc(r.status || "pending") +
+      esc(badgeText) +
       "</span></td>" +
       '<td style="font-size:0.72rem;color:rgba(232,223,200,0.4);">' +
       (r.created_at || "").slice(0, 10) +
@@ -1011,7 +1051,9 @@ function downloadCSV() {
   let rows = reportData.map(function (r) {
     let pled = regTotalPledged(r);
     let paid = regAmountPaid(r);
-    let bal = Math.max(0, pled - paid);
+    let overpaid = registrationIsOverpaidRow(pled, paid);
+    let balExport = reportBalanceExport(pled, paid);
+    let statusDisp = overpaid ? "overpaid" : r.status || "";
     return [
       r.pledge_code,
       r.first_name,
@@ -1023,8 +1065,8 @@ function downloadCSV() {
       r.tier || "",
       pled.toFixed(2),
       paid.toFixed(2),
-      bal.toFixed(2),
-      r.status || "",
+      balExport,
+      statusDisp,
       (r.created_at || "").slice(0, 10),
       buildPricingBreakdownLines(r).join("\n"),
     ]
@@ -1091,9 +1133,10 @@ function downloadPDF() {
   let body = reportData.map(function (r) {
     let pled = regTotalPledged(r);
     let paid = regAmountPaid(r);
-    let bal = Math.max(0, pled - paid);
     let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
-    let balanceStr = pled > 0 && bal <= 0 ? "Paid" : "$" + bal.toFixed(2);
+    let balanceStr = reportBalanceExport(pled, paid, { pdf: true });
+    let overpaid = registrationIsOverpaidRow(pled, paid);
+    let statusStr = overpaid ? "overpaid" : String(r.status || "");
     return [
       String(r.pledge_code || ""),
       [r.first_name, r.last_name].filter(Boolean).join(" "),
@@ -1105,7 +1148,7 @@ function downloadPDF() {
       "$" + paid.toFixed(2),
       balanceStr,
       rPct + "%",
-      String(r.status || ""),
+      statusStr,
       (r.created_at || "").slice(0, 10),
       buildPricingBreakdownLines(r).join("\n"),
     ];
