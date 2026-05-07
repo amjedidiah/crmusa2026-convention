@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRM 2026 — Admin</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <style>
       *,
       *::before,
@@ -531,6 +532,35 @@
         color: #d8d4cc;
         border: 1px solid #45454e;
       }
+
+      /* Session bootstrap: avoid flashing sign-in before restored session */
+      #auth-boot-screen {
+        min-height: 12rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #auth-boot-screen.hidden {
+        display: none;
+      }
+      .auth-boot-card {
+        max-width: 380px;
+        margin: 2rem auto;
+        text-align: center;
+        padding: 2rem 1.5rem;
+      }
+      .auth-boot-card .spinner {
+        width: 22px;
+        height: 22px;
+        border-width: 2px;
+        margin: 0 auto 1rem auto;
+        display: block;
+      }
+      .auth-boot-msg {
+        font-size: 0.82rem;
+        color: rgba(232, 223, 200, 0.55);
+        line-height: 1.5;
+      }
     </style>
   </head>
   <body>
@@ -540,8 +570,15 @@
         Convention payment management · Staff sign-in (magic link)
       </p>
 
+      <div id="auth-boot-screen">
+        <div class="card auth-boot-card">
+          <span class="spinner" aria-hidden="true"></span>
+          <p class="auth-boot-msg">Checking staff session…</p>
+        </div>
+      </div>
+
       <!-- ── LOGIN ── -->
-      <div id="login-screen">
+      <div id="login-screen" class="hidden">
         <div class="card" style="max-width: 420px; margin: 3rem auto">
           <p class="card-title">Staff Sign In</p>
           <p
@@ -1429,24 +1466,14 @@
       <!-- /main-screen -->
     </div>
 
-    <!-- jsPDF + autotable: pinned for SRI; bump versions + recompute hashes if upgrading:
-     curl -sL "https://cdn.jsdelivr.net/npm/jspdf@VERSION/dist/jspdf.umd.min.js" | openssl dgst -sha384 -binary | openssl base64 -A
-     curl -sL "https://cdn.jsdelivr.net/npm/jspdf-autotable@VERSION/dist/jspdf.plugin.autotable.min.js" | openssl dgst -sha384 -binary | openssl base64 -A -->
+    <!-- Supabase client: defer so it downloads in parallel with HTML parse (faster session). -->
+    <!-- jsPDF + autotable: loaded on demand from admin-sync-app.js when exporting PDF. -->
     <script
-      src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"
-      integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"
-      integrity="sha384-Zj5NAMJ45tB1L13yWiQlFjFjlyyeUBZTWQKktGXeW303njR3jSLmfN16iUgF8I8n"
-      crossorigin="anonymous"
-    ></script>
-    <script
+      defer
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.3"
       integrity="sha384-iWpUQPQzWsFiosLgsS8o+e6E8y3Gm+EW2m/vAAo7A2H3fuc4KOKEx+5CAord2H2z"
       crossorigin="anonymous"
     ></script>
-    <script src="/admin-sync-app.js"></script>
+    <script defer src="/admin-sync-app.js"></script>
   </body>
 </html>

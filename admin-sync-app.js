@@ -15,11 +15,15 @@ let zeffyApplyBusy = false;
 let batchApplyBusy = false;
 
 function showLoginScreen() {
+  let boot = document.getElementById("auth-boot-screen");
+  if (boot) boot.classList.add("hidden");
   document.getElementById("login-screen").classList.remove("hidden");
   document.getElementById("main-screen").classList.add("hidden");
 }
 
 function showMainScreen(email) {
+  let boot = document.getElementById("auth-boot-screen");
+  if (boot) boot.classList.add("hidden");
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("main-screen").classList.remove("hidden");
   let el = document.getElementById("staff-email-display");
@@ -1088,102 +1092,159 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
+/* jsPDF + autotable: loaded on first PDF export only (keeps login path fast). */
+let pdfLibsPromise = null;
+
+function loadPdfScriptOnce(src, integrity, dataKey) {
+  return new Promise(function (resolve, reject) {
+    if (document.querySelector('script[data-pdf-lib="' + dataKey + '"]')) {
+      resolve();
+      return;
+    }
+    let s = document.createElement("script");
+    s.src = src;
+    s.dataset.pdfLib = dataKey;
+    if (integrity) {
+      s.integrity = integrity;
+      s.crossOrigin = "anonymous";
+    }
+    s.onload = function () {
+      resolve();
+    };
+    s.onerror = function () {
+      reject(new Error("Failed to load " + dataKey));
+    };
+    document.head.appendChild(s);
+  });
+}
+
+function ensurePdfLibs() {
+  if (pdfLibsPromise) return pdfLibsPromise;
+  if (globalThis.jspdf?.jsPDF) {
+    pdfLibsPromise = Promise.resolve();
+    return pdfLibsPromise;
+  }
+  pdfLibsPromise = loadPdfScriptOnce(
+    "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js",
+    "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/",
+    "jspdf",
+  ).then(function () {
+    return loadPdfScriptOnce(
+      "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js",
+      "sha384-Zj5NAMJ45tB1L13yWiQlFjFjlyyeUBZTWQKktGXeW303njR3jSLmfN16iUgF8I8n",
+      "jspdf-autotable",
+    );
+  });
+  return pdfLibsPromise;
+}
+
 function downloadPDF() {
   if (!reportData.length) return;
-  if (globalThis.jspdf === undefined || !globalThis.jspdf.jsPDF) {
-    alert("PDF export is unavailable. Refresh the page and try again.");
-    return;
-  }
-  let JsPDF = globalThis.jspdf.jsPDF;
-  let margin = 36;
-  let doc = new JsPDF({
-    orientation: "landscape",
-    unit: "pt",
-    format: "letter",
-  });
-  doc.setFontSize(14);
-  doc.setTextColor(11, 22, 40);
-  doc.text("CRM 2026 — Pledges Report", margin, margin);
-  doc.setFontSize(9);
-  doc.setTextColor(90, 90, 90);
-  doc.text(
-    "Generated " + new Date().toISOString().slice(0, 19) + "Z",
-    margin,
-    margin + 18,
-  );
-  doc.setTextColor(0, 0, 0);
+  ensurePdfLibs()
+    .then(function () {
+      if (globalThis.jspdf === undefined || !globalThis.jspdf.jsPDF) {
+        throw new Error("jsPDF not available after load");
+      }
+      let JsPDF = globalThis.jspdf.jsPDF;
+      let margin = 36;
+      let doc = new JsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "letter",
+      });
+      doc.setFontSize(14);
+      doc.setTextColor(11, 22, 40);
+      doc.text("CRM 2026 — Pledges Report", margin, margin);
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      doc.text(
+        "Generated " + new Date().toISOString().slice(0, 19) + "Z",
+        margin,
+        margin + 18,
+      );
+      doc.setTextColor(0, 0, 0);
 
-  let head = [
-    [
-      "Code",
-      "Name",
-      "Email",
-      "Church",
-      "City",
-      "Tier",
-      "Pledged",
-      "Paid",
-      "Balance",
-      "% Paid",
-      "Status",
-      "Registered",
-      "Pricing / logic",
-    ],
-  ];
-  let body = reportData.map(function (r) {
-    let pled = regTotalPledged(r);
-    let paid = regAmountPaid(r);
-    let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
-    let balanceStr = reportBalanceExport(pled, paid, { pdf: true });
-    let overpaid = registrationIsOverpaidRow(pled, paid);
-    let statusStr = overpaid ? "overpaid" : String(r.status || "");
-    return [
-      String(r.pledge_code || ""),
-      [r.first_name, r.last_name].filter(Boolean).join(" "),
-      String(r.email || ""),
-      String(r.church || "—"),
-      String(r.city || "—"),
-      String(r.tier || "—"),
-      "$" + pled.toFixed(2),
-      "$" + paid.toFixed(2),
-      balanceStr,
-      rPct + "%",
-      statusStr,
-      (r.created_at || "").slice(0, 10),
-      buildPricingBreakdownLines(r).join("\n"),
-    ];
-  });
+      let head = [
+        [
+          "Code",
+          "Name",
+          "Email",
+          "Church",
+          "City",
+          "Tier",
+          "Pledged",
+          "Paid",
+          "Balance",
+          "% Paid",
+          "Status",
+          "Registered",
+          "Pricing / logic",
+        ],
+      ];
+      let body = reportData.map(function (r) {
+        let pled = regTotalPledged(r);
+        let paid = regAmountPaid(r);
+        let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
+        let balanceStr = reportBalanceExport(pled, paid, { pdf: true });
+        let overpaid = registrationIsOverpaidRow(pled, paid);
+        let statusStr = overpaid ? "overpaid" : String(r.status || "");
+        return [
+          String(r.pledge_code || ""),
+          [r.first_name, r.last_name].filter(Boolean).join(" "),
+          String(r.email || ""),
+          String(r.church || "—"),
+          String(r.city || "—"),
+          String(r.tier || "—"),
+          "$" + pled.toFixed(2),
+          "$" + paid.toFixed(2),
+          balanceStr,
+          rPct + "%",
+          statusStr,
+          (r.created_at || "").slice(0, 10),
+          buildPricingBreakdownLines(r).join("\n"),
+        ];
+      });
 
-  try {
-    doc.autoTable({
-      startY: margin + 28,
-      head: head,
-      body: body,
-      styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
-      columnStyles: {
-        12: { minCellWidth: 140, fontSize: 6 },
-      },
-      headStyles: {
-        fillColor: [200, 168, 90],
-        textColor: [11, 22, 40],
-        fontStyle: "bold",
-      },
-      alternateRowStyles: { fillColor: [248, 246, 242] },
-      margin: { left: margin, right: margin },
-      showHead: "everyPage",
+      try {
+        doc.autoTable({
+          startY: margin + 28,
+          head: head,
+          body: body,
+          styles: { fontSize: 7, cellPadding: 3, overflow: "linebreak" },
+          columnStyles: {
+            12: { minCellWidth: 140, fontSize: 6 },
+          },
+          headStyles: {
+            fillColor: [200, 168, 90],
+            textColor: [11, 22, 40],
+            fontStyle: "bold",
+          },
+          alternateRowStyles: { fillColor: [248, 246, 242] },
+          margin: { left: margin, right: margin },
+          showHead: "everyPage",
+        });
+      } catch (e) {
+        alert(
+          "Could not build PDF: " +
+            (e?.message ? e.message : String(e)) +
+            ". Try refreshing the page.",
+        );
+        return;
+      }
+
+      doc.save(
+        "crm2026-registrations-" +
+          new Date().toISOString().slice(0, 10) +
+          ".pdf",
+      );
+    })
+    .catch(function (e) {
+      alert(
+        "Could not export PDF: " +
+          (e?.message ? e.message : String(e)) +
+          ". Check your network and try again.",
+      );
     });
-  } catch (e) {
-    alert(
-      "Could not build PDF: " +
-        (e?.message ? e.message : String(e)) +
-        ". Try refreshing the page.",
-    );
-    return;
-  }
-
-  doc.save(
-    "crm2026-registrations-" + new Date().toISOString().slice(0, 10) + ".pdf",
-  );
 }
 
 function showMsg(id, msg, type) {
@@ -2115,9 +2176,11 @@ function applyBatch() {
 
 /* boot */
 document.addEventListener("DOMContentLoaded", function () {
+  let authBoot = initSupabase();
   initStaffPaymentForms();
   initZeffyDropZone();
-  initSupabase().catch(function (e) {
+  authBoot.catch(function (e) {
+    showLoginScreen();
     let msg = document.getElementById("login-msg");
     if (msg) {
       msg.className = "msg msg-err";
