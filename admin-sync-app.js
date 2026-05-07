@@ -165,23 +165,32 @@ function showTab(name) {
 function regTotalPledged(reg) {
   if (!reg) return 0;
   if (reg.total_cents != null && reg.total_cents !== '') {
-    return (Number(reg.total_cents) || 0) / 100;
+    var tc = Number(reg.total_cents);
+    return Number.isFinite(tc) ? tc / 100 : 0;
   }
   var raw =
     reg.total_pledged != null && reg.total_pledged !== ''
       ? reg.total_pledged
       : reg.total_amount;
   var t = parseFloat(raw);
-  return isFinite(t) ? t : 0;
+  return Number.isFinite(t) ? t : 0;
 }
 
 function regAmountPaid(reg) {
   if (!reg) return 0;
   if (reg.amount_paid_cents != null && reg.amount_paid_cents !== '') {
-    return (Number(reg.amount_paid_cents) || 0) / 100;
+    var pc = Number(reg.amount_paid_cents);
+    return Number.isFinite(pc) ? pc / 100 : 0;
   }
   var p = parseFloat(reg.amount_paid);
-  return isFinite(p) ? p : 0;
+  return Number.isFinite(p) ? p : 0;
+}
+
+/** Preview cell when pled is known dollars; avoids bogus negatives when pled is 0 */
+function adminPreviewBalanceHtml(pled, afterRem) {
+  if (!(pled > 0)) return '—';
+  if (afterRem <= 0) return '<span style="color:#7dbf80;">Fully Paid</span>';
+  return '$' + afterRem.toFixed(2) + ' left';
 }
 
 /* ── LOOKUP ── */
@@ -660,11 +669,7 @@ function renderZeffyPreview(rows, summary) {
                 ? 'OK'
                 : '—';
       var badgeCls = reg && (r.flags || []).length === 0 ? 'b-complete' : 'b-pending';
-      var balTd = !reg
-        ? '—'
-        : pled > 0 && afterRem <= 0
-          ? '<span style="color:#7dbf80;">Fully Paid</span>'
-          : '$' + afterRem.toFixed(2) + ' left';
+      var balTd = !reg ? '—' : adminPreviewBalanceHtml(pled, afterRem);
       tr.innerHTML =
         '<td>' +
         esc(r.date || '') +
@@ -854,9 +859,9 @@ function singleZelleLookup() {
         amt.toFixed(2) +
         '</strong><br/>' +
         'New balance after: <strong style="color:' +
-        (pled > 0 && newRem <= 0 ? '#7dbf80' : '#E8C87A') +
+        (pled > 0 ? (newRem <= 0 ? '#7dbf80' : '#E8C87A') : 'rgba(232,223,200,0.35)') +
         ';">' +
-        (pled > 0 && newRem <= 0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) +
+        (pled > 0 ? (newRem <= 0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) : '—') +
         '</strong>';
       document.getElementById('sz-result').style.display = 'block';
     })
@@ -1013,9 +1018,7 @@ function renderBatchPreview() {
     var tr = document.createElement('tr');
     var balCell = !r.reg
       ? '—'
-      : pled > 0 && afterRem <= 0
-        ? '<span style="color:#7dbf80;">Fully Paid ✓</span>'
-        : '$' + afterRem.toFixed(2) + ' left';
+      : adminPreviewBalanceHtml(pled, afterRem);
     tr.innerHTML =
       '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">' +
       esc(r.code) +

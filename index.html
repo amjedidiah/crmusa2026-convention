@@ -4254,11 +4254,13 @@
 
       /* ── SHARED PAYMENT INSTRUCTIONS (Zelle primary, Breeze secondary) ── */
       function paymentBlock(remaining, code) {
+        var safeCode = esc(code);
+        var remStr = fmtMoney(remaining);
         var balLine = remaining
           ? ' (balance: <strong style="color:#E8C87A;">$' +
-            remaining +
-            ".00</strong>)"
-          : "";
+            remStr +
+            '</strong>)'
+          : '';
         return (
           /* OPTION 1: Zeffy card payment */
           '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(99,102,241,0.45);background:rgba(99,102,241,0.06);">' +
@@ -4274,12 +4276,12 @@
           '<p style="font-size:0.82rem;color:rgba(245,239,224,0.55);line-height:1.75;margin-bottom:0.9rem;">' +
           'Fill in the form below. When asked for your <strong style="color:#E8C87A;">Conference Registration Code</strong>, ' +
           "enter your pledge code: <strong style=\"color:#E8C87A;font-family:'Cinzel',serif;letter-spacing:0.18em;\">" +
-          code +
+          safeCode +
           "</strong>" +
           (remaining
             ? '. You can pay any amount up to your balance of <strong style="color:#E8C87A;">$' +
-              remaining +
-              ".00</strong>."
+              remStr +
+              '</strong>.'
             : ".") +
           "</p>" +
           '<div style="position:relative;overflow:hidden;height:860px;width:100%;margin-bottom:0.5rem;">' +
@@ -4324,7 +4326,7 @@
           balLine +
           "</li>" +
           '<li>In the <strong style="color:#E8C87A;">Memo / Note</strong> field, enter: <strong style="color:#E8C87A;letter-spacing:0.2em;">' +
-          code +
+          safeCode +
           "</strong></li>" +
           "<li>Send — confirmed within 3-5 business days</li>" +
           "</ol>" +
@@ -4343,7 +4345,7 @@
           '<p style="font-size:0.82rem;color:rgba(245,239,224,0.55);line-height:1.75;margin-bottom:1rem;">' +
           "Tap below and your bank app launches with payment details ready. Enter the amount, " +
           'add <strong style="color:#E8C87A;letter-spacing:0.15em;">' +
-          code +
+          safeCode +
           "</strong> in the memo, and send." +
           "</p>" +
           '<div style="text-align:center;margin-bottom:1rem;">' +
@@ -4369,11 +4371,11 @@
         var b = registrationMoney(r);
         setText("bal-name", (r.first_name || "") + " " + (r.last_name || ""));
         setText("bal-tier", TIER_LABEL[r.tier] || r.tier || "");
-        setText("bal-total", "$" + b.total + ".00");
-        setText("bal-paid", "$" + b.paid + ".00");
+        setText("bal-total", "$" + fmtMoney(b.total));
+        setText("bal-paid", "$" + fmtMoney(b.paid));
         var remEl = document.getElementById("bal-remaining");
         if (b.total > 0 && b.remaining > 0) {
-          remEl.textContent = "$" + b.remaining + ".00";
+          remEl.textContent = "$" + fmtMoney(b.remaining);
           remEl.className = "balance-amt";
         } else if (b.total > 0 && b.remaining <= 0) {
           remEl.textContent = "Fully Paid ✓";
@@ -4419,6 +4421,11 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
       }
+      function fmtMoney(n) {
+        var x = Number(n);
+        if (!isFinite(x)) x = 0;
+        return x.toFixed(2);
+      }
       function setText(id, t) {
         var el = document.getElementById(id);
         if (el) el.textContent = t;
@@ -4434,7 +4441,7 @@
           var rem =
             r.remaining_cents != null && r.remaining_cents !== ""
               ? Math.max(0, Math.round(Number(r.remaining_cents) || 0) / 100)
-              : Math.max(0, t - p);
+              : Math.max(0, Math.round((t - p) * 100) / 100);
           return { total: t, paid: p, remaining: rem };
         }
         var rawT =
@@ -4445,7 +4452,7 @@
         if (!isFinite(t2)) t2 = 0;
         var p2 = parseFloat(r.amount_paid);
         if (!isFinite(p2)) p2 = 0;
-        var rem2 = Math.max(0, t2 - p2);
+        var rem2 = Math.max(0, Math.round((t2 - p2) * 100) / 100);
         return { total: t2, paid: p2, remaining: rem2 };
       }
 

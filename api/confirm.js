@@ -38,6 +38,30 @@ const TIER_LABELS = {
   late:      'Late (Jul 17+)',
 };
 
+const RESEND_TIMEOUT_MS = 15_000;
+
+function fmtUsd(n) {
+  const x = Number(n);
+  return (Number.isFinite(x) ? x : 0).toFixed(2);
+}
+
+function pledgeOneLine(code) {
+  return String(code ?? '').replace(/[\r\n\u2028\u2029]/g, ' ').trim();
+}
+
+async function fetchResend(init) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), RESEND_TIMEOUT_MS);
+  try {
+    return await fetch('https://api.resend.com/emails', {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
 export async function sendConfirmationEmails(payload) {
   const {
     registration_id: registrationId,
@@ -64,6 +88,8 @@ export async function sendConfirmationEmails(payload) {
   const tierLabel = TIER_LABELS[tier] || tier || '';
   const fullName  = [first_name, last_name].filter(Boolean).join(' ');
   const attList   = Array.isArray(attendees) ? attendees : [];
+  const safePledge = esc(pledge_code);
+  const subjectPledge = pledgeOneLine(pledge_code);
 
   /* ── Build attendee rows ── */
   const attRows = attList.map(function(a, i) {
@@ -86,23 +112,23 @@ export async function sendConfirmationEmails(payload) {
       'Your registration is <strong style="color:#7dbf80;">free</strong>. We look forward to seeing you in Houston!';
   } else if (paid === 0) {
     bodyPara =
-      'Your convention total is <strong style="color:#E8C87A;">$' + total + '.00</strong>. ' +
+      'Your convention total is <strong style="color:#E8C87A;">$' + fmtUsd(total) + '</strong>. ' +
       'You have <strong>$0 recorded as paid</strong> so far — please complete payment via Zelle or Zeffy using the instructions below. ' +
       'Your balance will be updated within 3-5 business days once we receive payment.';
   } else if (trulyFullyPaid) {
     bodyPara =
-      'We have recorded <strong style="color:#7dbf80;">$' + paid + '.00</strong> toward your registration. ' +
+      'We have recorded <strong style="color:#7dbf80;">$' + fmtUsd(paid) + '</strong> toward your registration. ' +
       'Your balance is <strong style="color:#7dbf80;">paid in full</strong> — see you in Houston!';
   } else {
     bodyPara =
-      'Your convention total is <strong style="color:#E8C87A;">$' + total + '.00</strong>. ' +
-      'We recorded <strong style="color:#7dbf80;">$' + paid + '.00</strong> toward your registration. ' +
-      'Remaining balance: <strong style="color:#E8C87A;">$' + remaining + '.00</strong>. ' +
+      'Your convention total is <strong style="color:#E8C87A;">$' + fmtUsd(total) + '</strong>. ' +
+      'We recorded <strong style="color:#7dbf80;">$' + fmtUsd(paid) + '</strong> toward your registration. ' +
+      'Remaining balance: <strong style="color:#E8C87A;">$' + fmtUsd(remaining) + '</strong>. ' +
       'Complete payment using the instructions below.';
   }
 
   var remLabel =
-    remaining > 0 ? '$' + remaining + '.00' : trulyFullyPaid ? 'Fully Paid ✓' : '$0.00';
+    remaining > 0 ? '$' + fmtUsd(remaining) : trulyFullyPaid ? 'Fully Paid ✓' : '$' + fmtUsd(0);
   var remColor =
     remaining > 0 ? '#E8C87A' : trulyFullyPaid ? '#7dbf80' : 'rgba(245,239,224,0.55)';
 
@@ -115,13 +141,13 @@ export async function sendConfirmationEmails(payload) {
             '<p style="margin:0 0 14px;font-size:13px;color:rgba(245,239,224,0.6);line-height:1.8;">' +
               'Send to <strong style="color:#E8C87A;">' + ZELLE_EMAIL + '</strong>. ' +
               'Put your pledge code <strong style="color:#E8C87A;letter-spacing:3px;font-family:Courier New,monospace;">' +
-              pledge_code + '</strong> in the Memo/Note field.' +
+              safePledge + '</strong> in the Memo/Note field.' +
             '</p>' +
             '<p style="margin:0 0 6px;font-size:13px;color:rgba(245,239,224,0.8);"><strong style="color:#E8C87A;">Option 2 - Card via Zeffy:</strong></p>' +
             '<p style="margin:0 0 16px;font-size:13px;color:rgba(245,239,224,0.6);line-height:1.8;">' +
               'Use the giving portal on the convention site. Enter your pledge code ' +
               '<strong style="color:#E8C87A;letter-spacing:3px;font-family:Courier New,monospace;">' +
-              pledge_code + '</strong> ' +
+              safePledge + '</strong> ' +
               'in the <strong style="color:#E8C87A;">Conference Registration Code</strong> field.' +
             '</p>' +
             '<a href="' + publicSiteUrl() + '#register" style="display:inline-block;padding:11px 28px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Return to Convention Site</a>' +
@@ -137,10 +163,10 @@ export async function sendConfirmationEmails(payload) {
 
   var staffBalanceText =
     remaining > 0
-      ? '$' + remaining + '.00 outstanding'
+      ? '$' + fmtUsd(remaining) + ' outstanding'
       : trulyFullyPaid
         ? 'Fully Paid'
-        : '$0 — verify total in Supabase if fee expected';
+        : '$' + fmtUsd(0) + ' — verify total in Supabase if fee expected';
 
   var lookupLinkBlock = lookup_url
     ? '<table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(125,191,128,0.06);border:1px solid rgba(125,191,128,0.22);margin-bottom:26px;">' +
@@ -178,7 +204,7 @@ export async function sendConfirmationEmails(payload) {
       '<table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(200,168,90,0.08);border:1px solid rgba(200,168,90,0.3);margin-bottom:26px;">' +
         '<tr><td align="center" style="padding:22px 24px;">' +
           '<p style="margin:0 0 8px;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:rgba(200,168,90,0.6);">Your Pledge Code</p>' +
-          '<p style="margin:0 0 10px;font-size:38px;letter-spacing:14px;color:#E8C87A;font-family:Courier New,monospace;font-weight:700;">' + pledge_code + '</p>' +
+          '<p style="margin:0 0 10px;font-size:38px;letter-spacing:14px;color:#E8C87A;font-family:Courier New,monospace;font-weight:700;">' + safePledge + '</p>' +
           '<p style="margin:0;font-size:11px;color:rgba(245,239,224,0.38);line-height:1.7;">' +
             'Save this code. Include it in your Zelle memo or Zeffy Registration Code field when paying.' +
           '</p>' +
@@ -192,10 +218,10 @@ export async function sendConfirmationEmails(payload) {
           '<td style="padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(200,168,90,0.55);text-align:right;">' + esc(tierLabel) + '</td>' +
         '</tr>' +
         '<tr><td style="padding:10px 16px;font-size:13px;color:rgba(245,239,224,0.55);">Total Convention Cost</td>' +
-             '<td style="padding:10px 16px;font-size:16px;color:#E8C87A;text-align:right;font-family:Georgia,serif;">$' + total + '.00</td></tr>' +
+             '<td style="padding:10px 16px;font-size:16px;color:#E8C87A;text-align:right;font-family:Georgia,serif;">$' + fmtUsd(total) + '</td></tr>' +
         '<tr style="border-top:1px solid rgba(200,168,90,0.08);">' +
              '<td style="padding:10px 16px;font-size:13px;color:rgba(245,239,224,0.55);">Amount Paid</td>' +
-             '<td style="padding:10px 16px;font-size:16px;color:#7dbf80;text-align:right;font-family:Georgia,serif;">$' + paid + '.00</td></tr>' +
+             '<td style="padding:10px 16px;font-size:16px;color:#7dbf80;text-align:right;font-family:Georgia,serif;">$' + fmtUsd(paid) + '</td></tr>' +
         '<tr style="border-top:1px solid rgba(200,168,90,0.15);">' +
              '<td style="padding:12px 16px;font-size:14px;color:#F5EFE0;font-weight:bold;">Remaining Balance</td>' +
              '<td style="padding:12px 16px;font-size:20px;color:' + remColor + ';text-align:right;font-family:Georgia,serif;font-weight:bold;">' +
@@ -238,10 +264,10 @@ export async function sendConfirmationEmails(payload) {
       notifyRow('Email',         esc(email)) +
       notifyRow('Phone',         esc(phone || '—')) +
       notifyRow('Church',        esc(church || '—')) +
-      notifyRow('Pledge Code',   '<span style="font-family:Courier New,monospace;font-size:22px;color:#C8A85A;letter-spacing:5px;font-weight:bold;">' + pledge_code + '</span>') +
+      notifyRow('Pledge Code',   '<span style="font-family:Courier New,monospace;font-size:22px;color:#C8A85A;letter-spacing:5px;font-weight:bold;">' + safePledge + '</span>') +
       notifyRow('Tier',          esc(tierLabel)) +
-      notifyRow('Total Pledged', '$' + total + '.00') +
-      notifyRow('Amount Paid',   '<span style="color:green;">$' + paid + '.00</span>') +
+      notifyRow('Total Pledged', '$' + fmtUsd(total)) +
+      notifyRow('Amount Paid',   '<span style="color:green;">$' + fmtUsd(paid) + '</span>') +
       notifyRow('Balance Due',   '<span style="color:' + (remaining > 0 ? '#B8860B' : trulyFullyPaid ? 'green' : '#888') + ';font-weight:bold;">' +
                                  staffBalanceText + '</span>') +
       notifyRow('Attendees',     attList.length + ' person(s)') +
@@ -252,7 +278,7 @@ export async function sendConfirmationEmails(payload) {
   /* ── Send both emails in parallel — independent of each other ── */
   const [confirmResult, notifyResult] = await Promise.allSettled([
 
-    fetch('https://api.resend.com/emails', {
+    fetchResend({
       method : 'POST',
       headers: {
         'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
@@ -262,14 +288,14 @@ export async function sendConfirmationEmails(payload) {
         from    : 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
         to      : [email],
         reply_to: REPLY_TO,
-        subject : 'CRM 2026 Registration Confirmed - Code: ' + pledge_code,
+        subject : 'CRM 2026 Registration Confirmed - Code: ' + subjectPledge,
         html    : confirmHtml,
       }),
     }).then(function(r) {
       return r.ok ? r.json() : r.text().then(function(t) { return Promise.reject(t); });
     }),
 
-    fetch('https://api.resend.com/emails', {
+    fetchResend({
       method : 'POST',
       headers: {
         'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
@@ -279,7 +305,7 @@ export async function sendConfirmationEmails(payload) {
         from    : 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
         to      : NOTIFY_LIST,
         reply_to: REPLY_TO,
-        subject : 'NEW REGISTRATION: ' + fullName + ' - Code ' + pledge_code,
+        subject : 'NEW REGISTRATION: ' + fullName + ' - Code ' + subjectPledge,
         html    : notifyHtml,
       }),
     }).then(function(r) {
@@ -358,7 +384,7 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
     '</td></tr>' +
     '</table></td></tr></table></body></html>';
 
-  const response = await fetch('https://api.resend.com/emails', {
+  const response = await fetchResend({
     method: 'POST',
     headers: {
       Authorization: 'Bearer ' + process.env.RESEND_API_KEY,
