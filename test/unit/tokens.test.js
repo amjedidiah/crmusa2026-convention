@@ -39,3 +39,25 @@ test('verifyLookupToken rejects tampered signature', () => {
   assert.equal(v.valid, false);
   assert.equal(v.reason, 'signature');
 });
+
+test('createLookupToken uses LOOKUP_TOKEN_TTL_SECONDS when ttlSeconds omitted', () => {
+  const prev = process.env.LOOKUP_TOKEN_TTL_SECONDS;
+  process.env.LOOKUP_TOKEN_TTL_SECONDS = '86400';
+  try {
+    const token = createLookupToken(
+      { registration_id: '11111111-1111-1111-1111-111111111111', lookup_token_version: 1 },
+      { secret: SECRET, nowSeconds: 1_700_000_000 }
+    );
+    assert.equal(
+      verifyLookupToken(token, { secret: SECRET, nowSeconds: 1_700_000_000 + 86399 }).valid,
+      true
+    );
+    assert.equal(
+      verifyLookupToken(token, { secret: SECRET, nowSeconds: 1_700_000_000 + 86401 }).valid,
+      false
+    );
+  } finally {
+    if (prev === undefined) delete process.env.LOOKUP_TOKEN_TTL_SECONDS;
+    else process.env.LOOKUP_TOKEN_TTL_SECONDS = prev;
+  }
+});

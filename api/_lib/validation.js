@@ -24,7 +24,8 @@ export function validateContact(contact) {
     normalized: {
       first_name: String(candidate.first_name || '').trim(),
       last_name: String(candidate.last_name || '').trim(),
-      email: String(candidate.email || '').trim(),
+      email_raw: String(candidate.email || '').trim(),
+      email,
       email_normalized: email,
       phone: String(candidate.phone || '').trim(),
       church: String(candidate.church || '').trim(),
@@ -39,12 +40,14 @@ export function validateAttendees(attendees) {
   const normalized = rows.map((attendee, index) => {
     const candidate = attendee || {};
     const name = String(candidate.name || '').trim();
-    const age = Number(candidate.age);
+    const ageRaw = candidate.age;
+    const age = Number(ageRaw);
+    const ageAbsent = ageRaw == null || String(ageRaw).trim() === "";
     const rowErrors = {};
 
     if (!name) rowErrors.name = 'Attendee name is required.';
-    if (!Number.isInteger(age) || age < 0 || age > 120) {
-      rowErrors.age = 'Attendee age must be an integer between 0 and 120.';
+    if (ageAbsent || !Number.isInteger(age) || age < 0 || age > 120) {
+      rowErrors.age = "Attendee age must be an integer between 0 and 120.";
     }
 
     if (Object.keys(rowErrors).length > 0) {

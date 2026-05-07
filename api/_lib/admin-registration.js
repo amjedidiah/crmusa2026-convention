@@ -1,5 +1,7 @@
 /**
  * Normalize DB registration row for admin / report JSON (dollars + cents).
+ * Includes PII (email, phone, names) by design for staff tools—do not log full objects;
+ * see OPERATIONS.md → Staff admin API responses (PII).
  */
 export function registrationToAdminJson(row) {
   if (!row) return null;
@@ -24,6 +26,7 @@ export function registrationToAdminJson(row) {
     remaining_cents: remaining,
     total_amount: totalCents / 100,
     amount_paid: paidCents / 100,
+    remaining_amount: remaining / 100,
     status: row.status,
     attendees_json: row.attendees_json,
     last_reminder_at: row.last_reminder_at,

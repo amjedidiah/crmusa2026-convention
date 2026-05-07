@@ -49,32 +49,43 @@ async function resetSeedPendingRegistration() {
     INTEGRATION_ALLOW_OVERPAY_REF,
   ];
   for (const ref of pendingIntegrationRefs) {
-    await supabaseRestRequest(
-      'DELETE',
-      `registration_payments?registration_id=eq.${SEED_PENDING_ID}&external_ref=eq.${encodeURIComponent(ref)}`
+    const dr = await supabaseRestRequest(
+      "DELETE",
+      `registration_payments?registration_id=eq.${SEED_PENDING_ID}&external_ref=eq.${encodeURIComponent(ref)}`,
+    );
+    assert.ok(
+      dr.ok,
+      `reset DELETE failed for ref ${ref}: ${JSON.stringify(dr.data)}`,
     );
   }
-  await supabaseRestRequest('PATCH', `registrations?id=eq.${SEED_PENDING_ID}`, {
-    body: {
-      amount_paid_cents: 0,
-      status: 'pending',
+  const pr = await supabaseRestRequest(
+    "PATCH",
+    `registrations?id=eq.${SEED_PENDING_ID}`,
+    {
+      body: {
+        amount_paid_cents: 0,
+        status: "pending",
+      },
+      headers: { Prefer: "return=minimal" },
     },
-    headers: { Prefer: 'return=minimal' },
-  });
+  );
+  assert.ok(pr.ok, `reset PATCH failed: ${JSON.stringify(pr.data)}`);
 }
 
 async function resetSeedPartialRegistration() {
-  await supabaseRestRequest(
+  const dr = await supabaseRestRequest(
     'DELETE',
     `registration_payments?registration_id=eq.${SEED_PARTIAL_ID}&external_ref=eq.${encodeURIComponent(INTEGRATION_PARTIAL_TOPUP_REF)}`
   );
-  await supabaseRestRequest('PATCH', `registrations?id=eq.${SEED_PARTIAL_ID}`, {
+  assert.ok(dr.ok, `reset partial DELETE failed: ${JSON.stringify(dr.data)}`);
+  const pr = await supabaseRestRequest('PATCH', `registrations?id=eq.${SEED_PARTIAL_ID}`, {
     body: {
       amount_paid_cents: 20000,
       status: 'partial',
     },
     headers: { Prefer: 'return=minimal' },
   });
+  assert.ok(pr.ok, `reset partial PATCH failed: ${JSON.stringify(pr.data)}`);
 }
 
 async function fetchRegistrationRow(id) {

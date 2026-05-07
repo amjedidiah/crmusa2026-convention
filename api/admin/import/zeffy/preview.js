@@ -62,7 +62,7 @@ async function fetchExistingZeffyRefs(refs) {
 }
 
 export default async function handler(req, res) {
-  Object.entries(staffCorsHeaders()).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(staffCorsHeaders(req)).forEach(([k, v]) => res.setHeader(k, v));
   if (handleStaffOptions(req, res)) return;
 
   if (req.method !== 'POST') {
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
       };
     }
 
-    const reg = regMap.get(row.pledge_code) || null;
+    const reg = regMap.get(String(row.pledge_code || '').toUpperCase()) || null;
     const amountCents = Math.round(row.amount_dollars * 100);
     const proposedExternalRef = stableZeffyExternalRef(row);
 

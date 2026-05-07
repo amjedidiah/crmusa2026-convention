@@ -39,6 +39,12 @@ export function getLookupRequestRateLimiter() {
 }
 
 export function getClientIp(req) {
+  // On Vercel, trust this first: set by the platform, not clobbered like raw
+  // X-Forwarded-For can be in some proxy stacks.
+  const vercelIp = req.headers['x-vercel-forwarded-for'];
+  if (typeof vercelIp === 'string' && vercelIp.trim()) {
+    return vercelIp.split(',')[0].trim();
+  }
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
     return forwarded.split(',')[0].trim();
@@ -58,6 +64,15 @@ export async function enforceRateLimit(req, limiterFactory) {
     return { ok: true };
   }
   const ip = getClientIp(req);
-  const result = await limiter.limit(ip);
-  return { ok: result.success };
+  if (ip === 'unknown') {
+    return { ok: true };
+  }
+  try {
+    const result = await limiter.limit(ip);
+    return { ok: result.success };
+  } catch (err) {
+    // Fail open: allow the request through if Redis is unavailable.
+    console.error("[rate-limit] Redis error, failing open:", err);
+    return { ok: true };
+  }
 }

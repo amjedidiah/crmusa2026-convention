@@ -7,9 +7,10 @@ import {
   staffCorsHeaders,
 } from '../../../_lib/staff-auth.js';
 import { supabaseRestRequest } from '../../../_lib/supabase.js';
+import { isUuid } from '../../../_lib/uuid.js';
 
 export default async function handler(req, res) {
-  Object.entries(staffCorsHeaders()).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(staffCorsHeaders(req)).forEach(([k, v]) => res.setHeader(k, v));
   if (handleStaffOptions(req, res)) return;
 
   if (req.method !== 'POST') {
@@ -52,17 +53,34 @@ export default async function handler(req, res) {
       continue;
     }
 
+    const rid = String(registrationId).trim();
+    if (!isUuid(rid)) {
+      results.push({
+        index: i,
+        ok: false,
+        error: 'invalid_registration_id_format',
+        registration_id: registrationId,
+      });
+      serverLog('warn', 'payment.zeffy_apply_row_skipped', {
+        route: '/api/admin/import/zeffy/apply',
+        row_index: i,
+        registration_id: rid,
+        detail: 'invalid_registration_id_format',
+      });
+      continue;
+    }
+
     const amountCents = Math.round(Number(amountCentsRaw));
     if (!Number.isFinite(amountCents) || amountCents <= 0) {
       results.push({
         index: i,
         ok: false,
         error: 'invalid_amount_cents',
-        registration_id: registrationId,
+        registration_id: rid,
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
-        registration_id: registrationId,
+        registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
         detail: 'invalid_amount_cents',
       });
@@ -71,7 +89,7 @@ export default async function handler(req, res) {
 
     const regRes = await supabaseRestRequest(
       'GET',
-      `registrations?id=eq.${registrationId}&select=id,pledge_code,total_cents,amount_paid_cents&limit=1`
+      `registrations?id=eq.${encodeURIComponent(rid)}&select=id,pledge_code,total_cents,amount_paid_cents&limit=1`
     );
     const regRow =
       regRes.ok && Array.isArray(regRes.data) && regRes.data[0]
@@ -82,11 +100,11 @@ export default async function handler(req, res) {
         index: i,
         ok: false,
         error: 'registration_not_found',
-        registration_id: registrationId,
+        registration_id: rid,
       });
       serverLog('warn', 'payment.zeffy_apply_row_skipped', {
         route: '/api/admin/import/zeffy/apply',
-        registration_id: registrationId,
+        registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
         detail: 'registration_not_found',
       });
@@ -94,7 +112,7 @@ export default async function handler(req, res) {
     }
 
     const result = await staffApplyRegistrationPayment({
-      registrationId,
+      registrationId: rid,
       source: 'zeffy',
       externalRef: String(externalRef).trim(),
       amountCents,
@@ -111,11 +129,11 @@ export default async function handler(req, res) {
         index: i,
         ok: false,
         error: msg,
-        registration_id: registrationId,
+        registration_id: rid,
       });
       serverLog('error', 'payment.zeffy_apply_row_failed', {
         route: '/api/admin/import/zeffy/apply',
-        registration_id: registrationId,
+        registration_id: rid,
         payment_external_ref: String(externalRef).trim(),
         detail: msg,
       });
@@ -125,7 +143,7 @@ export default async function handler(req, res) {
     const payload = Array.isArray(result.data) ? result.data[0] : result.data;
     serverLog('info', 'payment.zeffy_row_applied', {
       route: '/api/admin/import/zeffy/apply',
-      registration_id: registrationId,
+      registration_id: rid,
       payment_id: payload?.payment_id || null,
       payment_external_ref: String(externalRef).trim(),
       staff_email: staff.email,
@@ -133,7 +151,7 @@ export default async function handler(req, res) {
     results.push({
       index: i,
       ok: true,
-      registration_id: registrationId,
+      registration_id: rid,
       pledge_code: regRow.pledge_code,
       summary: payload,
     });

@@ -19,6 +19,14 @@ Server routes emit **one JSON object per line** to stdout/stderr (searchable in 
 
 **Do not** rely on logs for PII; registrant email appears only in legacy reminder failure payloads—prefer registration id when investigating.
 
+## Staff admin API responses (PII)
+
+`GET /api/admin/registrations`, Zeffy preview rows, and related staff JSON intentionally include **names, email, phone,** and financial fields so operators can reconcile payments—this is **not** a bug.
+
+**Hygiene:** Do **not** log full registration objects, `registrationToAdminJson(...)` output, or raw API response bodies in `serverLog`, `console.log`, shared caches, or third-party tools. Use **`registration_id`** (and non-PII codes like `pledge_code` when needed) in structured logs. When debugging, pull details from Supabase Studio with appropriate access controls, not from verbose server logs.
+
+Treat **`admin-sync.html`** session data and API responses as **sensitive** (screen sharing, recordings, support tickets).
+
 ## Registration failures
 
 1. Check Vercel logs for `register.save_failed` (database / validation from PostgREST) vs `register.persisted` (row created).

@@ -190,7 +190,7 @@ export default async function handler(req, res) {
     email: {
       confirm_sent: emailResult.confirmSent,
       notification_sent: emailResult.notificationSent,
-      errors: Array.isArray(emailResult.errors) ? emailResult.errors : [],
+      has_errors: Array.isArray(emailResult.errors) && emailResult.errors.length > 0,
     },
   });
 }

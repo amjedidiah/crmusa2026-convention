@@ -150,6 +150,9 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] readable table typography and density on desktop
   - [x] usable mobile/tablet fallback behavior where needed
   - [x] consistent status badges, alerts, and row-level feedback
+- [ ] **Audit trail for staff payment actions:** Log Supabase Auth staff user id (`sub`) and email when available for every `registration_payments` insert from manual entry or Zeffy import apply; include registration id, payment id/source, and timestamp in structured logs.
+- [ ] **Durable attribution (optional but recommended):** Add nullable `created_by_staff_user_id` and/or `created_by_staff_email` on `registration_payments` (migration + writes from staff routes) so reconciliation and disputes do not depend only on log retention. For imports, also log a single **batch identifier** (e.g. request id or timestamp + staff id) to correlate many rows.
+- [ ] Document in the operational runbook how to trace a payment event back to a staff member and which logs/tables to use for reconciliation audits.
 
 ### Phase 5: Operations, Deployment, and Hardening
 
@@ -161,7 +164,7 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
 - [x] Define and document required env vars:
   - [x] `SUPABASE_URL`
   - [x] `SUPABASE_SERVICE_KEY`
-  - [x] `SUPABASE_ANON_KEY` only if needed for staff auth/session bootstrap, not for public data access
+  - [x] `SUPABASE_ANON_KEY` required for staff JWT verification (`staff-auth.js` uses anon only; no silent fallback to service_role). Optional `SUPABASE_AUTH_KEY` overrides that Auth `apikey` when explicitly documented.
   - [x] `RESEND_API_KEY`
   - [x] `CRON_SECRET`
   - [x] `SITE_URL`
@@ -169,22 +172,35 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] `UPSTASH_REDIS_REST_URL`
   - [x] `UPSTASH_REDIS_REST_TOKEN`
   - [x] `STAFF_EMAIL_ALLOWLIST` or an equivalent allowlist source
+  - [x] `STAFF_ORIGINS` / `STAFF_ORIGIN` (optional; staff `/api/admin/*` CORS allowlist; defaults from `SITE_URL` when unset)
 - [x] Add structured server logs keyed by registration id and payment id.
+- [ ] **Staff identity in payment logs:** Extend manual entry and import-apply paths so structured logs always include staff Auth `sub` and email when present (see Phase 4 audit checklist).
 - [x] Add an operational runbook for:
   - [x] registration failures
   - [x] email delivery failures
   - [x] Zeffy import mismatch handling
   - [x] manual payment corrections
   - [x] reminder job failures
+  - [ ] **staff payment disputes and reconciliation:** how to correlate `registration_payments` rows and structured logs with a staff member and time window
 - [x] Verify database backups and establish a pre-launch smoke checklist covering register, lookup, admin payment update, import, and reminder cron auth.
-- [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 npm run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query. This does **not** cover `POST /api/register` persistence or staff JWT routes end-to-end.
-- [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `npm run test:smoke-http`) for core route status codes without browser automation.
+- [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 npm run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query.
+- [ ] Extend integration tests to cover **`POST /api/register` persistence** against local Supabase (e.g. inserted row, pledge code, totals)—**primary automated pre-launch gate** for registration. Staff JWT-protected routes may remain validated via manual checks plus HTTP smoke **401** coverage unless extended later.
+- [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `npm run test:smoke-http`) for core route status codes without browser automation. **Pre-launch:** run smoke against the **release candidate URL**; strengthen assertions when feasible (e.g. response body shape, pledge code on successful register—not only status codes).
 - [x] Run **unit tests in CI** on push/PR (`.github/workflows/ci.yml`).
 - [x] Adopt a right-sized automated testing strategy:
   - [x] require unit tests for pure logic and validation rules
-  - [x] require integration tests for database workflows used by payments (RPC + REST)
+  - [x] require integration tests for database workflows used by payments (RPC + REST), plus registration persistence once the integration test above lands
   - [x] optional HTTP smoke for deployed route handlers; browser E2E remains minimal/deferred
+  - [x] optional **E2E registration** on staging: `E2E_REGISTER=1` for full-browser validation before launch when the team chooses to run it
   - [x] defer broad visual regression and large snapshot-based UI suites unless later justified by change volume
+
+#### Staff email allowlist (launch) and offboarding
+
+- **Management (v1):** `STAFF_EMAIL_ALLOWLIST` is comma-separated in Vercel (or host) env. **Adding or removing** an email requires updating the var and **redeploying**. After deploy: confirm added staff reach admin APIs and removed addresses receive **403** on staff routes.
+- **Audit trail (v1):** The allowlist is not stored in Postgres until a future DB-backed source lands; for access reviews and incidents, correlate changes with **host deployment/env history** (e.g. Vercel env snapshots tied to deployments) and a **short ticket or deploy note** (who changed what, when, why).
+- **JWT session caveat:** JWTs may remain valid until expiry, but **every staff API request** checks the allowlist. After an email is removed and redeployed, the **next** call to a staff route should receive **403**. For urgent offboarding, combine allowlist removal with Supabase Dashboard steps if needed (e.g. sign-out, user disable per your security policy) and verify **403** on admin APIs.
+- **Offboarding checklist:** Remove email from `STAFF_EMAIL_ALLOWLIST` → redeploy → verify former staff cannot call staff APIs → record removal date and owner in launch/sign-off documentation (see Pre-launch verification).
+- **Future enhancement:** Store allowlist in a database table with an admin UI for updates without redeploy and a clearer change audit trail.
 
 ### Phase 6: SEO, Legal, and Accessibility Baseline
 
@@ -249,6 +265,19 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
 
 The checklist is grouped into **Integration** (automated tests you can run from the repo), **E2E** (browser automation), and **Manual** (human or staging-only verification).
 
+### Pre-launch verification and sign-off
+
+Complete the **Manual Tests** sections below before production launch and **record results** in one agreed place.
+
+| Topic | Guidance |
+|--------|----------|
+| **Ownership** | Name a **launch owner** (e.g. tech lead or PM) who coordinates execution; individual scenarios may be run by dev, QA, or product as assigned. |
+| **Sign-off criteria** | Default: **all launch-critical manual scenarios pass** (Registration, Lookup, Payments/admin, Reminders, and baseline accessibility). Waivers for non-critical items require **written** acceptance by the launch owner with a short risk note. |
+| **Staging / preview** | Use a **staging or preview** URL for failure simulation and email-dependent checks. Env vars should match **production categories** (same email provider class, Redis, Supabase roles—not necessarily production data volume). Document which URL is used for the final run. |
+| **Results storage** | Keep a single artifact: e.g. this checklist with dates/initials, a shared spreadsheet, or test tickets—**link it from launch notes** for audits and postmortems. |
+
+**Automated gate (recommended order):** `RUN_INTEGRATION=1` including **registration persistence** once implemented → **HTTP smoke** on the release candidate URL (tighten assertions when the harness allows) → optional **`E2E_REGISTER=1`** on staging for full-browser registration.
+
 ### Integration
 
 **Unit — `npm test` (`test/unit/*.test.js`)**
@@ -269,6 +298,7 @@ The checklist is grouped into **Integration** (automated tests you can run from 
 - [x] pending → partial → complete via two RPC calls (mixed `zelle_manual` / `zeffy` sources)
 - [x] partial seed registration → complete with one RPC (exact remainder)
 - [x] reminder candidate query shape (`status in pending/partial`)
+- [ ] `POST /api/register` persists a registration row with expected pledge code / totals against local Supabase (**planned**—primary automated gate for registration; track with Phase 5 integration item)
 
 **HTTP smoke — `SMOKE_BASE_URL=… npm run test:smoke-http` (`test/smoke-http.mjs`; status codes only, no secrets)**
 
@@ -280,6 +310,8 @@ The checklist is grouped into **Integration** (automated tests you can run from 
 - [x] `GET /api/admin/auth-config` → 200 or 500 (config-dependent)
 - [x] static policy/sitemap/robots URLs → 200 (`privacy-policy.html`, `sitemap.xml`, `robots.txt`)
 
+**Pre-launch:** Run smoke against the **deploy URL under test**; extend checks beyond status codes when practical (see Phase 5).
+
 ### E2E
 
 Playwright specs live in `e2e/` with `playwright.config.js` at the project root.
@@ -289,7 +321,7 @@ Playwright specs live in `e2e/` with `playwright.config.js` at the project root.
 1. Start the app so `/` serves `index.html` **and** `/api/*` works (e.g. `vercel dev`, or point at a preview deployment).
 2. `npm run test:e2e:install` once (Chromium).
 3. `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e` — smoke + wizard validation (no writes).
-4. Optional full registration against a real backend: `E2E_REGISTER=1 E2E_BASE_URL=… npm run test:e2e`.
+4. Optional full registration against a real backend: `E2E_REGISTER=1 E2E_BASE_URL=… npm run test:e2e`. Recommended on **staging** before launch when integration tests and smoke alone are not enough confidence.
 
 Returning-registrant and `admin-sync.html` flows are still manual or future specs (magic-link auth).
 
@@ -346,8 +378,9 @@ Returning-registrant and `admin-sync.html` flows are still manual or future spec
 - Payment authority for production launch is `Manual Reconciliation v1`: Zeffy and Zelle remain manual until staff import/entry confirms payment.
 - Returning registrant access uses `Tokenized Self-Serve`: emailed signed links are primary; code+email is fallback only to request a fresh link.
 - Legal/compliance target is `Launch Baseline`, not counsel-led redrafting.
-- Staff authentication uses Supabase Auth magic-link plus an email allowlist; shared PIN auth is removed.
+- Staff authentication uses Supabase Auth magic-link plus an email allowlist (`STAFF_EMAIL_ALLOWLIST`); changes require env update and **redeploy** unless a future DB-backed allowlist replaces it (see Phase 5). Shared PIN auth is removed.
 - Pricing and registration date cutoffs are computed server-side in `America/Chicago`.
 - The public marketing frontend remains on Vercel and continues to use the current single-page site structure unless a later implementation step makes file splitting necessary.
 - “Vercel server-side functions/route handlers” is the required backend constraint; this plan does not require a Next.js Server Actions rewrite.
 - Local development uses a Supabase CLI-managed instance as the source of truth for migrations, seeds, and integration testing before deploying to shared environments.
+- **Schema (Phase 1):** `registration_payments` rows are **positive amounts only**; negative/refund lines are **not** modeled in v1 (documented on constraints). **`amount_paid_cents`** may **exceed** **`total_cents`** when staff confirms **intentional overpayment** (`staff_apply_registration_payment`). **`registration_payments.registration_id`** uses **`ON DELETE RESTRICT`** so deleting a registration cannot silently erase payment audit rows.

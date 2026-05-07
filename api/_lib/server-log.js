@@ -16,10 +16,10 @@ function write(level, line) {
  */
 export function serverLog(level, event, fields = {}) {
   const payload = {
+    ...fields,
     ts: new Date().toISOString(),
     level,
     event,
-    ...fields,
   };
   try {
     write(level, JSON.stringify(payload));

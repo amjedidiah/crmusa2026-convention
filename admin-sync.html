@@ -494,7 +494,9 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- @supabase/supabase-js pinned for SRI; bump version + recompute hash if upgrading:
+     curl -sL "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@VERSION" | openssl dgst -sha384 -binary | openssl base64 -A -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.3" integrity="sha384-iWpUQPQzWsFiosLgsS8o+e6E8y3Gm+EW2m/vAAo7A2H3fuc4KOKEx+5CAord2H2z" crossorigin="anonymous"></script>
 <script src="/admin-sync-app.js"></script>
 </body>
 </html>

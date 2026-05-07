@@ -5,6 +5,7 @@
  *
  * Does not send secrets; asserts status codes only. Staff/Zeffy preview routes
  * are checked for unauthenticated 401, not for successful CSV handling.
+ * GET /api/admin/auth-config: 200 or 500 (missing Supabase env); 500 logs a WARN.
  */
 
 const base = (process.env.SMOKE_BASE_URL || '').replace(/\/+$/, '');
@@ -75,6 +76,11 @@ try {
   ok('POST /api/admin/import/zeffy/apply (no bearer)', r.status === 401);
 
   r = await http('GET', '/api/admin/auth-config');
+  if (r.status === 500) {
+    console.warn(
+      'WARN GET /api/admin/auth-config returned 500 — check SUPABASE_URL / SUPABASE_ANON_KEY on this deployment'
+    );
+  }
   ok(
     'GET /api/admin/auth-config',
     r.status === 200 || r.status === 500,

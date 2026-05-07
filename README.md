@@ -15,7 +15,7 @@ Official convention website for Charismatic Renewal Ministries USA.
 | **2** | `POST /api/register` only for new registrations; confirmation email via Resend; public site has no direct DB writes.                                                                                                                                                                         |
 | **3** | Tokenized return flow: `GET /api/lookup`, `POST /api/lookup-request`, signed links in email, optional Upstash rate limits on register + lookup-request.                                                                                                                                      |
 | **4** | Staff tools: Supabase Auth magic link + email allowlist; `GET /api/admin/registrations`, `POST /api/admin/payments/manual`, Zeffy `preview`/`apply`; RPC `staff_apply_registration_payment`; weekly `/api/remind` with `last_reminder_at`.                                                   |
-| **5** | Ops hardening: structured JSON logs (`api/_lib/server-log.js`), [OPERATIONS.md](./OPERATIONS.md) runbook, `.env.example`, CI (`npm test`), optional DB integration tests (`RUN_INTEGRATION=1`), optional HTTP smoke (`SMOKE_BASE_URL`); RPC returns `payment_id` (migration `202605070003`). |
+| **5** | Ops hardening: structured JSON logs (`api/_lib/server-log.js`), [OPERATIONS.md](./OPERATIONS.md) runbook, [.env.example](./.env.example), CI (`npm test`), optional DB integration tests (`RUN_INTEGRATION=1`), optional HTTP smoke (`SMOKE_BASE_URL`); RPC returns `payment_id` (migration `202605070003`). Roadmap and launch criteria: [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md). |
 
 Public pages: `index.html` (register + returning guest). Staff: `admin-sync.html` + `admin-sync-app.js`.
 
@@ -48,6 +48,7 @@ supabase status      # API URL, anon key, service_role key — copy into .env.lo
 - `supabase/migrations/202605070001_phase1_foundation.sql` — tables, RLS, triggers
 - `supabase/migrations/202605070002_staff_apply_registration_payment.sql` — atomic payment RPC
 - `supabase/migrations/202605070003_staff_apply_return_payment_id.sql` — RPC response includes `payment_id` for ops logs
+- `supabase/migrations/202605080001_registration_payments_restrict_and_docs.sql` — `ON DELETE RESTRICT` on payment rows + constraint comments (also upgrades older DBs that used CASCADE)
 
 **Typical loop:** `supabase start` → change SQL → `supabase db reset` (recreates DB from all migrations + `seed.sql`) → run `npm test` and, when ready, `RUN_INTEGRATION=1 npm run test:integration` with `.env.local` pointing at that instance.
 
@@ -71,7 +72,8 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 | ---------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SUPABASE_URL`         | Yes           | All server routes using REST/RPC                                                                                                                                                  |
 | `SUPABASE_SERVICE_KEY` | Yes           | Server-only: `service_role` JWT for PostgREST (bypasses RLS). **Never** expose to the browser.                                                                                    |
-| `SUPABASE_ANON_KEY`    | Yes (Phase 4) | `/api/admin/auth-config` (loads admin UI), and `GET /auth/v1/user` when validating staff JWTs. **Public** in admin page; still not used for registration data from the main site. |
+| `SUPABASE_ANON_KEY`    | Yes (Phase 4) | `/api/admin/auth-config` (admin UI) and **required** `apikey` for `GET /auth/v1/user` in `staff-auth.js` (no fallback to service_role). **Public** in admin page; not used for public registration data. |
+| `SUPABASE_AUTH_KEY`    | No            | Optional override for that Auth `apikey` only—set deliberately if documented; avoid using service_role. |
 
 ### Email
 
@@ -85,6 +87,7 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 | --------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `SITE_URL`            | Strongly recommended | Canonical links in emails (confirmation, lookup links, reminders). Example: `https://your-domain.vercel.app` (no trailing slash). |
 | `LOOKUP_TOKEN_SECRET` | Yes (Phase 3)        | Signing lookup JWTs for `/#return?token=...`                                                                                      |
+| `LOOKUP_TOKEN_TTL_SECONDS` | No            | Override default lookup-link lifetime (seconds). Default **7 days** if unset; max **365 days**. Use for explicit longer campaigns. |
 
 ### Rate limiting (Phase 3, optional)
 
@@ -105,9 +108,13 @@ If unset, register / lookup-request still work; limits are only enforced when Up
 
 | Variable                | Required | Used by                                                                                                                     |
 | ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `STAFF_EMAIL_ALLOWLIST` | Yes      | Comma- or newline-separated emails allowed after Supabase magic-link sign-in. If empty, **all** staff API calls return 403. |
+| `STAFF_EMAIL_ALLOWLIST` | Yes      | Comma- or newline-separated emails allowed after Supabase magic-link sign-in. If empty, **all** staff API calls return 403. Changes require updating Vercel (or host) env and **redeploy**; see [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) → *Staff email allowlist (launch) and offboarding*. |
+| `STAFF_ORIGINS`         | No*      | Allowed browser `Origin` values for `/api/admin/*` CORS (comma/newline-separated; echoed back with `Vary: Origin`). Never `*`. |
+| `STAFF_ORIGIN`          | No*      | Single origin when you only need one; ignored if `STAFF_ORIGINS` is set.                                                   |
 
-**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under URL configuration, add the production and preview origins for `admin-sync.html` (for example `https://<project>.vercel.app/admin-sync.html`). Staff open the admin page, sign in with an allowlisted email, and the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data.
+\*If both are unset, CORS allowlist falls back to **`SITE_URL`** (typical same-deployment admin + API). Add explicit origins for previews or when `SITE_URL` does not match where `admin-sync.html` is opened (e.g. `http://localhost:3000`).
+
+**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under URL configuration, add the production and preview origins for `admin-sync.html` (for example `https://<project>.vercel.app/admin-sync.html`). Staff open the admin page, sign in with an allowlisted email, and the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data. Staff APIs only emit `Access-Control-Allow-Origin` for allowlisted origins (see `STAFF_ORIGINS` / `SITE_URL`).
 
 **Reminder cron:** Vercel Cron invokes `GET /api/remind` per `vercel.json`. Set `CRON_SECRET` in Vercel and configure the cron job to send `Authorization: Bearer <CRON_SECRET>` (the handler also accepts `?secret=` for manual curls).
 
@@ -124,8 +131,16 @@ SUPABASE_ANON_KEY=eyJ...anon...
 RESEND_API_KEY=re_...
 SITE_URL=https://crmusa2026-convention.vercel.app
 LOOKUP_TOKEN_SECRET=use-a-long-random-string
+# Optional: lookup link TTL in seconds (default 604800 = 7 days; max 31536000).
+# LOOKUP_TOKEN_TTL_SECONDS=2592000
 CRON_SECRET=another-long-random-secret
 STAFF_EMAIL_ALLOWLIST=finance@example.org,ops@example.org
+
+# Optional: admin API CORS (defaults to SITE_URL if unset). Add previews/extra hosts as needed.
+# STAFF_ORIGINS=https://crmusa2026-convention.vercel.app
+
+# Optional: Auth verify apikey override (staff-auth.js); prefer SUPABASE_ANON_KEY.
+# SUPABASE_AUTH_KEY=
 
 # Optional
 UPSTASH_REDIS_REST_URL=https://....upstash.io
@@ -187,19 +202,22 @@ UPSTASH_REDIS_REST_TOKEN=...
 
 ## Phase 5: Logs, tests, and operations
 
-- **Structured logs:** Handlers emit single-line JSON (see [OPERATIONS.md](./OPERATIONS.md)) with `registration_id` and `payment_id` where applicable. Search Vercel logs by `event` (for example `payment.manual_applied`, `register.persisted`).
+**Repo docs (all at repo root):** [OPERATIONS.md](./OPERATIONS.md) (runbook + log fields), [.env.example](./.env.example) (env template), [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) (phases, staff payment audit checklist, allowlist/offboarding, **Pre-launch verification and sign-off**, full test plan).
+
+- **Structured logs:** Handlers emit single-line JSON (see [OPERATIONS.md](./OPERATIONS.md)) with `registration_id` and `payment_id` where applicable. Search Vercel logs by `event` (for example `payment.manual_applied`, `register.persisted`). **Planned:** staff Auth identity on manual/import payment paths and optional DB columns—tracked in [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) Phase 4–5.
+- **Staff admin responses:** Staff APIs return registrant PII by design for reconciliation—never log full response bodies; see [OPERATIONS.md](./OPERATIONS.md) → *Staff admin API responses (PII)*.
 - **Env template:** Copy [.env.example](./.env.example) when onboarding; production keys live in Vercel / Supabase dashboards only.
-- **Unit tests:** `npm test` — pricing, validation, tokens, Zeffy CSV helpers (runs on push/PR via `.github/workflows/ci.yml`).
-- **DB integration (opt-in):** `RUN_INTEGRATION=1 npm run test:integration` — calls Supabase REST/RPC directly (same paths as the payment RPC used by manual + Zeffy apply). Does **not** exercise staff JWT auth or HTTP framing for admin/Zeffy preview routes.
+- **Unit tests:** `npm test` — pricing, validation, tokens, Zeffy CSV helpers (runs on push/PR via [`ci.yml`](./.github/workflows/ci.yml)).
+- **DB integration (opt-in):** `RUN_INTEGRATION=1 npm run test:integration` — calls Supabase REST/RPC directly (same paths as the payment RPC used by manual + Zeffy apply). Loads `.env.local` then `.env` via [`dotenv`](https://github.com/motdotla/dotenv) in [`test/load-env.mjs`](./test/load-env.mjs). Does **not** exercise staff JWT auth or HTTP framing for admin/Zeffy preview routes. **`POST /api/register` persistence** in integration tests is **planned** as the primary automated gate for registration—see [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) → Test Plan → Integration / Phase 5.
 - **HTTP smoke (opt-in):** against a running deployment or `vercel dev`:
 
   ```bash
     SMOKE_BASE_URL=https://your-host.vercel.app npm run test:smoke-http
   ```
 
-  Sends real HTTP requests to public/admin/cron routes for status-code sanity checks (see `test/smoke-http.mjs`). Not a replacement for manual checkout or browser E2E.
-- **E2E (Playwright):** `npm run test:e2e:install` then, with `vercel dev` (or a deployed URL) running, `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e`. Add `E2E_REGISTER=1` to include one real `POST /api/register` journey. See `e2e/` and `PRODUCTION_PLAN.md` → Test Plan → E2E.
-- **Strategy:** Unit + targeted integration + HTTP smoke + optional Playwright; admin and token-return flows remain mostly manual.
+  Sends real HTTP requests to public/admin/cron routes for status-code sanity checks (see [`test/smoke-http.mjs`](./test/smoke-http.mjs)). `GET /api/admin/auth-config` allows **200 or 500** (500 means missing `SUPABASE_URL` / `SUPABASE_ANON_KEY` on that host); a **500 still passes** smoke but prints a **WARN** so logs surface misconfiguration. Before launch, run against the **release candidate URL** and tighten assertions when the harness allows ([PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md)). Not a replacement for manual checkout or browser E2E.
+- **E2E (Playwright):** `npm run test:e2e:install` then, with `vercel dev` (or a deployed URL) running, `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e`. Add `E2E_REGISTER=1` to include one real `POST /api/register` journey (recommended on **staging** before launch when needed). See [`e2e/`](./e2e/) and [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) → Test Plan → E2E.
+- **Strategy:** Unit + targeted integration + HTTP smoke + optional Playwright; admin and token-return flows remain mostly manual. Use **Pre-launch verification and sign-off** in [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) for ownership, staging parity, and recording manual results before production.
 
 ---
 

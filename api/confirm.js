@@ -74,6 +74,10 @@ export async function sendConfirmationEmails(payload) {
     throw new Error('Missing email or pledge_code');
   }
 
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
   const paidNum = Number(amount_paid);
   const paid = Number.isFinite(paidNum) ? paidNum : 0;
   const rawTotal =

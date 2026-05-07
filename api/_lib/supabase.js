@@ -21,8 +21,14 @@ export function createSupabaseHeaders(serviceKey) {
   };
 }
 
-export async function supabaseRestRequest(method, path, { body, headers } = {}) {
+export async function supabaseRestRequest(
+  method,
+  path,
+  { body, headers, timeoutMs = 10000 } = {},
+) {
   const { url, serviceKey } = getSupabaseServiceConfig();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const response = await fetch(`${url}/rest/v1/${path}`, {
     method,
     headers: {
@@ -30,7 +36,9 @@ export async function supabaseRestRequest(method, path, { body, headers } = {}) 
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
+    signal: controller.signal,
   });
+  clearTimeout(timeoutId);
 
   const text = await response.text();
   let data = null;

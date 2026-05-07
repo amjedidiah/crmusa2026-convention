@@ -11,13 +11,13 @@ export async function staffApplyRegistrationPayment({
   createdBy,
   allowOverpayment,
 }) {
-  return supabaseRestRequest('POST', 'rpc/staff_apply_registration_payment', {
+  return supabaseRestRequest("POST", "rpc/staff_apply_registration_payment", {
     body: {
       p_registration_id: registrationId,
       p_source: source,
       p_external_ref: externalRef,
       p_amount_cents: amountCents,
-      p_received_at: receivedAt || null,
+      p_received_at: receivedAt ?? null,
       p_notes: notes ?? null,
       p_raw_payload: rawPayload ?? {},
       p_created_by: createdBy ?? null,
@@ -32,5 +32,9 @@ export function rpcErrorMessage(response) {
   if (d?.message) return d.message;
   if (d?.error) return d.error;
   if (d?.hint) return d.hint;
+  const e = response?.error;
+  if (typeof e === "string") return e;
+  if (e?.message) return e.message;
+  if (e?.hint) return e.hint;
   return 'request_failed';
 }

@@ -575,20 +575,22 @@ function esc(s) {
 /* ══════════════════════════════════════════════
    ZEFFY CSV IMPORT
 ══════════════════════════════════════════════ */
-var zDrop = document.getElementById('z-drop-zone');
-if (zDrop) {
-  zDrop.addEventListener('dragover', function (e) {
-    e.preventDefault();
-    zDrop.classList.add('over');
-  });
-  zDrop.addEventListener('dragleave', function () {
-    zDrop.classList.remove('over');
-  });
-  zDrop.addEventListener('drop', function (e) {
-    e.preventDefault();
-    zDrop.classList.remove('over');
-    handleZeffyFile(e.dataTransfer.files[0]);
-  });
+function initZeffyDropZone() {
+  var zDrop = document.getElementById('z-drop-zone');
+  if (zDrop) {
+    zDrop.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      zDrop.classList.add('over');
+    });
+    zDrop.addEventListener('dragleave', function () {
+      zDrop.classList.remove('over');
+    });
+    zDrop.addEventListener('drop', function (e) {
+      e.preventDefault();
+      zDrop.classList.remove('over');
+      handleZeffyFile(e.dataTransfer.files[0]);
+    });
+  }
 }
 
 function handleZeffyFile(file) {
@@ -804,7 +806,7 @@ function resetZeffyCSV() {
 function zLog(el, cls, msg) {
   var colors = { ok: '#7dbf80', err: '#e09090', inf: '#C8A85A' };
   el.innerHTML +=
-    '<span style="color:' + colors[cls] + '">' + msg + '</span>\n';
+    '<span style="color:' + colors[cls] + '">' + esc(msg) + "</span>\n";
   el.scrollTop = el.scrollHeight;
 }
 
@@ -1139,6 +1141,7 @@ function applyBatch() {
 
 /* boot */
 document.addEventListener('DOMContentLoaded', function () {
+  initZeffyDropZone();
   initSupabase().catch(function (e) {
     var msg = document.getElementById('login-msg');
     if (msg) {

@@ -67,11 +67,14 @@ before update on public.registrations
 for each row
 execute function public.set_current_timestamp_updated_at();
 
+-- Payment events (Phase 1): only strictly positive amounts; refund/reversal rows
+-- (negative amounts) are not modeled in v1 — revisit with RPC + constraints if needed.
+-- registration_id uses ON DELETE RESTRICT so deleting a registration cannot silently remove audit rows.
 create table if not exists public.registration_payments (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
-  registration_id uuid not null references public.registrations(id) on delete cascade,
+  registration_id uuid not null references public.registrations(id) on delete restrict,
   source text not null,
   external_ref text not null,
   amount_cents bigint not null,

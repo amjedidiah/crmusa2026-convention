@@ -1,5 +1,6 @@
 import { registrationToAdminJson } from '../_lib/admin-registration.js';
 import { normalizeEmail } from '../_lib/registration.js';
+import { serverLog } from '../_lib/server-log.js';
 import {
   getStaffFromRequest,
   handleStaffOptions,
@@ -8,7 +9,7 @@ import {
 import { supabaseRestRequest } from '../_lib/supabase.js';
 
 export default async function handler(req, res) {
-  Object.entries(staffCorsHeaders()).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(staffCorsHeaders(req)).forEach(([k, v]) => res.setHeader(k, v));
   if (handleStaffOptions(req, res)) return;
 
   if (req.method !== 'GET') {
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
       path = `registrations?pledge_code=eq.${encodeURIComponent(v.toUpperCase())}&select=*`;
     }
   } else if (req.query.search && String(req.query.search).trim()) {
-    const raw = String(req.query.search).trim().replace(/[*\\]/g, '');
+    const raw = String(req.query.search).trim().replace(/[*\\%_]/g, '');
     const pat = `*${raw}*`;
     path =
       `registrations?or=(pledge_code.ilike.${encodeURIComponent(pat)},` +
@@ -55,7 +56,13 @@ export default async function handler(req, res) {
 
   const r = await supabaseRestRequest('GET', path);
   if (!r.ok) {
-    return res.status(500).json({ error: 'query_failed', detail: r.data });
+    serverLog('error', 'admin.registrations_query_failed', {
+      route: '/api/admin/registrations',
+      staff_email: staff.email,
+      http_status: r.status,
+      detail: r.data,
+    });
+    return res.status(500).json({ error: 'query_failed' });
   }
 
   const rows = Array.isArray(r.data) ? r.data : [];

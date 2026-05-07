@@ -1,20 +1,25 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
-import { staffApplyRegistrationPayment, rpcErrorMessage } from '../../_lib/apply-payment.js';
-import { normalizeReceivedAt } from '../../_lib/dates.js';
-import { serverLog } from '../../_lib/server-log.js';
+import {
+  staffApplyRegistrationPayment,
+  rpcErrorMessage,
+} from "../../_lib/apply-payment.js";
+import { normalizeReceivedAt } from "../../_lib/dates.js";
+import { serverLog } from "../../_lib/server-log.js";
 import {
   getStaffFromRequest,
   handleStaffOptions,
   staffCorsHeaders,
-} from '../../_lib/staff-auth.js';
+} from "../../_lib/staff-auth.js";
 
 export default async function handler(req, res) {
-  Object.entries(staffCorsHeaders()).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(staffCorsHeaders(req)).forEach(([k, v]) =>
+    res.setHeader(k, v),
+  );
   if (handleStaffOptions(req, res)) return;
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const staff = await getStaffFromRequest(req);
@@ -34,69 +39,103 @@ export default async function handler(req, res) {
     confirm_overpayment: confirmOverpayment,
   } = body;
 
-  if (!registrationId || typeof registrationId !== 'string') {
-    return res.status(400).json({ error: 'registration_id_required' });
+  if (!registrationId || typeof registrationId !== "string") {
+    return res.status(400).json({ error: "registration_id_required" });
   }
 
   let amountCents;
-  if (amountCentsRaw != null && amountCentsRaw !== '') {
+  const centsProvided =
+    amountCentsRaw != null && amountCentsRaw !== "";
+
+  if (centsProvided) {
     const n = Number(amountCentsRaw);
-    if (Number.isFinite(n) && n > 0) {
-      amountCents = Math.round(n);
+    if (!Number.isFinite(n) || n <= 0) {
+      return res.status(400).json({ error: "invalid_amount_cents" });
     }
-  }
-  if (amountCents == null && amountDollars != null && amountDollars !== '') {
+    amountCents = Math.round(n);
+    if (amountCents <= 0) {
+      return res.status(400).json({ error: "invalid_amount_cents" });
+    }
+  } else if (amountDollars != null && amountDollars !== "") {
     const n = Number(amountDollars);
     if (Number.isFinite(n) && n > 0) {
-      amountCents = Math.round(n * 100);
+      amountCents = Math.round(parseFloat(n.toFixed(2)) * 100);
     }
   }
 
   if (!amountCents || amountCents <= 0) {
-    return res.status(400).json({ error: 'valid_amount_required' });
+    return res.status(400).json({ error: "valid_amount_required" });
   }
 
-  const source = String(paymentSource || 'zelle_manual').trim() || 'zelle_manual';
+  const source =
+    String(paymentSource || "zelle_manual").trim() || "zelle_manual";
   const externalRef =
     (externalRefIn && String(externalRefIn).trim()) ||
     `manual-${crypto.randomUUID()}`;
 
-  const result = await staffApplyRegistrationPayment({
-    registrationId,
-    source,
-    externalRef,
-    amountCents,
-    receivedAt: normalizeReceivedAt(receivedAt),
-    notes: notes != null ? String(notes) : null,
-    rawPayload: {
-      entry: 'staff_manual',
-      payment_source: source,
-    },
-    createdBy: staff.email,
-    allowOverpayment: !!confirmOverpayment,
-  });
+  let result;
+  try {
+    result = await staffApplyRegistrationPayment({
+      registrationId,
+      source,
+      externalRef,
+      amountCents,
+      receivedAt: normalizeReceivedAt(receivedAt),
+      notes: notes != null ? String(notes) : null,
+      rawPayload: {
+        entry: "staff_manual",
+        payment_source: source,
+      },
+      createdBy: staff.email,
+      allowOverpayment: !!confirmOverpayment,
+    });
+  } catch (err) {
+    serverLog("error", "payment.manual_exception", {
+      route: "/api/admin/payments/manual",
+      registration_id: registrationId,
+      payment_external_ref: externalRef,
+      staff_email: staff.email,
+      detail: err?.message,
+    });
+    return res.status(500).json({ error: "internal_error" });
+  }
 
   if (!result.ok) {
     const msg = rpcErrorMessage(result);
-    serverLog('error', 'payment.manual_failed', {
-      route: '/api/admin/payments/manual',
+    serverLog("error", "payment.manual_failed", {
+      route: "/api/admin/payments/manual",
       registration_id: registrationId,
       payment_external_ref: externalRef,
       detail: msg,
+      rpc_payload:
+        typeof result.data === "string"
+          ? result.data.slice(0, 800)
+          : result.data != null
+            ? JSON.stringify(result.data).slice(0, 800)
+            : null,
     });
     if (
       /overpayment_not_allowed|duplicate_external_ref|registration_not_found|invalid_/.test(
-        msg
+        msg,
       )
     ) {
       return res.status(400).json({ error: msg });
     }
-    return res.status(500).json({ error: msg, detail: result.data });
+    return res.status(500).json({ error: msg });
   }
 
   const payload = Array.isArray(result.data) ? result.data[0] : result.data;
-  serverLog('info', 'payment.manual_applied', {
-    route: '/api/admin/payments/manual',
+  if (!payload) {
+    serverLog("error", "payment.manual_empty_result", {
+      route: "/api/admin/payments/manual",
+      registration_id: registrationId,
+      payment_external_ref: externalRef,
+    });
+    return res.status(500).json({ error: "empty_result" });
+  }
+
+  serverLog("info", "payment.manual_applied", {
+    route: "/api/admin/payments/manual",
     registration_id: registrationId,
     payment_id: payload?.payment_id || null,
     payment_external_ref: externalRef,

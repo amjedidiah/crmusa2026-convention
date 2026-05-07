@@ -44,7 +44,7 @@ begin
     raise exception 'registration_not_found';
   end if;
 
-  v_new_paid := v_paid + p_amount_cents;
+  v_new_paid := coalesce(v_paid, 0) + p_amount_cents;
 
   if v_new_paid > v_total and not coalesce(p_allow_overpayment, false) then
     raise exception 'overpayment_not_allowed';
