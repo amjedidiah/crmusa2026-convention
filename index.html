@@ -222,6 +222,7 @@
       .site-footer .container {
         max-width: 72rem;
         margin: 0 auto;
+        text-align: center;
       }
 
       .site-footer .footer-brand {
@@ -230,16 +231,25 @@
         letter-spacing: 0.18em;
         text-transform: uppercase;
         color: rgba(200, 168, 90, 0.65);
-        margin-bottom: 1rem;
+        margin: 0 auto 1rem;
+        max-width: 36rem;
+      }
+
+      .site-footer nav[aria-label="Legal and accessibility"] {
+        display: flex;
+        justify-content: center;
       }
 
       .site-footer .footer-links {
         list-style: none;
         padding: 0;
-        margin: 0 0 1.25rem;
+        margin: 0 auto 1.25rem;
         display: flex;
         flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
         gap: 0.75rem 1.25rem;
+        max-width: 48rem;
       }
 
       .site-footer .footer-links a {
@@ -275,6 +285,13 @@
       .site-footer .footer-copy a:focus-visible {
         outline: 2px solid var(--gold);
         outline-offset: 3px;
+      }
+
+      @media (max-width: 520px) {
+        .site-footer .footer-links {
+          flex-direction: column;
+          gap: 0.65rem;
+        }
       }
 
       #main-content:focus {
@@ -878,8 +895,8 @@
         margin: 1.2rem auto;
       }
 
-      /* ── NAV ── */
-      nav {
+      /* ── NAV ── (must be #navbar only — footer has its own <nav> for legal links) */
+      #navbar {
         position: fixed;
         top: 0;
         left: 0;
@@ -893,7 +910,7 @@
           background 0.4s,
           backdrop-filter 0.4s;
       }
-      nav.scrolled {
+      #navbar.scrolled {
         background: rgba(11, 22, 40, 0.92);
         backdrop-filter: blur(10px);
         border-bottom: 1px solid rgba(200, 168, 90, 0.12);
@@ -925,7 +942,7 @@
 
       /* ── MOBILE ── */
       @media (max-width: 768px) {
-        nav {
+        #navbar {
           padding: 1.2rem 1.5rem;
         }
         .nav-links {
@@ -2717,8 +2734,13 @@
                 >
                   Request a new secure link
                 </p>
-                <p id="recovery-email-hint" class="reg-muted" style="margin: 0 0 1rem; font-size: 0.75rem">
-                  We will only email a link if your email and pledge code match a registration (same response either way).
+                <p
+                  id="recovery-email-hint"
+                  class="reg-muted"
+                  style="margin: 0 0 1rem; font-size: 0.75rem"
+                >
+                  We will only email a link if your email and pledge code match
+                  a registration (same response either way).
                 </p>
                 <div class="field full">
                   <label for="recovery-email">Registration email</label>
@@ -2732,8 +2754,13 @@
                 </div>
                 <div class="field full">
                   <label for="recovery-pledge">Pledge code</label>
-                  <p id="recovery-pledge-hint" class="reg-muted" style="margin: 0 0 0.5rem; font-size: 0.72rem">
-                    Use the code exactly as it appears in your confirmation email.
+                  <p
+                    id="recovery-pledge-hint"
+                    class="reg-muted"
+                    style="margin: 0 0 0.5rem; font-size: 0.72rem"
+                  >
+                    Use the code exactly as it appears in your confirmation
+                    email.
                   </p>
                   <input
                     id="recovery-pledge"
@@ -2833,13 +2860,17 @@
             <li><a href="refund-policy.html">Refund &amp; Cancellation</a></li>
             <li><a href="accessibility.html">Accessibility</a></li>
             <li>
-              <a href="admin-sync.html" class="footer-staff-link">Staff sign-in</a>
+              <a href="admin-sync.html" class="footer-staff-link"
+                >Staff sign-in</a
+              >
             </li>
           </ul>
         </nav>
         <p class="footer-copy">
           © 2026 Charismatic Renewal Ministries USA · Houston, Texas ·
-          <a href="mailto:convention@crmusanational.org">convention@crmusanational.org</a>
+          <a href="mailto:convention@crmusanational.org"
+            >convention@crmusanational.org</a
+          >
         </p>
       </div>
     </footer>
@@ -3113,8 +3144,13 @@
         if (row) {
           row.classList.toggle("att-row--invalid", hasNameError || hasAgeError);
         }
-        if (nameInput) nameInput.setAttribute("aria-invalid", hasNameError ? "true" : "false");
-        if (ageInput) ageInput.setAttribute("aria-invalid", hasAgeError ? "true" : "false");
+        if (nameInput)
+          nameInput.setAttribute(
+            "aria-invalid",
+            hasNameError ? "true" : "false",
+          );
+        if (ageInput)
+          ageInput.setAttribute("aria-invalid", hasAgeError ? "true" : "false");
         if (alert) {
           var message = attendeeRowErrorMessage(rowErrors);
           alert.textContent = message;
@@ -3150,8 +3186,7 @@
           var rowErrors = attendeeFieldErrors[idx] || {};
           var rowErrorText = attendeeRowErrorMessage(rowErrors);
           var row = document.createElement("div");
-          row.className =
-            "att-row" + (rowErrorText ? " att-row--invalid" : "");
+          row.className = "att-row" + (rowErrorText ? " att-row--invalid" : "");
           row.id = "ar-" + a.id;
           row.innerHTML =
             '<div class="att-num">' +
@@ -3455,15 +3490,15 @@
       }
 
       function hideRegErr(ids) {
-        (ids || ["s1-err", "s2-err", "s3-err", "s4-err", "reg-consent-err"]).forEach(
-          function (id) {
-            var el = document.getElementById(id);
-            if (el) {
-              el.style.display = "none";
-              el.textContent = "";
-            }
-          },
-        );
+        (
+          ids || ["s1-err", "s2-err", "s3-err", "s4-err", "reg-consent-err"]
+        ).forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) {
+            el.style.display = "none";
+            el.textContent = "";
+          }
+        });
       }
 
       function showErrEl(el, msg) {
@@ -3684,7 +3719,7 @@
           'You can pay <strong style="color:#E8C87A;">any amount</strong> — $0 to lock in your spot ' +
           "and pay later, a partial amount, or the full total. " +
           "Your registration is secured at today's tier price regardless. " +
-          "<strong style=\"color:#F5EFE0;\">Choosing an amount here does not record a payment yet.</strong>" +
+          '<strong style="color:#F5EFE0;">Choosing an amount here does not record a payment yet.</strong>' +
           "</p>" +
           '<div class="pledge-row">' +
           '<label for="reg-pay-amt">Amount to Pay Today (USD)</label>' +
@@ -3770,7 +3805,9 @@
               "Please confirm the statements above before submitting your registration.";
             consentErr.style.display = "block";
           }
-          announceReg("Consent required. Please confirm the checkbox to continue.");
+          announceReg(
+            "Consent required. Please confirm the checkbox to continue.",
+          );
           if (consentEl) {
             setTimeout(function () {
               consentEl.focus();
@@ -3852,7 +3889,8 @@
       }
 
       function showRegistrationSuccess(amt, saved) {
-        var registration = saved && saved.registration ? saved.registration : {};
+        var registration =
+          saved && saved.registration ? saved.registration : {};
         var emailOk = !!(saved && saved.emailOk);
         var remaining =
           typeof registration.remaining_amount === "number"
@@ -3877,7 +3915,7 @@
                 ".00</strong>. " +
                 'You selected <strong style="color:#E8C87A;">$' +
                 amt +
-                '.00</strong> as the amount you plan to pay today. Use the Zelle or Zeffy instructions below to send payment. Your full balance remains due until staff receives and reconciles that payment.'
+                ".00</strong> as the amount you plan to pay today. Use the Zelle or Zeffy instructions below to send payment. Your full balance remains due until staff receives and reconciles that payment."
               : 'Your registration is confirmed for <strong style="color:#E8C87A;">$' +
                 grandTotal +
                 ".00</strong>. No payment has been recorded yet. Use the Zelle or Zeffy instructions below whenever you are ready, and your balance will be updated within 3–5 business days once payment is received.";
@@ -3906,12 +3944,12 @@
           (typeof registration.total_amount === "number"
             ? registration.total_amount
             : grandTotal) +
-          '.00</strong></div>' +
+          ".00</strong></div>" +
           '<div class="confirm-summary-row"><span>Recorded as paid</span><strong class="confirm-paid">$' +
           (typeof registration.amount_paid === "number"
             ? registration.amount_paid
             : 0) +
-          '.00</strong></div>' +
+          ".00</strong></div>" +
           '<div class="confirm-summary-row"><span>Remaining balance</span><strong class="confirm-amount">$' +
           remaining +
           ".00</strong></div>" +
@@ -4003,8 +4041,8 @@
             response.status >= 500
               ? "We could not confirm your registration was saved. Please try again. If this keeps happening, contact convention@crmusanational.org."
               : (data && data.message) ||
-                (data && data.error) ||
-                "Could not save your registration. Please try again.",
+                  (data && data.error) ||
+                  "Could not save your registration. Please try again.",
           );
           if (data && data.step) {
             err.registrationGate = data;
@@ -4170,7 +4208,10 @@
           : "";
 
         if (!email || email.indexOf("@") === -1) {
-          showErr(errEl, "Please enter the email address you used to register.");
+          showErr(
+            errEl,
+            "Please enter the email address you used to register.",
+          );
           return;
         }
         if (!pledge || pledge.length < 4) {
@@ -4266,8 +4307,8 @@
         var balLine = remaining
           ? ' (balance: <strong style="color:#E8C87A;">$' +
             remStr +
-            '</strong>)'
-          : '';
+            "</strong>)"
+          : "";
         return (
           /* OPTION 1: Zeffy card payment */
           '<div class="pledge-box" style="margin-bottom:1rem;border:1px solid rgba(99,102,241,0.45);background:rgba(99,102,241,0.06);">' +
@@ -4288,7 +4329,7 @@
           (remaining
             ? '. You can pay any amount up to your balance of <strong style="color:#E8C87A;">$' +
               remStr +
-              '</strong>.'
+              "</strong>."
             : ".") +
           "</p>" +
           '<div style="position:relative;overflow:hidden;height:860px;width:100%;margin-bottom:0.5rem;">' +

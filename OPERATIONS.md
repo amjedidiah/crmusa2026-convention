@@ -27,7 +27,7 @@ Server routes emit **one JSON object per line** to stdout/stderr (searchable in 
 
 `GET /api/admin/registrations`, Zeffy preview rows, and related staff JSON intentionally include **names, email, phone,** and financial fields so operators can reconcile payments—this is **not** a bug.
 
-**Hygiene:** Do **not** log full registration objects, `registrationToAdminJson(...)` output, or raw API response bodies in `serverLog`, `console.log`, shared caches, or third-party tools. Use **`registration_id`** (and non-PII codes like `pledge_code` when needed) in structured logs. When debugging, pull details from Supabase Studio with appropriate access controls, not from verbose server logs.
+**Hygiene:** Do **not** log full registration objects, `registrationToAdminJson(...)` output, or raw API response bodies in `serverLog`, ad-hoc `consola`/`console` calls, shared caches, or third-party tools. Use **`registration_id`** (and non-PII codes like `pledge_code` when needed) in structured logs. When debugging, pull details from Supabase Studio with appropriate access controls, not from verbose server logs.
 
 Treat **`admin-sync.html`** session data and API responses as **sensitive** (screen sharing, recordings, support tickets).
 

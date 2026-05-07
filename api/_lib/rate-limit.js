@@ -1,5 +1,6 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { consola } from "consola";
 
 function redisConfigured() {
   return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
@@ -49,7 +50,7 @@ export function getClientIp(req) {
   if (typeof forwarded === 'string' && forwarded.trim()) {
     return forwarded.split(',')[0].trim();
   }
-  if (req.socket && req.socket.remoteAddress) {
+  if (req.socket?.remoteAddress) {
     return req.socket.remoteAddress;
   }
   return 'unknown';
@@ -72,7 +73,7 @@ export async function enforceRateLimit(req, limiterFactory) {
     return { ok: result.success };
   } catch (err) {
     // Fail open: allow the request through if Redis is unavailable.
-    console.error("[rate-limit] Redis error, failing open:", err);
+    consola.error("[rate-limit] Redis error, failing open:", err);
     return { ok: true };
   }
 }
