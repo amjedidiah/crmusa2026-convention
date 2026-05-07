@@ -282,11 +282,16 @@ The checklist is grouped into **Integration** (automated tests you can run from 
 
 ### E2E
 
-Playwright or Cypress (recommended before launch; not required in CI today).
+Playwright specs live in `e2e/` with `playwright.config.js` at the project root.
 
-- [ ] happy-path new registration (paid and/or free) through confirmation UI
-- [ ] returning registrant: open emailed lookup link and/or recovery flow end-to-end
-- [ ] admin: staff sign-in + one manual payment or one Zeffy preview → apply path
+**Run:**
+
+1. Start the app so `/` serves `index.html` **and** `/api/*` works (e.g. `vercel dev`, or point at a preview deployment).
+2. `npm run test:e2e:install` once (Chromium).
+3. `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e` — smoke + wizard validation (no writes).
+4. Optional full registration against a real backend: `E2E_REGISTER=1 E2E_BASE_URL=… npm run test:e2e`.
+
+Returning-registrant and `admin-sync.html` flows are still manual or future specs (magic-link auth).
 
 ### Manual Tests
 

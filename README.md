@@ -198,7 +198,8 @@ UPSTASH_REDIS_REST_TOKEN=...
   ```
 
   Sends real HTTP requests to public/admin/cron routes for status-code sanity checks (see `test/smoke-http.mjs`). Not a replacement for manual checkout or browser E2E.
-- **Strategy:** Unit + targeted integration + HTTP smoke; full Playwright/Cypress flows remain optional until you need them.
+- **E2E (Playwright):** `npm run test:e2e:install` then, with `vercel dev` (or a deployed URL) running, `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e`. Add `E2E_REGISTER=1` to include one real `POST /api/register` journey. See `e2e/` and `PRODUCTION_PLAN.md` → Test Plan → E2E.
+- **Strategy:** Unit + targeted integration + HTTP smoke + optional Playwright; admin and token-return flows remain mostly manual.
 
 ---
 

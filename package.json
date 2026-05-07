@@ -5,10 +5,15 @@
   "scripts": {
     "test": "node --test test/unit/*.test.js",
     "test:integration": "node --test test/integration/*.test.js",
-    "test:smoke-http": "node test/smoke-http.mjs"
+    "test:smoke-http": "node test/smoke-http.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
   }
 }

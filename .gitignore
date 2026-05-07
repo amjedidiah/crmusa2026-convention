@@ -1,8 +1,33 @@
+# OS
 .DS_Store
-*.env
-.env.local
+Thumbs.db
+
+# Dependencies
 node_modules/
-.vercel
+
+# Environment & secrets (keep `.env.example` tracked)
+.env
+.env.*
+!.env.example
+
+# Vercel CLI link state (do not commit project linkage / tokens)
+.vercel/
+
+# Logs & debug
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Playwright (https://playwright.dev/docs/ci-intro)
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# Optional: committed storageState from `npx playwright codegen` / manual login
+/e2e/.auth/
 
 # Supabase CLI local artifacts (never commit)
 supabase/.temp/
