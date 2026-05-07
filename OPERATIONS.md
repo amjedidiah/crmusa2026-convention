@@ -39,7 +39,7 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 
 ## Email delivery failures
 
-1. Confirm `RESEND_API_KEY` and domain verification in Resend.
+1. Confirm which **transport** is active (`EMAIL_TRANSPORT` if set; else Resend on Vercel **production/preview**, else SMTP to Mailpit defaults `127.0.0.1:1025`). **Resend:** `RESEND_API_KEY` set and domain verified in Resend. **SMTP:** Mailpit (or relay) reachable; see `email.smtp_send_failed` in logs.
 2. Search logs for `confirm.registration_email_failed`, `confirm.lookup_link_email_sent`, `lookup_request.email_failed`, `remind.email_send_failed`.
 3. Registration and lookup-request endpoints are designed to **return success to the client** after persistence even when email fails; treat missing email as an ops follow-up, not a silent user failure.
 
@@ -67,7 +67,7 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 ## Reminder job failures
 
 1. Cron hits `GET /api/remind` with `Authorization: Bearer $CRON_SECRET` (see `vercel.json` schedule).
-2. **`RESEND_API_KEY` must be set** before the job queries registrants. If it is missing, the handler returns **500** once with `remind.resend_not_configured` in logs (fail-fast). This avoids querying Supabase and then failing each send with `Bearer undefined`.
+2. **Email must be configured** before the job queries registrants: **Resend** (`RESEND_API_KEY`) on production/preview, or **SMTP → Mailpit** locally (`EMAIL_TRANSPORT` defaults). If misconfigured, the handler returns **500** with `remind.email_not_configured` in logs (fail-fast).
 3. Logs: `remind.supabase_query_failed`, `remind.email_send_failed`, `remind.last_reminder_stamp_failed`, `remind.batch_complete`.
 4. If email succeeds but `last_reminder_stamp_failed`, the same registrant may receive duplicate reminders next cycle—PATCH `last_reminder_at` manually if needed after fixing permissions/network.
 
@@ -77,7 +77,7 @@ Hosted Supabase: enable **Point-in-time recovery** / automated backups per your 
 
 ## Pre-launch smoke checklist
 
-Automated **HTTP smoke** (status codes only): `SMOKE_BASE_URL=https://… npm run test:smoke-http` (see `test/smoke-http.mjs`).
+Automated **HTTP smoke** (status codes only): `SMOKE_BASE_URL=https://… bun run test:smoke-http` (see `test/smoke-http.mjs`).
 
 Run manual checks against **staging** or production after deploy:
 

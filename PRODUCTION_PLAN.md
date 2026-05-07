@@ -183,9 +183,9 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
   - [x] reminder job failures
   - [x] **staff payment disputes and reconciliation:** how to correlate `registration_payments` rows and structured logs with a staff member and time window
 - [x] Verify database backups and establish a pre-launch smoke checklist covering register, lookup, admin payment update, import, and reminder cron auth.
-- [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 npm run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query.
+- [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 bun run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query.
 - [x] Extend integration tests to cover **`POST /api/register` persistence** against local Supabase (e.g. inserted row, pledge code, totals)—**primary automated pre-launch gate** for registration. Staff JWT-protected routes may remain validated via manual checks plus HTTP smoke **401** coverage unless extended later.
-- [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `npm run test:smoke-http`) for core route status codes without browser automation. **Pre-launch:** run smoke against the **release candidate URL**; strengthen assertions when feasible (e.g. response body shape, pledge code on successful register—not only status codes).
+- [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `bun run test:smoke-http`) for core route status codes without browser automation. **Pre-launch:** run smoke against the **release candidate URL**; strengthen assertions when feasible (e.g. response body shape, pledge code on successful register—not only status codes).
 - [x] Run **unit tests in CI** on push/PR (`.github/workflows/ci.yml`).
 - [x] Adopt a right-sized automated testing strategy:
   - [x] require unit tests for pure logic and validation rules
@@ -269,18 +269,18 @@ The checklist is grouped into **Integration** (automated tests you can run from 
 
 Complete the **Manual Tests** sections below before production launch and **record results** in one agreed place.
 
-| Topic | Guidance |
-|--------|----------|
-| **Ownership** | Name a **launch owner** (e.g. tech lead or PM) who coordinates execution; individual scenarios may be run by dev, QA, or product as assigned. |
-| **Sign-off criteria** | Default: **all launch-critical manual scenarios pass** (Registration, Lookup, Payments/admin, Reminders, and baseline accessibility). Waivers for non-critical items require **written** acceptance by the launch owner with a short risk note. |
+| Topic                 | Guidance                                                                                                                                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ownership**         | Name a **launch owner** (e.g. tech lead or PM) who coordinates execution; individual scenarios may be run by dev, QA, or product as assigned.                                                                                                                                |
+| **Sign-off criteria** | Default: **all launch-critical manual scenarios pass** (Registration, Lookup, Payments/admin, Reminders, and baseline accessibility). Waivers for non-critical items require **written** acceptance by the launch owner with a short risk note.                              |
 | **Staging / preview** | Use a **staging or preview** URL for failure simulation and email-dependent checks. Env vars should match **production categories** (same email provider class, Redis, Supabase roles—not necessarily production data volume). Document which URL is used for the final run. |
-| **Results storage** | Keep a single artifact: e.g. this checklist with dates/initials, a shared spreadsheet, or test tickets—**link it from launch notes** for audits and postmortems. |
+| **Results storage**   | Keep a single artifact: e.g. this checklist with dates/initials, a shared spreadsheet, or test tickets—**link it from launch notes** for audits and postmortems.                                                                                                             |
 
 **Automated gate (recommended order):** `RUN_INTEGRATION=1` including **registration persistence** once implemented → **HTTP smoke** on the release candidate URL (tighten assertions when the harness allows) → optional **`E2E_REGISTER=1`** on staging for full-browser registration.
 
 ### Integration
 
-**Unit — `npm test` (`test/unit/*.test.js`)**
+**Unit — `bun test` (`test/unit/*.test.js`)**
 
 - [x] pricing and tier cutoff rules (`activeTierForDate`, attendee totals)
 - [x] server-side validation helpers (`validateContact`, `validateAttendees`)
@@ -289,7 +289,7 @@ Complete the **Manual Tests** sections below before production launch and **reco
 - [x] Zeffy CSV parsing, stable external ref, and skipped refunded rows (`parseZeffyCsvText`)
 - [x] RPC error shaping helper (`rpcErrorMessage`)
 
-**Database / RPC — `RUN_INTEGRATION=1 npm run test:integration` (`test/integration/db-workflows.test.js`; service role + seeded rows)**
+**Database / RPC — `RUN_INTEGRATION=1 bun run test:integration` (`test/integration/db-workflows.test.js`; service role + seeded rows)**
 
 - [x] signed lookup token matches seeded registration row (`lookup_token_version`)
 - [x] `staff_apply_registration_payment`: duplicate `external_ref` rejected (`duplicate_external_ref`)
@@ -300,7 +300,7 @@ Complete the **Manual Tests** sections below before production launch and **reco
 - [x] reminder candidate query shape (`status in pending/partial`)
 - [x] `POST /api/register` persists a registration row with expected pledge code / totals against local Supabase (**primary automated gate** for registration)
 
-**HTTP smoke — `SMOKE_BASE_URL=… npm run test:smoke-http` (`test/smoke-http.mjs`; status codes only, no secrets)**
+**HTTP smoke — `SMOKE_BASE_URL=… bun run test:smoke-http` (`test/smoke-http.mjs`; status codes only, no secrets)**
 
 - [x] `POST /api/register` empty body → 400
 - [x] `GET /api/lookup` without token → 400
@@ -319,9 +319,9 @@ Playwright specs live in `e2e/` with `playwright.config.js` at the project root.
 **Run:**
 
 1. Start the app so `/` serves `index.html` **and** `/api/*` works (e.g. `vercel dev`, or point at a preview deployment).
-2. `npm run test:e2e:install` once (Chromium).
-3. `E2E_BASE_URL=http://127.0.0.1:3000 npm run test:e2e` — smoke + wizard validation (no writes).
-4. Optional full registration against a real backend: `E2E_REGISTER=1 E2E_BASE_URL=… npm run test:e2e`. Recommended on **staging** before launch when integration tests and smoke alone are not enough confidence.
+2. `bun run test:e2e:install` once (Chromium).
+3. `E2E_BASE_URL=http://127.0.0.1:3000 bun run test:e2e` — smoke + wizard validation (no writes).
+4. Optional full registration against a real backend: `E2E_REGISTER=1 E2E_BASE_URL=… bun run test:e2e`. Recommended on **staging** before launch when integration tests and smoke alone are not enough confidence.
 
 Returning-registrant and `admin-sync.html` flows are still manual or future specs (magic-link auth).
 

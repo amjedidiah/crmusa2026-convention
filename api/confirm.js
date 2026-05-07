@@ -6,6 +6,10 @@
 ───────────────────────────────────────────────────────────────────── */
 
 import { serverLog } from './_lib/server-log.js';
+import {
+  assertTransactionalEmailReady,
+  sendTransactionalEmail,
+} from './_lib/email-send.js';
 
 const FROM_ADDRESS = 'pastor@gracelifecenter.com';
 const REPLY_TO = 'mok2003@gmail.com';
@@ -38,8 +42,6 @@ const TIER_LABELS = {
   late:      'Late (Jul 17+)',
 };
 
-const RESEND_TIMEOUT_MS = 15_000;
-
 function fmtUsd(n) {
   const x = Number(n);
   return (Number.isFinite(x) ? x : 0).toFixed(2);
@@ -47,19 +49,6 @@ function fmtUsd(n) {
 
 function pledgeOneLine(code) {
   return String(code ?? '').replace(/[\r\n\u2028\u2029]/g, ' ').trim();
-}
-
-async function fetchResend(init) {
-  const controller = new AbortController();
-  const tid = setTimeout(() => controller.abort(), RESEND_TIMEOUT_MS);
-  try {
-    return await fetch('https://api.resend.com/emails', {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(tid);
-  }
 }
 
 export async function sendConfirmationEmails(payload) {
@@ -74,9 +63,7 @@ export async function sendConfirmationEmails(payload) {
     throw new Error('Missing email or pledge_code');
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
+  assertTransactionalEmailReady();
 
   const paidNum = Number(amount_paid);
   const paid = Number.isFinite(paidNum) ? paidNum : 0;
@@ -282,38 +269,20 @@ export async function sendConfirmationEmails(payload) {
   /* ── Send both emails in parallel — independent of each other ── */
   const [confirmResult, notifyResult] = await Promise.allSettled([
 
-    fetchResend({
-      method : 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
-        'Content-Type' : 'application/json',
-      },
-      body: JSON.stringify({
-        from    : 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
-        to      : [email],
-        reply_to: REPLY_TO,
-        subject : 'CRM 2026 Registration Confirmed - Code: ' + subjectPledge,
-        html    : confirmHtml,
-      }),
-    }).then(function(r) {
-      return r.ok ? r.json() : r.text().then(function(t) { return Promise.reject(t); });
+    sendTransactionalEmail({
+      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
+      to: [email],
+      replyTo: REPLY_TO,
+      subject: 'CRM 2026 Registration Confirmed - Code: ' + subjectPledge,
+      html: confirmHtml,
     }),
 
-    fetchResend({
-      method : 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
-        'Content-Type' : 'application/json',
-      },
-      body: JSON.stringify({
-        from    : 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
-        to      : NOTIFY_LIST,
-        reply_to: REPLY_TO,
-        subject : 'NEW REGISTRATION: ' + fullName + ' - Code ' + subjectPledge,
-        html    : notifyHtml,
-      }),
-    }).then(function(r) {
-      return r.ok ? r.json() : r.text().then(function(t) { return Promise.reject(t); });
+    sendTransactionalEmail({
+      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
+      to: NOTIFY_LIST,
+      replyTo: REPLY_TO,
+      subject: 'NEW REGISTRATION: ' + fullName + ' - Code ' + subjectPledge,
+      html: notifyHtml,
     }),
 
   ]);
@@ -363,9 +332,8 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
   if (!email || !lookup_url) {
     throw new Error('Missing email or lookup_url');
   }
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not configured');
-  }
+
+  assertTransactionalEmailReady();
 
   const greeting = esc(first_name || 'there');
   const html =
@@ -388,25 +356,13 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
     '</td></tr>' +
     '</table></td></tr></table></body></html>';
 
-  const response = await fetchResend({
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + process.env.RESEND_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
-      to: [email],
-      reply_to: REPLY_TO,
-      subject: 'Your CRM 2026 registration link',
-      html,
-    }),
+  await sendTransactionalEmail({
+    from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
+    to: [email],
+    replyTo: REPLY_TO,
+    subject: 'Your CRM 2026 registration link',
+    html,
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Resend request failed');
-  }
 
   serverLog('info', 'confirm.lookup_link_email_sent', {
     route: 'confirm.sendLookupLinkEmail',

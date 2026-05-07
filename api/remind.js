@@ -5,6 +5,10 @@
 ───────────────────────────────────────────────────────────────────── */
 
 import { serverLog } from './_lib/server-log.js';
+import {
+  assertTransactionalEmailReady,
+  sendTransactionalEmail,
+} from './_lib/email-send.js';
 
 const FROM_ADDRESS = 'pastor@gracelifecenter.com';
 const REPLY_TO = 'mok2003@gmail.com';
@@ -60,11 +64,19 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not set' });
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    serverLog('error', 'remind.resend_not_configured', { route: '/api/remind' });
+  try {
+    assertTransactionalEmailReady();
+  } catch (e) {
+    serverLog('error', 'remind.email_not_configured', {
+      route: '/api/remind',
+      detail: e instanceof Error ? e.message : String(e),
+    });
     return res.status(500).json({
-      error: 'RESEND_API_KEY not configured',
-      message: 'Reminder emails require Resend; set RESEND_API_KEY before running this job.',
+      error: 'email_not_configured',
+      message:
+        e instanceof Error
+          ? e.message
+          : 'Set RESEND_API_KEY for Resend, or run Mailpit and use SMTP (see EMAIL_TRANSPORT).',
     });
   }
 
@@ -123,22 +135,15 @@ export default async function handler(req, res) {
 
     const html = buildReminderEmail(reg, remUsd, totalUsd, paidUsd);
 
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      await sendTransactionalEmail({
         from: `CRM 2026 Convention <${FROM_ADDRESS}>`,
         to: [reg.email],
-        reply_to: REPLY_TO,
+        replyTo: REPLY_TO,
         subject: `CRM 2026 — Balance Reminder: $${remUsd.toFixed(2)} remaining`,
         html,
-      }),
-    });
+      });
 
-    if (resendRes.ok) {
       sent += 1;
       const stamp = new Date().toISOString();
       const patchRes = await fetch(
@@ -162,9 +167,10 @@ export default async function handler(req, res) {
           detail: patchText.slice(0, 300),
         });
       }
-    } else {
+    } catch (sendErr) {
       failed += 1;
-      const errText = await resendRes.text();
+      const errText =
+        sendErr instanceof Error ? sendErr.message : String(sendErr);
       serverLog('error', 'remind.email_send_failed', {
         route: '/api/remind',
         registration_id: reg.id,

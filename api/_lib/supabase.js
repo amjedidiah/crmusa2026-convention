@@ -8,8 +8,8 @@ export function requireEnv(name) {
 
 export function getSupabaseServiceConfig() {
   return {
-    url: requireEnv('SUPABASE_URL'),
-    serviceKey: requireEnv('SUPABASE_SERVICE_KEY'),
+    url: requireEnv("SUPABASE_URL"),
+    serviceKey: requireEnv("SUPABASE_SERVICE_KEY"),
   };
 }
 
@@ -17,7 +17,7 @@ export function createSupabaseHeaders(serviceKey) {
   return {
     apikey: serviceKey,
     Authorization: `Bearer ${serviceKey}`,
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 }
 

@@ -25,8 +25,14 @@ port = 54323
 
 [auth]
 enabled = true
+# Convention site + admin (magic-link return). Include host variants used with `vercel dev`.
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["http://127.0.0.1:3000"]
+additional_redirect_urls = [
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3000/admin-sync.html",
+  "http://localhost:3000",
+  "http://localhost:3000/admin-sync.html",
+]
 jwt_expiry = 3600
 
 [storage]

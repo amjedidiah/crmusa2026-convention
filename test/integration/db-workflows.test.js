@@ -3,10 +3,10 @@
  * Most tests hit REST/RPC directly; register persistence exercises /api/register
  * against the same local Supabase instance with Resend mocked.
  *
- * Run: RUN_INTEGRATION=1 npm run test:integration
+ * Run: RUN_INTEGRATION=1 bun run test:integration
  * Requires: migrations + seed, `.env.local` with SUPABASE_URL, SUPABASE_SERVICE_KEY, LOOKUP_TOKEN_SECRET.
  *
- * For HTTP-level checks against a running app, use: SMOKE_BASE_URL=… npm run test:smoke-http
+ * For HTTP-level checks against a running app, use: SMOKE_BASE_URL=… bun run test:smoke-http
  */
 
 import assert from 'node:assert/strict';
@@ -371,7 +371,7 @@ test(
     await resetSeedPendingRegistration();
 
     const row0 = await fetchRegistrationRow(SEED_PENDING_ID);
-    assert.equal(row0.total_cents, 40000);
+    assert.equal(row0.total_cents, 30000);
     assert.equal(row0.amount_paid_cents, 0);
     assert.equal(row0.status, 'pending');
 
@@ -390,7 +390,7 @@ test(
     const p1 = Array.isArray(first.data) ? first.data[0] : first.data;
     assert.equal(p1.status, 'partial');
     assert.equal(p1.amount_paid_cents, 15000);
-    assert.equal(p1.remaining_cents, 25000);
+    assert.equal(p1.remaining_cents, 15000);
 
     const row1 = await fetchRegistrationRow(SEED_PENDING_ID);
     assert.equal(row1.amount_paid_cents, 15000);
@@ -400,7 +400,7 @@ test(
       registrationId: SEED_PENDING_ID,
       source: 'zeffy',
       externalRef: INTEGRATION_TWO_STEP_REF_B,
-      amountCents: 25000,
+      amountCents: 15000,
       receivedAt: '2026-05-11T11:00:00.000Z',
       notes: 'integration final payment',
       rawPayload: { step: 2 },
@@ -410,11 +410,11 @@ test(
     assert.equal(second.ok, true);
     const p2 = Array.isArray(second.data) ? second.data[0] : second.data;
     assert.equal(p2.status, 'complete');
-    assert.equal(p2.amount_paid_cents, 40000);
+    assert.equal(p2.amount_paid_cents, 30000);
     assert.equal(p2.remaining_cents, 0);
 
     const row2 = await fetchRegistrationRow(SEED_PENDING_ID);
-    assert.equal(row2.amount_paid_cents, 40000);
+    assert.equal(row2.amount_paid_cents, 30000);
     assert.equal(row2.status, 'complete');
 
     await resetSeedPendingRegistration();
@@ -428,7 +428,7 @@ test(
     await resetSeedPartialRegistration();
 
     const before = await fetchRegistrationRow(SEED_PARTIAL_ID);
-    assert.equal(before.total_cents, 60000);
+    assert.equal(before.total_cents, 90000);
     assert.equal(before.amount_paid_cents, 20000);
     assert.equal(before.status, 'partial');
 
@@ -436,7 +436,7 @@ test(
       registrationId: SEED_PARTIAL_ID,
       source: 'zelle_manual',
       externalRef: INTEGRATION_PARTIAL_TOPUP_REF,
-      amountCents: 40000,
+      amountCents: 70000,
       receivedAt: '2026-05-12T12:00:00.000Z',
       notes: 'integration pay remainder',
       rawPayload: { phase: 'partial_to_complete' },
@@ -446,11 +446,11 @@ test(
     assert.equal(applied.ok, true);
     const payload = Array.isArray(applied.data) ? applied.data[0] : applied.data;
     assert.equal(payload.status, 'complete');
-    assert.equal(payload.amount_paid_cents, 60000);
+    assert.equal(payload.amount_paid_cents, 90000);
     assert.equal(payload.remaining_cents, 0);
 
     const after = await fetchRegistrationRow(SEED_PARTIAL_ID);
-    assert.equal(after.amount_paid_cents, 60000);
+    assert.equal(after.amount_paid_cents, 90000);
     assert.equal(after.status, 'complete');
 
     await resetSeedPartialRegistration();
@@ -478,7 +478,7 @@ test(
     const payload = Array.isArray(applied.data) ? applied.data[0] : applied.data;
     assert.equal(payload.status, 'complete');
     assert.equal(payload.amount_paid_cents, 45000);
-    assert.equal(payload.total_cents, 40000);
+    assert.equal(payload.total_cents, 30000);
     assert.equal(payload.remaining_cents, 0);
 
     const row = await fetchRegistrationRow(SEED_PENDING_ID);

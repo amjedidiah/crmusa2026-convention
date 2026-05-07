@@ -11,3 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 dotenv.config({ path: path.join(root, '.env.local'), quiet: true });
 dotenv.config({ path: path.join(root, '.env'), quiet: true });
+
+// DB integration tests mock Resend HTTP; keep Resend transport unless explicitly overridden.
+if (process.env.RUN_INTEGRATION === '1' && !process.env.EMAIL_TRANSPORT) {
+  process.env.EMAIL_TRANSPORT = 'resend';
+}

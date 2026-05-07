@@ -6,6 +6,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "dev:vercel": "dotenv -e .env.local -- vercel dev",
     "test": "node --test test/unit/*.test.js",
     "test:integration": "node --test test/integration/*.test.js",
     "test:smoke-http": "node test/smoke-http.mjs",
@@ -14,10 +15,12 @@
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.5",
-    "@upstash/redis": "^1.34.3"
+    "@upstash/redis": "^1.34.3",
+    "nodemailer": "^6.10.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0"
   }
 }

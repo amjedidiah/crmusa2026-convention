@@ -31,11 +31,18 @@ body {
 }
 
 /* Tabs */
-.tabs { display: flex; border-bottom: 1px solid rgba(200,168,90,0.2); margin-bottom: 1.8rem; }
+.tabs {
+  display: flex; flex-wrap: wrap;
+  border-bottom: 1px solid rgba(200,168,90,0.2); margin-bottom: 1.8rem;
+  gap: 0.15rem 0.25rem;
+}
 .tab-btn {
   padding: 0.7rem 1.4rem; background: transparent; border: none; border-bottom: 2px solid transparent;
   font-size: 0.67rem; letter-spacing: 0.18em; text-transform: uppercase;
   color: rgba(232,223,200,0.32); cursor: pointer; margin-bottom: -1px;
+}
+@media (max-width: 520px) {
+  .tab-btn { padding: 0.55rem 0.75rem; font-size: 0.58rem; letter-spacing: 0.12em; }
 }
 .tab-btn.on { color: #C8A85A; border-bottom-color: #C8A85A; }
 .tab-panel { display: none; }
@@ -53,12 +60,56 @@ input[type="date"], select, textarea {
   border: 1px solid rgba(200,168,90,0.2);
   color: #e8dfc8; font-size: 0.88rem; outline: none;
   font-family: inherit; margin-bottom: 0;
+  min-height: 2.75rem;
+  line-height: 1.35;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 input:focus, select:focus, textarea:focus { border-color: #C8A85A; }
+textarea { min-height: 7rem; }
 .field { margin-bottom: 1rem; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-@media(max-width:560px){ .grid2,.grid3 { grid-template-columns: 1fr; } }
+.field--tight { margin-bottom: 0; }
+/* Multi-column form rows: align control bottoms; avoid stray .field margin throwing off paired buttons */
+.grid2, .grid3 {
+  display: grid;
+  gap: 1rem 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+.grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid2 .field, .grid3 .field { margin-bottom: 0; }
+@media (max-width: 720px) {
+  .grid3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
+/* Label + input + action on one row (narrow: stacks); action aligns with input, not below label margin */
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+.form-inline .field {
+  flex: 1 1 min(100%, 18rem);
+  min-width: 0;
+  margin-bottom: 0;
+}
+.form-inline .btn {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  min-height: 2.75rem;
+  align-self: flex-end;
+}
+@media (max-width: 520px) {
+  .form-inline .btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
 
 /* Buttons */
 .btn {
@@ -124,6 +175,48 @@ tbody td {
   color: rgba(232,223,200,0.65);
 }
 tbody tr:hover td { background: rgba(200,168,90,0.04); }
+
+/* Pledges report: clearer row separation */
+#report-body td {
+  padding: 0.72rem 0.75rem;
+  border-bottom: 1px solid rgba(200,168,90,0.16);
+}
+#report-body tr:nth-child(odd) td {
+  background: rgba(6, 10, 20, 0.55);
+}
+#report-body tr:nth-child(even) td {
+  background: rgba(200, 168, 90, 0.07);
+}
+#report-body tr:hover td {
+  background: rgba(200, 168, 90, 0.11);
+}
+.report-logic-cell {
+  font-size: 0.68rem;
+  line-height: 1.38;
+  max-width: 24rem;
+  min-width: 11rem;
+  white-space: normal;
+  vertical-align: top;
+  color: rgba(232,223,200,0.88);
+}
+.report-logic-cell .report-pricing-p {
+  margin: 0 0 0.28rem 0;
+}
+.report-logic-cell .report-pricing-p:last-child { margin-bottom: 0; }
+.report-logic-cell .report-pricing-ul {
+  margin: 0.15rem 0 0.35rem 0;
+  padding-left: 1.1rem;
+  list-style-type: disc;
+  color: rgba(232,223,200,0.88);
+}
+.report-logic-cell .report-pricing-ul li { margin: 0.12rem 0; }
+.report-logic-cell .report-pricing-summary {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(200, 168, 90, 0.22);
+  font-weight: 600;
+  color: rgba(240, 232, 210, 0.95);
+}
 .badge {
   display: inline-block; padding: 0.15rem 0.5rem; font-size: 0.6rem;
   font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
@@ -201,19 +294,17 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
         <p style="font-size:0.8rem;color:rgba(232,223,200,0.42);margin-bottom:1rem;">
           Enter the registrant's pledge code (from the Zelle or Zeffy memo) or their email address.
         </p>
-        <div class="grid2">
-          <div class="field">
+        <div class="form-inline">
+          <div class="field field--tight">
             <label>Pledge Code or Email</label>
             <input type="text" id="lu-val" placeholder="e.g. LKKB9D or name@email.com"
               style="text-transform:uppercase;"
               onkeydown="if(event.key==='Enter')lookupReg()"
               oninput="this.value=this.value.indexOf('@')>-1?this.value:this.value.toUpperCase()"/>
           </div>
-          <div style="display:flex;align-items:flex-end;padding-bottom:0;">
-            <button class="btn" onclick="lookupReg()" id="lu-btn">Look Up →</button>
-          </div>
+          <button type="button" class="btn" onclick="lookupReg()" id="lu-btn">Look Up →</button>
         </div>
-        <div id="lu-msg"></div>
+        <div id="lu-msg" style="margin-top:0;"></div>
       </div>
 
       <!-- Step 2: Registrant info (shown after lookup) -->
@@ -416,12 +507,15 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
       <div class="card">
         <p class="card-title">Pledges &amp; Payment Report</p>
         <p style="font-size:0.8rem;color:rgba(232,223,200,0.42);margin-bottom:1.2rem;">
-          Full list of all registrations with pledge status. Download as CSV to open in Excel or Google Sheets.
+          Full list of all registrations with pledge status. Download as CSV (Excel / Sheets) or PDF.
         </p>
         <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
           <button class="btn" onclick="loadReport()" id="report-load-btn">Load Report →</button>
           <button class="btn-outline hidden" onclick="downloadCSV()" id="report-dl-btn">
             ↓ Download as CSV
+          </button>
+          <button class="btn-outline hidden" onclick="downloadPDF()" id="report-dl-pdf-btn">
+            ↓ Download as PDF
           </button>
           <span id="report-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
         </div>
@@ -480,6 +574,7 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
                   <th>% Paid</th>
                   <th>Status</th>
                   <th>Registered</th>
+                  <th>Pricing / logic</th>
                 </tr>
               </thead>
               <tbody id="report-body"></tbody>
@@ -494,8 +589,11 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 
 </div>
 
-<!-- @supabase/supabase-js pinned for SRI; bump version + recompute hash if upgrading:
-     curl -sL "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@VERSION" | openssl dgst -sha384 -binary | openssl base64 -A -->
+<!-- jsPDF + autotable: pinned for SRI; bump versions + recompute hashes if upgrading:
+     curl -sL "https://cdn.jsdelivr.net/npm/jspdf@VERSION/dist/jspdf.umd.min.js" | openssl dgst -sha384 -binary | openssl base64 -A
+     curl -sL "https://cdn.jsdelivr.net/npm/jspdf-autotable@VERSION/dist/jspdf.plugin.autotable.min.js" | openssl dgst -sha384 -binary | openssl base64 -A -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" integrity="sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js" integrity="sha384-Zj5NAMJ45tB1L13yWiQlFjFjlyyeUBZTWQKktGXeW303njR3jSLmfN16iUgF8I8n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.3" integrity="sha384-iWpUQPQzWsFiosLgsS8o+e6E8y3Gm+EW2m/vAAo7A2H3fuc4KOKEx+5CAord2H2z" crossorigin="anonymous"></script>
 <script src="/admin-sync-app.js"></script>
 </body>

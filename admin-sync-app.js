@@ -46,6 +46,9 @@ async function initSupabase() {
   var cfg = await loadAuthConfig();
   sb = supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key, {
     auth: {
+      // Magic links are often opened in the mail app's browser — no PKCE verifier there.
+      // Implicit flow puts tokens in the URL hash so this page can recover the session.
+      flowType: 'implicit',
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
@@ -128,7 +131,8 @@ async function sendMagicLink() {
   msg.className = 'msg msg-inf';
   msg.textContent = 'Sending link…';
   try {
-    var redirect = window.location.href.split('#')[0];
+    // Always return to this app on the admin path (not `/`), so the hash is handled here.
+    var redirect = new URL('/admin-sync.html', window.location.origin).href;
     var res = await sb.auth.signInWithOtp({
       email: email,
       options: { emailRedirectTo: redirect },
@@ -184,6 +188,180 @@ function regAmountPaid(reg) {
   }
   var p = parseFloat(reg.amount_paid);
   return Number.isFinite(p) ? p : 0;
+}
+
+/** Mirrors api/_lib/registration.js PRICING_CENTS (admin report only). */
+var PRICING_CENTS_ADMIN = {
+  earlybird: { u10: 0, u17: 10000, adu: 20000 },
+  regular: { u10: 5000, u17: 15000, adu: 25000 },
+  late: { u10: 30000, u17: 30000, adu: 30000 },
+};
+
+function attendeeBracketCentsAdmin(age, tier) {
+  var numericAge = Number(age);
+  var pricing = PRICING_CENTS_ADMIN[tier];
+  if (!pricing || !Number.isFinite(numericAge) || numericAge < 0) return 0;
+  if (numericAge < 10) return pricing.u10;
+  if (numericAge < 18) return pricing.u17;
+  return pricing.adu;
+}
+
+function sumBracketCentsAdmin(attendees, tier) {
+  if (!Array.isArray(attendees)) return 0;
+  var t = String(tier || '').toLowerCase();
+  var s = 0;
+  for (var i = 0; i < attendees.length; i += 1) {
+    s += attendeeBracketCentsAdmin(attendees[i] && attendees[i].age, t);
+  }
+  return s;
+}
+
+/** YYYY-MM-DD in America/Chicago for an ISO timestamp. */
+function chicagoYmdFromIso(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  var parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(d);
+  var y = '';
+  var m = '';
+  var day = '';
+  for (var j = 0; j < parts.length; j += 1) {
+    if (parts[j].type === 'year') y = parts[j].value;
+    if (parts[j].type === 'month') m = parts[j].value;
+    if (parts[j].type === 'day') day = parts[j].value;
+  }
+  if (y && m && day) return y + '-' + m + '-' + day;
+  return '';
+}
+
+/** Same calendar rules as activeTierForDate(registration.js) for a Chicago YYYY-MM-DD. */
+function activeTierFromChicagoYmd(ymd) {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return '';
+  var segs = ymd.split('-');
+  var mo = Number(segs[1]);
+  var dom = Number(segs[2]);
+  if (mo < 6 || (mo === 6 && dom <= 15)) return 'earlybird';
+  if (mo < 7 || (mo === 7 && dom <= 16)) return 'regular';
+  return 'late';
+}
+
+function formatUsdFromCentsAdmin(cents) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format((Number(cents) || 0) / 100);
+}
+
+function windowLeadSentence(calTier) {
+  if (calTier === 'earlybird') return 'Inside early-bird window.';
+  if (calTier === 'regular') return 'Inside regular window.';
+  if (calTier === 'late') return 'After Jul 17.';
+  return '';
+}
+
+/**
+ * Human-readable tier + ticket math for Pledges Report (HTML / CSV / PDF).
+ * Uses stored tier for bracket prices; Chicago calendar on created_at for window copy.
+ */
+function buildPricingBreakdownParts(r) {
+  var preamble = [];
+  var items = [];
+  var summary = null;
+  var footers = [];
+  var storedTier = String((r && r.tier) || '').toLowerCase();
+  var attendees = Array.isArray(r && r.attendees_json) ? r.attendees_json : [];
+  var chYmd = chicagoYmdFromIso(r && r.created_at);
+  var calTier = activeTierFromChicagoYmd(chYmd);
+  var lead = windowLeadSentence(calTier);
+  if (lead) preamble.push(lead);
+  if (storedTier && calTier && storedTier !== calTier) {
+    preamble.push(
+      'Stored tier is "' +
+        storedTier +
+        '" (Chicago date ' +
+        chYmd +
+        ' falls in ' +
+        calTier +
+        '). Bracket math below uses stored tier.'
+    );
+  }
+  if (!storedTier || !PRICING_CENTS_ADMIN[storedTier]) {
+    preamble.push('No stored tier or unknown tier — bracket lines omitted.');
+    return { preamble: preamble, items: items, summary: summary, footers: footers };
+  }
+  var bracketSum = sumBracketCentsAdmin(attendees, storedTier);
+  var totalC = Number(r.total_cents) || 0;
+  var paidC = Number(r.amount_paid_cents) || 0;
+  for (var i = 0; i < attendees.length; i += 1) {
+    var a = attendees[i] || {};
+    var nm = String(a.name || 'Attendee ' + (i + 1)).trim();
+    var ag = a.age != null && a.age !== '' ? a.age : '?';
+    var cents = attendeeBracketCentsAdmin(a.age, storedTier);
+    items.push(nm + ' (age ' + ag + '): ' + formatUsdFromCentsAdmin(cents));
+  }
+  if (items.length === 0) {
+    footers.push('No attendees on file.');
+    if (totalC > 0) {
+      summary = 'Stored pledge ' + formatUsdFromCentsAdmin(totalC) + '.';
+    }
+  } else {
+    summary =
+      'Total pledged ' +
+      formatUsdFromCentsAdmin(totalC) +
+      (totalC === bracketSum
+        ? ' — matches ticket line items.'
+        : ' — ticket prices add to ' +
+          formatUsdFromCentsAdmin(bracketSum) +
+          ' at this tier (differs from stored pledge).');
+  }
+  if (r.last_reminder_at) {
+    footers.push('Last reminder sent ' + String(r.last_reminder_at).slice(0, 10) + ' (UTC).');
+  }
+  if (paidC > 0) {
+    footers.push('Recorded paid ' + formatUsdFromCentsAdmin(paidC) + '.');
+  }
+  return { preamble: preamble, items: items, summary: summary, footers: footers };
+}
+
+/** Flat lines for CSV / PDF: bullets on each attendee line item. */
+function buildPricingBreakdownLines(r) {
+  var p = buildPricingBreakdownParts(r);
+  var out = [].concat(p.preamble);
+  p.items.forEach(function (it) {
+    out.push('\u2022 ' + it);
+  });
+  if (p.summary) out.push(p.summary);
+  out = out.concat(p.footers);
+  return out;
+}
+
+function buildPricingBreakdownHtml(r) {
+  var p = buildPricingBreakdownParts(r);
+  var chunks = [];
+  p.preamble.forEach(function (line) {
+    chunks.push('<p class="report-pricing-p">' + esc(line) + '</p>');
+  });
+  if (p.items.length) {
+    chunks.push('<ul class="report-pricing-ul">');
+    p.items.forEach(function (it) {
+      chunks.push('<li>' + esc(it) + '</li>');
+    });
+    chunks.push('</ul>');
+  }
+  if (p.summary) {
+    chunks.push(
+      '<p class="report-pricing-p report-pricing-summary">' + esc(p.summary) + '</p>'
+    );
+  }
+  p.footers.forEach(function (line) {
+    chunks.push('<p class="report-pricing-p">' + esc(line) + '</p>');
+  });
+  return chunks.join('');
 }
 
 /** Preview cell when pled is known dollars; avoids bogus negatives when pled is 0 */
@@ -388,6 +566,7 @@ function loadReport() {
       reportData = data.registrations || [];
       renderReport(reportData);
       document.getElementById('report-dl-btn').classList.remove('hidden');
+      document.getElementById('report-dl-pdf-btn').classList.remove('hidden');
       document.getElementById('report-status').textContent =
         reportData.length + ' registrations loaded';
     })
@@ -439,6 +618,7 @@ function renderReport(rows) {
           ? 'b-partial'
           : 'b-pending';
     var tr = document.createElement('tr');
+    tr.className = 'report-row';
     tr.innerHTML =
       '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">' +
       esc(r.pledge_code) +
@@ -488,6 +668,9 @@ function renderReport(rows) {
       '</span></td>' +
       '<td style="font-size:0.72rem;color:rgba(232,223,200,0.4);">' +
       (r.created_at || '').slice(0, 10) +
+      '</td>' +
+      '<td class="report-logic-cell">' +
+      buildPricingBreakdownHtml(r) +
       '</td>';
     tbody.appendChild(tr);
   });
@@ -510,6 +693,7 @@ function downloadCSV() {
     'Balance',
     'Status',
     'Registered',
+    'Pricing / logic',
   ];
   var rows = reportData.map(function (r) {
     var pled = regTotalPledged(r);
@@ -529,6 +713,7 @@ function downloadCSV() {
       bal.toFixed(2),
       r.status || '',
       (r.created_at || '').slice(0, 10),
+      buildPricingBreakdownLines(r).join('\n'),
     ]
       .map(function (v) {
         return '"' + String(v).replace(/"/g, '""') + '"';
@@ -546,6 +731,95 @@ function downloadCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+function downloadPDF() {
+  if (!reportData.length) return;
+  if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+    alert('PDF export is unavailable. Refresh the page and try again.');
+    return;
+  }
+  var JsPDF = window.jspdf.jsPDF;
+  var margin = 36;
+  var doc = new JsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+  doc.setFontSize(14);
+  doc.setTextColor(11, 22, 40);
+  doc.text('CRM 2026 — Pledges Report', margin, margin);
+  doc.setFontSize(9);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Generated ' + new Date().toISOString().slice(0, 19) + 'Z', margin, margin + 18);
+  doc.setTextColor(0, 0, 0);
+
+  var head = [
+    [
+      'Code',
+      'Name',
+      'Email',
+      'Church',
+      'City',
+      'Tier',
+      'Pledged',
+      'Paid',
+      'Balance',
+      '% Paid',
+      'Status',
+      'Registered',
+      'Pricing / logic',
+    ],
+  ];
+  var body = reportData.map(function (r) {
+    var pled = regTotalPledged(r);
+    var paid = regAmountPaid(r);
+    var bal = Math.max(0, pled - paid);
+    var rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
+    var balanceStr = pled > 0 && bal <= 0 ? 'Paid' : '$' + bal.toFixed(2);
+    return [
+      String(r.pledge_code || ''),
+      [r.first_name, r.last_name].filter(Boolean).join(' '),
+      String(r.email || ''),
+      String(r.church || '—'),
+      String(r.city || '—'),
+      String(r.tier || '—'),
+      '$' + pled.toFixed(2),
+      '$' + paid.toFixed(2),
+      balanceStr,
+      rPct + '%',
+      String(r.status || ''),
+      (r.created_at || '').slice(0, 10),
+      buildPricingBreakdownLines(r).join('\n'),
+    ];
+  });
+
+  try {
+    doc.autoTable({
+      startY: margin + 28,
+      head: head,
+      body: body,
+      styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
+      columnStyles: {
+        12: { minCellWidth: 140, fontSize: 6 },
+      },
+      headStyles: {
+        fillColor: [200, 168, 90],
+        textColor: [11, 22, 40],
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [248, 246, 242] },
+      margin: { left: margin, right: margin },
+      showHead: 'everyPage',
+    });
+  } catch (e) {
+    alert(
+      'Could not build PDF: ' +
+        (e && e.message ? e.message : String(e)) +
+        '. Try refreshing the page.'
+    );
+    return;
+  }
+
+  doc.save(
+    'crm2026-registrations-' + new Date().toISOString().slice(0, 10) + '.pdf'
+  );
 }
 
 function showMsg(id, msg, type) {

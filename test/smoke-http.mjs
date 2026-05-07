@@ -1,7 +1,7 @@
 /**
  * Minimal HTTP smoke checks against a live deployment or `vercel dev`.
  *
- *   SMOKE_BASE_URL=https://your-project.vercel.app npm run test:smoke-http
+ *   SMOKE_BASE_URL=https://your-project.vercel.app bun run test:smoke-http
  *
  * Does not send secrets; asserts status codes only. Staff/Zeffy preview routes
  * are checked for unauthenticated 401, not for successful CSV handling.
@@ -11,7 +11,7 @@
 const base = (process.env.SMOKE_BASE_URL || '').replace(/\/+$/, '');
 if (!base) {
   console.error(
-    'Missing SMOKE_BASE_URL. Example: SMOKE_BASE_URL=http://localhost:3000 npm run test:smoke-http'
+    "Missing SMOKE_BASE_URL. Example: SMOKE_BASE_URL=http://localhost:3000 bun run test:smoke-http",
   );
   process.exit(1);
 }

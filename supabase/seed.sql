@@ -1,3 +1,7 @@
+-- Sample registrations / payments for local dev.
+-- Totals match api/_lib/registration.js PRICING_CENTS (same $ amounts as index.html #register).
+-- created_at falls inside each tier’s registration window (America/Chicago calendar dates).
+
 truncate table public.registration_payments restart identity cascade;
 truncate table public.registrations restart identity cascade;
 
@@ -18,7 +22,9 @@ insert into public.registrations (
   attendees_json,
   lookup_token_version,
   last_reminder_at,
-  metadata
+  metadata,
+  created_at,
+  updated_at
 ) values
   (
     '11111111-1111-1111-1111-111111111111',
@@ -31,13 +37,16 @@ insert into public.registrations (
     'Grace Life Center',
     'Houston',
     'earlybird',
-    40000,
+    -- Early bird: adult $200 + youth 11–17 $100 = $300 (ages 38 + 14)
+    30000,
     0,
     'pending',
     '[{"name":"Sarah Johnson","age":38},{"name":"Micah Johnson","age":14}]'::jsonb,
     1,
     null,
-    '{"seed":"pending"}'::jsonb
+    '{"seed":"pending"}'::jsonb,
+    '2026-05-10T18:00:00+00'::timestamptz,
+    '2026-05-10T18:00:00+00'::timestamptz
   ),
   (
     '22222222-2222-2222-2222-222222222222',
@@ -50,13 +59,16 @@ insert into public.registrations (
     'River of Life Chapel',
     'Dallas',
     'regular',
+    -- Regular: one adult 18+ $250
     25000,
     25000,
     'complete',
     '[{"name":"Daniel Okoye","age":42}]'::jsonb,
     1,
-    '2026-05-01T14:00:00Z',
-    '{"seed":"complete"}'::jsonb
+    '2026-07-02T14:00:00+00'::timestamptz,
+    '{"seed":"complete"}'::jsonb,
+    '2026-06-20T16:00:00+00'::timestamptz,
+    '2026-06-20T16:00:00+00'::timestamptz
   ),
   (
     '33333333-3333-3333-3333-333333333333',
@@ -69,13 +81,16 @@ insert into public.registrations (
     'New Hope Assembly',
     'Austin',
     'late',
-    60000,
+    -- Late: $300 per person × 3 (all-ages tier)
+    90000,
     20000,
     'partial',
     '[{"name":"Maria Chen","age":35},{"name":"Ethan Chen","age":9},{"name":"Olivia Chen","age":12}]'::jsonb,
     2,
-    '2026-05-05T14:00:00Z',
-    '{"seed":"partial"}'::jsonb
+    '2026-08-10T14:00:00+00'::timestamptz,
+    '{"seed":"partial"}'::jsonb,
+    '2026-07-25T17:00:00+00'::timestamptz,
+    '2026-07-25T17:00:00+00'::timestamptz
   );
 
 insert into public.registration_payments (
@@ -96,7 +111,7 @@ insert into public.registration_payments (
     'zeffy_import',
     'zeffy-seed-0001',
     25000,
-    '2026-04-20T16:30:00Z',
+    '2026-06-22T16:30:00+00'::timestamptz,
     'Seeded fully paid card payment',
     '{"provider":"zeffy"}'::jsonb,
     'seed',
@@ -108,7 +123,7 @@ insert into public.registration_payments (
     'manual_zelle',
     'manual-zelle-seed-0001',
     20000,
-    '2026-05-03T13:15:00Z',
+    '2026-08-02T13:15:00+00'::timestamptz,
     'Seeded partial Zelle payment',
     '{"provider":"zelle"}'::jsonb,
     'seed',
