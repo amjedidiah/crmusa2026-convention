@@ -41,177 +41,184 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
 - [x] Change the frontend so success UI appears only after the API returns a persisted registration.
 - [x] If email delivery fails after persistence, still show a successful registration result with a "registration saved, email retry pending" message and log the failure for follow-up.
 - [x] Keep the public payment UI informational only. The user may indicate how much they intend to pay today, but that value must not update paid state and must be treated only as email copy or omitted entirely if it creates ambiguity.
-- [ ] Define and implement registration flow UI states:
-  - [ ] idle/default form state
-  - [ ] client-side validating state
-  - [ ] submitting/loading state with submit disabled
-  - [ ] persisted success state with confirmation details
-  - [ ] recoverable error state with retry path
-  - [ ] fatal error state with support guidance
-- [ ] Define validation behavior for registration:
-  - [ ] inline field-level validation for contact and attendee inputs
-  - [ ] form-level summary for blocking errors
-  - [ ] server validation error mapping back to the correct fields/messages
-  - [ ] duplicate-submit prevention and safe retry UX
-- [ ] Define registration confirmation UI content:
-  - [ ] final persisted registration summary
-  - [ ] pledge code display and copy action
-  - [ ] lookup/recovery guidance
-  - [ ] truthful payment-state messaging that does not imply funds were received
-- [ ] Standardize form UI presentation for production:
-  - [ ] consistent label/help/error text styling
-  - [ ] readable mobile spacing and hierarchy
-  - [ ] clear success/warning/error visual states without relying on color alone
+- [x] Define and implement registration flow UI states:
+  - [x] idle/default form state
+  - [x] client-side validating state
+  - [x] submitting/loading state with submit disabled
+  - [x] persisted success state with confirmation details
+  - [x] recoverable error state with retry path
+  - [x] fatal error state with support guidance
+- [x] Define validation behavior for registration:
+  - [x] inline field-level validation for contact and attendee inputs
+  - [x] form-level summary for blocking errors
+  - [x] server validation error mapping back to the correct fields/messages
+  - [x] duplicate-submit prevention and safe retry UX
+- [x] Define registration confirmation UI content:
+  - [x] final persisted registration summary
+  - [x] pledge code display and copy action
+  - [x] lookup/recovery guidance
+  - [x] truthful payment-state messaging that does not imply funds were received
+- [x] Standardize form UI presentation for production:
+  - [x] consistent label/help/error text styling
+  - [x] readable mobile spacing and hierarchy
+  - [x] clear success/warning/error visual states without relying on color alone
 
 ### Phase 3: Tokenized Self-Service Lookup
 
-- [ ] Replace public direct lookup with tokenized self-service.
-- [ ] Ensure all self-service lookup and lookup recovery logic runs only in Vercel server-side functions/route handlers.
-- [ ] Include a signed lookup link to the returning-registrant page in confirmation emails.
-- [ ] Add `GET /api/lookup?token=...` to return a sanitized registration summary for a valid signed token.
-- [ ] Add `POST /api/lookup-request` as the fallback recovery flow:
-  - [ ] input: `email` + `pledge_code`
-  - [ ] behavior: on a valid match, email a fresh signed lookup link
-  - [ ] response: always generic success text to avoid account enumeration
-- [ ] Implement tokens that:
-  - [ ] contain registration id and `lookup_token_version`
-  - [ ] expire after 30 days
-  - [ ] are reissuable without changing the registration record
-  - [ ] are revocable by incrementing `lookup_token_version`
-- [ ] Add rate limiting to `POST /api/register` and `POST /api/lookup-request` using a server-side store such as Upstash Redis.
-- [ ] Keep generic error responses for public lookup recovery and registration abuse controls.
-- [ ] Define and implement self-service lookup UI states:
-  - [ ] token loading state
-  - [ ] valid token with outstanding balance state
-  - [ ] valid token with fully paid state
-  - [ ] valid token with free registration state
-  - [ ] invalid or expired token state with recovery CTA
-  - [ ] lookup-request submitted state
-  - [ ] generic recovery response state that avoids account enumeration
-- [ ] Add UI guards for self-service lookup:
-  - [ ] stale or reused token handling
-  - [ ] disabled actions while token or recovery request is pending
-  - [ ] retry path for transient server failures
-  - [ ] support fallback messaging when recovery cannot be completed immediately
-- [ ] Standardize balance/data display states:
-  - [ ] loaded summary state with clear totals and labels
-  - [ ] empty/no-data state where appropriate
-  - [ ] error state copy that is informative but non-leaky
+- [x] Replace public direct lookup with tokenized self-service.
+- [x] Ensure all self-service lookup and lookup recovery logic runs only in Vercel server-side functions/route handlers.
+- [x] Include a signed lookup link to the returning-registrant page in confirmation emails.
+- [x] Add `GET /api/lookup?token=...` to return a sanitized registration summary for a valid signed token.
+- [x] Add `POST /api/lookup-request` as the fallback recovery flow:
+  - [x] input: `email` + `pledge_code`
+  - [x] behavior: on a valid match, email a fresh signed lookup link
+  - [x] response: always generic success text to avoid account enumeration
+- [x] Implement tokens that:
+  - [x] contain registration id and `lookup_token_version`
+  - [x] expire after 30 days
+  - [x] are reissuable without changing the registration record
+  - [x] are revocable by incrementing `lookup_token_version`
+- [x] Add rate limiting to `POST /api/register` and `POST /api/lookup-request` using a server-side store such as Upstash Redis.
+- [x] Keep generic error responses for public lookup recovery and registration abuse controls.
+- [x] Define and implement self-service lookup UI states:
+  - [x] token loading state
+  - [x] valid token with outstanding balance state
+  - [x] valid token with fully paid state
+  - [x] valid token with free registration state
+  - [x] invalid or expired token state with recovery CTA
+  - [x] lookup-request submitted state
+  - [x] generic recovery response state that avoids account enumeration
+- [x] Add UI guards for self-service lookup:
+  - [x] stale or reused token handling
+  - [x] disabled actions while token or recovery request is pending
+  - [x] retry path for transient server failures
+  - [x] support fallback messaging when recovery cannot be completed immediately
+- [x] Standardize balance/data display states:
+  - [x] loaded summary state with clear totals and labels
+  - [x] empty/no-data state where appropriate
+  - [x] error state copy that is informative but non-leaky
 
 ### Phase 4: Authoritative Payment State and Staff Operations
 
-- [ ] Treat payment state as staff-controlled only for v1 production.
-- [ ] Ensure all payment updates, imports, reporting reads, and reminder queries run only in Vercel server-side functions/route handlers.
-- [ ] Remove any public path that can set `amount_paid` or `status`.
-- [ ] Replace the PIN-based admin API with staff authentication via Supabase Auth magic-link and a server-side allowlist of staff emails.
-- [ ] Split the admin surface into explicit authenticated endpoints:
-  - [ ] `POST /api/admin/payments/manual` for single payment entry
-  - [ ] `POST /api/admin/import/zeffy/preview` for CSV preview/matching
-  - [ ] `POST /api/admin/import/zeffy/apply` for applying matched rows
-  - [ ] `GET /api/admin/registrations` for reporting/search
-- [ ] Ensure every payment write:
-  - [ ] inserts a `registration_payments` row first-class
-  - [ ] uses `external_ref` idempotency for imports
-  - [ ] updates registration aggregates transactionally
-  - [ ] recalculates `status` as `pending`, `partial`, or `complete`
-- [ ] Lock Zeffy CSV import behavior to:
-  - [ ] parse client-side or server-side for preview
-  - [ ] match on pledge code
-  - [ ] flag unmatched, refunded, duplicate, and overpayment rows before apply
-  - [ ] apply only approved rows
-- [ ] Lock Zelle manual entry behavior to:
-  - [ ] lookup by staff
-  - [ ] create a manual payment event
-  - [ ] allow overpayment only with an explicit staff confirmation flag
-- [ ] Keep the reminder cron weekly, querying authoritative outstanding balances only and stamping `last_reminder_at` so one registration does not get duplicate reminders in the same cycle.
-- [ ] Define and implement admin/payment UI states:
-  - [ ] loading/searching state for registration lookup
-  - [ ] no-result state for staff lookup
-  - [ ] ready-to-record payment state
-  - [ ] payment recorded success state with updated totals
-  - [ ] partial failure state when write or aggregate update fails
-  - [ ] session-expired/auth-expired recovery state
-- [ ] Define and implement import/report UI states:
-  - [ ] empty report state
-  - [ ] populated report state
-  - [ ] empty import preview state
-  - [ ] unmatched rows state
-  - [ ] duplicate rows state
-  - [ ] overpayment warning state
-  - [ ] apply-in-progress state
-  - [ ] apply-complete state
-  - [ ] apply-partial-failure state with actionable row-level feedback
-- [ ] Add admin-side validation and guards:
-  - [ ] prevent duplicate manual submissions while pending
-  - [ ] require explicit confirmation for overpayments or suspicious entries
-  - [ ] verify imported rows before apply
-  - [ ] keep destructive or irreversible actions behind a review step
-- [ ] Standardize admin data presentation:
-  - [ ] readable table typography and density on desktop
-  - [ ] usable mobile/tablet fallback behavior where needed
-  - [ ] consistent status badges, alerts, and row-level feedback
+- [x] Treat payment state as staff-controlled only for v1 production.
+- [x] Ensure all payment updates, imports, reporting reads, and reminder queries run only in Vercel server-side functions/route handlers.
+- [x] Remove any public path that can set `amount_paid` or `status`. (`POST /api/register` sets initial `amount_paid_cents = 0` and derived `status` only at creation; `/api/confirm` sends email only and does not mutate balances.)
+- [x] Replace the PIN-based admin API with staff authentication via Supabase Auth magic-link and a server-side allowlist of staff emails.
+- [x] Split the admin surface into explicit authenticated endpoints:
+  - [x] `POST /api/admin/payments/manual` for single payment entry
+  - [x] `POST /api/admin/import/zeffy/preview` for CSV preview/matching
+  - [x] `POST /api/admin/import/zeffy/apply` for applying matched rows
+  - [x] `GET /api/admin/registrations` for reporting/search
+- [x] Ensure every payment write:
+  - [x] inserts a `registration_payments` row first-class
+  - [x] uses `external_ref` idempotency for imports
+  - [x] updates registration aggregates transactionally
+  - [x] recalculates `status` as `pending`, `partial`, or `complete`
+- [x] Lock Zeffy CSV import behavior to:
+  - [x] parse client-side or server-side for preview
+  - [x] match on pledge code
+  - [x] flag unmatched, refunded, duplicate, and overpayment rows before apply
+  - [x] apply only approved rows
+- [x] Lock Zelle manual entry behavior to:
+  - [x] lookup by staff
+  - [x] create a manual payment event
+  - [x] allow overpayment only with an explicit staff confirmation flag
+- [x] Keep the reminder cron weekly, querying authoritative outstanding balances only and stamping `last_reminder_at` so one registration does not get duplicate reminders in the same cycle.
+- [x] Define and implement admin/payment UI states:
+  - [x] loading/searching state for registration lookup
+  - [x] no-result state for staff lookup
+  - [x] ready-to-record payment state
+  - [x] payment recorded success state with updated totals
+  - [x] partial failure state when write or aggregate update fails
+  - [x] session-expired/auth-expired recovery state
+- [x] Define and implement import/report UI states:
+  - [x] empty report state
+  - [x] populated report state
+  - [x] empty import preview state
+  - [x] unmatched rows state
+  - [x] duplicate rows state
+  - [x] overpayment warning state
+  - [x] apply-in-progress state
+  - [x] apply-complete state
+  - [x] apply-partial-failure state with actionable row-level feedback
+- [x] Add admin-side validation and guards:
+  - [x] prevent duplicate manual submissions while pending
+  - [x] require explicit confirmation for overpayments or suspicious entries
+  - [x] verify imported rows before apply
+  - [x] keep destructive or irreversible actions behind a review step
+- [x] Standardize admin data presentation:
+  - [x] readable table typography and density on desktop
+  - [x] usable mobile/tablet fallback behavior where needed
+  - [x] consistent status badges, alerts, and row-level feedback
 
 ### Phase 5: Operations, Deployment, and Hardening
 
-- [ ] Clean up deployment/docs to match the real system:
-  - [ ] remove PayPal references
-  - [ ] document all required env vars
-  - [ ] document staff login, reminder cron secret, rate-limit store, and email provider setup
-- [ ] Document the local Supabase development workflow, including start, reset, migrate, seed, and test steps.
-- [ ] Define and document required env vars:
-  - [ ] `SUPABASE_URL`
-  - [ ] `SUPABASE_SERVICE_KEY`
-  - [ ] `SUPABASE_ANON_KEY` only if needed for staff auth/session bootstrap, not for public data access
-  - [ ] `RESEND_API_KEY`
-  - [ ] `CRON_SECRET`
-  - [ ] `SITE_URL`
-  - [ ] `LOOKUP_TOKEN_SECRET`
-  - [ ] `UPSTASH_REDIS_REST_URL`
-  - [ ] `UPSTASH_REDIS_REST_TOKEN`
-  - [ ] `STAFF_EMAIL_ALLOWLIST` or an equivalent allowlist source
-- [ ] Add structured server logs keyed by registration id and payment id.
-- [ ] Add an operational runbook for:
-  - [ ] registration failures
-  - [ ] email delivery failures
-  - [ ] Zeffy import mismatch handling
-  - [ ] manual payment corrections
-  - [ ] reminder job failures
-- [ ] Verify database backups and establish a pre-launch smoke checklist covering register, lookup, admin payment update, import, and reminder cron auth.
-- [ ] Add integration testing against the local Supabase instance for registration creation, token lookup, manual payment recording, Zeffy import preview/apply, and reminder queries.
-- [ ] Adopt a right-sized automated testing strategy:
-  - [ ] require unit tests for pure logic and validation rules
-  - [ ] require integration tests for server-side endpoints and database workflows
-  - [ ] keep E2E coverage minimal and focused on a few critical end-to-end flows
-  - [ ] defer broad visual regression and large snapshot-based UI suites unless later justified by change volume
+- [x] Clean up deployment/docs to match the real system:
+  - [x] remove PayPal references (none remain in app/docs beyond this plan’s history)
+  - [x] document all required env vars
+  - [x] document staff login, reminder cron secret, rate-limit store, and email provider setup
+- [x] Document the local Supabase development workflow, including start, reset, migrate, seed, and test steps.
+- [x] Define and document required env vars:
+  - [x] `SUPABASE_URL`
+  - [x] `SUPABASE_SERVICE_KEY`
+  - [x] `SUPABASE_ANON_KEY` only if needed for staff auth/session bootstrap, not for public data access
+  - [x] `RESEND_API_KEY`
+  - [x] `CRON_SECRET`
+  - [x] `SITE_URL`
+  - [x] `LOOKUP_TOKEN_SECRET`
+  - [x] `UPSTASH_REDIS_REST_URL`
+  - [x] `UPSTASH_REDIS_REST_TOKEN`
+  - [x] `STAFF_EMAIL_ALLOWLIST` or an equivalent allowlist source
+- [x] Add structured server logs keyed by registration id and payment id.
+- [x] Add an operational runbook for:
+  - [x] registration failures
+  - [x] email delivery failures
+  - [x] Zeffy import mismatch handling
+  - [x] manual payment corrections
+  - [x] reminder job failures
+- [x] Verify database backups and establish a pre-launch smoke checklist covering register, lookup, admin payment update, import, and reminder cron auth.
+- [x] Add integration testing against a local or hosted Supabase instance using **direct REST/RPC** (`RUN_INTEGRATION=1 npm run test:integration`): lookup token vs seed row, manual payment RPC idempotency, reminder-scope query. This does **not** cover `POST /api/register` persistence or staff JWT routes end-to-end.
+- [x] Add optional **HTTP smoke** checks (`SMOKE_BASE_URL` + `npm run test:smoke-http`) for core route status codes without browser automation.
+- [x] Run **unit tests in CI** on push/PR (`.github/workflows/ci.yml`).
+- [x] Adopt a right-sized automated testing strategy:
+  - [x] require unit tests for pure logic and validation rules
+  - [x] require integration tests for database workflows used by payments (RPC + REST)
+  - [x] optional HTTP smoke for deployed route handlers; browser E2E remains minimal/deferred
+  - [x] defer broad visual regression and large snapshot-based UI suites unless later justified by change volume
 
 ### Phase 6: SEO, Legal, and Accessibility Baseline
 
-- [ ] Add production metadata to the public site:
-  - [ ] meta description
-  - [ ] canonical URL
-  - [ ] Open Graph tags
-  - [ ] Twitter card tags
-  - [ ] `robots.txt`
-  - [ ] `sitemap.xml`
-  - [ ] organization/event JSON-LD
-- [ ] Add launch-baseline policy pages or equivalent routed documents:
-  - [ ] Privacy Policy
-  - [ ] Terms of Use
-  - [ ] Refund/Cancellation Policy
-  - [ ] Accessibility Statement
-- [ ] Add explicit consent copy at registration submit covering:
-  - [ ] collection and use of personal/contact data
-  - [ ] payment follow-up and reminder emails
-  - [ ] staff reconciliation of Zelle/Zeffy payments
-- [ ] Meet the accessibility baseline:
-  - [ ] semantic landmarks and heading order
-  - [ ] labeled form controls and programmatic error associations
-  - [ ] keyboard-only navigation for registration and return flows
-  - [ ] focus management on step changes and error states
-  - [ ] sufficient contrast for all text/actions
-  - [ ] reduced-motion handling for hero animations
-  - [ ] accessible iframe/title handling for Zeffy embeds
-  - [ ] no information conveyed by color alone
+- [x] Add production metadata to the public site:
+  - [x] meta description
+  - [x] canonical URL
+  - [x] Open Graph tags
+  - [x] Twitter card tags
+  - [x] `robots.txt`
+  - [x] `sitemap.xml`
+  - [x] organization/event JSON-LD
+- [x] Add launch-baseline policy pages or equivalent routed documents:
+  - [x] Privacy Policy
+  - [x] Terms of Use
+  - [x] Refund/Cancellation Policy
+  - [x] Accessibility Statement
+- [x] Add explicit consent copy at registration submit covering:
+  - [x] collection and use of personal/contact data
+  - [x] payment follow-up and reminder emails
+  - [x] staff reconciliation of Zelle/Zeffy payments
+- [x] Meet the accessibility baseline:
+  - [x] semantic landmarks and heading order
+  - [x] labeled form controls and programmatic error associations
+  - [x] keyboard-only navigation for registration and return flows
+  - [x] focus management on step changes and error states
+  - [x] sufficient contrast for all text/actions
+  - [x] reduced-motion handling for hero animations
+  - [x] accessible iframe/title handling for Zeffy embeds
+  - [x] no information conveyed by color alone
+- [x] Validate animation and motion behavior:
+  - [x] page-load and reveal motion feels intentional without delaying interaction
+  - [x] reduced-motion fallback disables or simplifies non-essential animation
+  - [x] motion does not cause layout shift or content jump during load and step changes
+  - [x] no blocking, auto-looping, or distracting motion interferes with reading or form completion
 
 ## Public APIs and Interfaces
 
@@ -240,61 +247,94 @@ Keep the public site as a static Vercel frontend, but move every state-changing 
 
 ## Test Plan
 
-- [ ] Unit tests for pure logic:
-  - [ ] pricing and tier cutoff rules
-  - [ ] server-side validation helpers
-  - [ ] status calculation helpers
-  - [ ] token signing/verification helpers
-  - [ ] import matching, deduplication, and idempotency helpers
-- [ ] Registration:
-  - [ ] valid paid registration
-  - [ ] valid free registration
-  - [ ] invalid email
-  - [ ] incomplete attendee data
-  - [ ] duplicate submit/retry behavior
-  - [ ] pricing cutover boundaries on the tier dates
-  - [ ] DB failure before save
-  - [ ] email failure after save
-  - [ ] loading/submitting state disables duplicate submit
-  - [ ] server validation errors render in the correct UI locations
-  - [ ] success state shows persisted data, not optimistic placeholder data
-- [ ] Lookup:
-  - [ ] valid token
-  - [ ] expired token
-  - [ ] revoked token
-  - [ ] fallback request with valid pair
-  - [ ] fallback request with invalid pair
-  - [ ] rate-limited fallback abuse
-  - [ ] no account-enumeration leakage in responses
-  - [ ] invalid/expired token state offers the correct recovery CTA
-  - [ ] fully paid, outstanding, and free-registration data states render correctly
-- [ ] Payments/admin:
-  - [ ] staff login allowlist enforcement
-  - [ ] manual payment updates pending to partial to complete
-  - [ ] overpayment flow
-  - [ ] duplicate Zeffy import row idempotence
-  - [ ] unmatched pledge code preview
-  - [ ] refunded/cancelled Zeffy rows skipped
-  - [ ] report totals equal payment-event sums
-  - [ ] empty, loading, success, and partial-failure admin states render correctly
-- [ ] Reminders:
-  - [ ] unauthorized cron rejected
-  - [ ] authorized cron sends only to outstanding balances
-  - [ ] no duplicate reminder in one cycle
-- [ ] Site quality:
-  - [ ] keyboard navigation through all registration steps
-  - [ ] screen-reader-readable labels/errors
-  - [ ] Lighthouse/axe checks for metadata, contrast, and basic accessibility
-  - [ ] `robots.txt`, `sitemap.xml`, canonical, and OG tags present in production output
-  - [ ] typography hierarchy is readable and consistent across form, summary, table, empty, and error states
-- [ ] Minimal E2E coverage:
-  - [ ] one happy-path new registration flow
-  - [ ] one returning-registrant token lookup/recovery flow
-  - [ ] one admin-side payment or import flow
-- [ ] Explicitly defer as non-launch-critical:
-  - [ ] broad visual regression coverage
-  - [ ] large snapshot-based UI test suites
-  - [ ] exhaustive page-by-page browser automation
+The checklist is grouped into **Integration** (automated tests you can run from the repo), **E2E** (browser automation), and **Manual** (human or staging-only verification).
+
+### Integration
+
+**Unit — `npm test` (`test/unit/*.test.js`)**
+
+- [x] pricing and tier cutoff rules (`activeTierForDate`, attendee totals)
+- [x] server-side validation helpers (`validateContact`, `validateAttendees`)
+- [x] status calculation helpers (`deriveRegistrationStatus`)
+- [x] token signing/verification helpers
+- [x] Zeffy CSV parsing, stable external ref, and skipped refunded rows (`parseZeffyCsvText`)
+- [x] RPC error shaping helper (`rpcErrorMessage`)
+
+**Database / RPC — `RUN_INTEGRATION=1 npm run test:integration` (`test/integration/db-workflows.test.js`; service role + seeded rows)**
+
+- [x] signed lookup token matches seeded registration row (`lookup_token_version`)
+- [x] `staff_apply_registration_payment`: duplicate `external_ref` rejected (`duplicate_external_ref`)
+- [x] overpayment rejected without RPC allow flag (`overpayment_not_allowed`)
+- [x] overpayment allowed when `p_allow_overpayment` / client passes confirm flag
+- [x] pending → partial → complete via two RPC calls (mixed `zelle_manual` / `zeffy` sources)
+- [x] partial seed registration → complete with one RPC (exact remainder)
+- [x] reminder candidate query shape (`status in pending/partial`)
+
+**HTTP smoke — `SMOKE_BASE_URL=… npm run test:smoke-http` (`test/smoke-http.mjs`; status codes only, no secrets)**
+
+- [x] `POST /api/register` empty body → 400
+- [x] `GET /api/lookup` without token → 400
+- [x] `POST /api/lookup-request` short pledge → generic 200
+- [x] `GET /api/remind` without cron secret → 401
+- [x] staff routes without `Authorization` → 401 (`GET /api/admin/registrations`, `POST` Zeffy preview/apply, manual payment)
+- [x] `GET /api/admin/auth-config` → 200 or 500 (config-dependent)
+- [x] static policy/sitemap/robots URLs → 200 (`privacy-policy.html`, `sitemap.xml`, `robots.txt`)
+
+### E2E
+
+Playwright or Cypress (recommended before launch; not required in CI today).
+
+- [ ] happy-path new registration (paid and/or free) through confirmation UI
+- [ ] returning registrant: open emailed lookup link and/or recovery flow end-to-end
+- [ ] admin: staff sign-in + one manual payment or one Zeffy preview → apply path
+
+### Manual Tests
+
+#### Registration (public site)
+
+- [ ] valid paid registration (full flow, real email optional)
+- [ ] valid free registration
+- [ ] invalid email and incomplete attendee data (inline + summary behavior)
+- [ ] duplicate submit / retry behavior and disabled state while submitting
+- [ ] simulate or observe DB failure before save and email failure after save (staging)
+- [ ] server validation errors appear on the correct fields
+- [ ] success UI reflects persisted API response, not placeholders
+
+#### Lookup
+
+- [ ] expired lookup token handling and messaging
+- [ ] revoked token after `lookup_token_version` bump
+- [ ] recovery: valid email + pledge pair receives link; invalid pair still shows generic copy
+- [ ] rate-limited abuse behavior on recovery endpoint
+- [ ] no account-enumeration leakage in JSON or UI copy
+- [ ] invalid/expired token screen shows correct recovery CTA
+- [ ] balance UI for fully paid, outstanding balance, and free registration
+
+#### Payments / admin (`admin-sync.html`)
+
+- [ ] staff allowlist: signed-in Supabase user not on `STAFF_EMAIL_ALLOWLIST` gets 403 on staff APIs
+- [ ] optional UI walkthrough: pending → partial → complete (RPC already covered in integration)
+- [ ] Zeffy CSV preview: unmatched pledge rows, duplicates, overpay rows + confirm checkbox
+- [ ] report totals vs sum of payment events (spot-check against Supabase)
+- [ ] confirm loading, empty, success, and partial-failure states match expectations in the admin UI
+
+#### Reminders
+
+- [ ] authorized cron (`CRON_SECRET`) only targets registrations with outstanding balance
+- [ ] no duplicate send within the same cooldown window (`last_reminder_at`)
+
+#### Site quality / accessibility
+
+- [ ] keyboard-only path through registration and return flow
+- [ ] screen reader: labels, errors, live regions as needed
+- [ ] Lighthouse / axe on key pages (metadata, contrast, basics)
+- [ ] typography and hierarchy across form, summary, tables, empty and error states
+
+#### Explicitly defer (non-launch-critical)
+
+- [ ] broad visual regression
+- [ ] large snapshot-based UI suites
+- [ ] exhaustive page-by-page browser automation
 
 ## Assumptions and Fixed Defaults
 

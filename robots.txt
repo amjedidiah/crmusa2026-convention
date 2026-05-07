@@ -1,0 +1,5 @@
+# CRM USA National Convention 2026 — public site
+User-agent: *
+Allow: /
+
+Sitemap: https://crmusa2026-convention.vercel.app/sitemap.xml

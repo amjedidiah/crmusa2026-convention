@@ -5,29 +5,13 @@ import {
   deriveRegistrationStatus,
   generatePledgeCode,
 } from './_lib/registration.js';
+import { enforceRateLimit, getRegisterRateLimiter } from './_lib/rate-limit.js';
+import { buildLookupUrlForRegistration } from './_lib/site.js';
 import { supabaseRestRequest } from './_lib/supabase.js';
-import { createLookupToken } from './_lib/tokens.js';
+import { serverLog } from './_lib/server-log.js';
 import { validateAttendees, validateContact } from './_lib/validation.js';
 
 const MAX_PLEDGE_CODE_ATTEMPTS = 8;
-
-function getRequestOrigin(req) {
-  if (process.env.SITE_URL) {
-    return process.env.SITE_URL.replace(/\/+$/, '');
-  }
-
-  const forwardedProto = req.headers['x-forwarded-proto'];
-  const proto =
-    forwardedProto ||
-    (req.headers.host && req.headers.host.includes('localhost') ? 'http' : 'https');
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-
-  if (!host) {
-    return null;
-  }
-
-  return `${proto}://${host}`;
-}
 
 function createRegistrationGate(step, message, extras = {}) {
   return {
@@ -80,23 +64,14 @@ async function insertRegistration(registration) {
   throw new Error('Could not create a unique pledge code. Please try again.');
 }
 
-function buildLookupUrl(req, registration) {
-  const origin = getRequestOrigin(req);
-  if (!origin || !process.env.LOOKUP_TOKEN_SECRET) {
-    return null;
-  }
-
-  const token = createLookupToken({
-    registration_id: registration.id,
-    lookup_token_version: registration.lookup_token_version,
-  });
-
-  return `${origin}/#return?token=${encodeURIComponent(token)}`;
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const rate = await enforceRateLimit(req, getRegisterRateLimiter);
+  if (!rate.ok) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
   }
 
   const { contact, attendees } = req.body || {};
@@ -148,7 +123,10 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error('[register] Save failed:', error);
+    serverLog('error', 'register.save_failed', {
+      route: '/api/register',
+      detail: error instanceof Error ? error.message : 'unknown_error',
+    });
     return res.status(500).json({
       error: 'Could not save your registration. Please try again.',
     });
@@ -161,8 +139,11 @@ export default async function handler(req, res) {
     errors: [],
   };
 
+  const lookupUrl = buildLookupUrlForRegistration(req, persisted);
+
   try {
     emailResult = await sendConfirmationEmails({
+      registration_id: persisted.id,
       first_name: validatedContact.normalized.first_name,
       last_name: validatedContact.normalized.last_name,
       email: validatedContact.normalized.email,
@@ -173,12 +154,22 @@ export default async function handler(req, res) {
       total_pledged: totalCents / 100,
       amount_paid: 0,
       attendees: validatedAttendees.normalized,
+      lookup_url: lookupUrl,
     });
   } catch (error) {
-    console.error('[register] Email failed after persistence:', error);
+    serverLog('error', 'register.email_failed_after_persist', {
+      route: '/api/register',
+      registration_id: persisted.id,
+      detail: error instanceof Error ? error.message : 'unknown_error',
+    });
   }
 
-  const lookupUrl = buildLookupUrl(req, persisted);
+  serverLog('info', 'register.persisted', {
+    route: '/api/register',
+    registration_id: persisted.id,
+    pledge_code: persisted.pledge_code,
+    email_ok: emailResult.confirmSent,
+  });
 
   return res.status(201).json({
     ok: true,

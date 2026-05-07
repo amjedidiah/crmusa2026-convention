@@ -46,7 +46,7 @@ label {
   display: block; font-size: 0.68rem; letter-spacing: 0.1em;
   color: rgba(232,223,200,0.45); margin-bottom: 0.3rem;
 }
-input[type="text"], input[type="password"], input[type="number"],
+input[type="text"], input[type="email"], input[type="password"], input[type="number"],
 input[type="date"], select, textarea {
   width: 100%; padding: 0.7rem 0.9rem;
   background: rgba(255,255,255,0.06);
@@ -140,35 +140,52 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 /* Progress bar */
 .prog-track { background: rgba(255,255,255,0.07); height: 6px; border-radius: 3px; margin: 0.4rem 0; }
 .prog-fill  { background: #C8A85A; height: 6px; border-radius: 3px; transition: width 0.3s; }
+
+.drop-zone { border: 2px dashed rgba(200,168,90,0.28); padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 1rem; position: relative; }
+.drop-zone:hover, .drop-zone.over { border-color: #C8A85A; }
+.drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.b-match { background: rgba(100,180,100,0.15); color: #7dbf80; border: 1px solid rgba(100,180,100,0.3); }
+.b-none { background: rgba(180,80,80,0.12); color: #e09090; border: 1px solid rgba(180,80,80,0.25); }
+.b-skip { background: rgba(150,150,150,0.12); color: rgba(232,223,200,0.35); border: 1px solid rgba(150,150,150,0.25); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <h1 class="page-title">CRM 2026 — Admin</h1>
-  <p class="page-sub">Convention payment management · Secured by PIN</p>
+  <p class="page-sub">Convention payment management · Staff sign-in (magic link)</p>
 
-  <!-- ── PIN SCREEN ── -->
-  <div id="pin-screen">
-    <div class="card" style="max-width:380px;margin:4rem auto;">
-      <p class="card-title">Admin Login</p>
+  <!-- ── LOGIN ── -->
+  <div id="login-screen">
+    <div class="card" style="max-width:420px;margin:3rem auto;">
+      <p class="card-title">Staff Sign In</p>
+      <p style="font-size:0.78rem;color:rgba(232,223,200,0.42);margin-bottom:1rem;line-height:1.6;">
+        Enter your allowlisted email. We will send a one-time link (Supabase Auth).
+        After clicking it, return here to use payment tools.
+      </p>
       <div class="field">
-        <label>PIN</label>
-        <input type="password" id="pin-input" placeholder="Enter admin PIN"
-          onkeydown="if(event.key==='Enter')checkPin()"/>
+        <label>Staff email</label>
+        <input type="email" id="staff-email-input" placeholder="you@ministry.org"
+          autocomplete="email"
+          onkeydown="if(event.key==='Enter')sendMagicLink()"/>
       </div>
-      <button class="btn" onclick="checkPin()">Enter →</button>
-      <div id="pin-err" class="msg msg-err hidden" style="margin-top:0.7rem;">Incorrect PIN.</div>
+      <button class="btn" type="button" id="login-send-btn" onclick="sendMagicLink()">Send magic link →</button>
+      <div id="login-msg" class="hidden" style="margin-top:0.9rem;"></div>
     </div>
   </div>
 
   <!-- ── MAIN SCREEN ── -->
   <div id="main-screen" class="hidden">
 
+    <div class="card" style="padding:0.9rem 1.2rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.6rem;">
+      <span style="font-size:0.78rem;color:rgba(232,223,200,0.45);">Signed in as <strong id="staff-email-display" style="color:#E8C87A;"></strong></span>
+      <button type="button" class="btn-outline btn-sm" onclick="signOut()">Sign out</button>
+    </div>
+
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab-btn on" onclick="showTab('payment')">Record Payment</button>
-      <button class="tab-btn"    onclick="showTab('zelle')">Zelle Batch Entry</button>
+      <button class="tab-btn on" onclick="showTab('payment')">Payment Lookup</button>
+      <button class="tab-btn"    onclick="showTab('zelle')">Zelle Inbox</button>
       <button class="tab-btn"    onclick="showTab('zeffy')">Zeffy CSV Import</button>
       <button class="tab-btn"    onclick="showTab('report')">Pledges Report</button>
     </div>
@@ -251,9 +268,9 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 
       <!-- Single entry -->
       <div class="card">
-        <p class="card-title">Single Zelle Payment</p>
+        <p class="card-title">Quick Zelle Memo Entry</p>
         <p style="font-size:0.8rem;color:rgba(232,223,200,0.42);margin-bottom:1.2rem;">
-          Look up a pledge code from your bank app memo and record the payment.
+          Use this when you are working straight from the bank memo and want a faster Zelle-only entry flow.
         </p>
         <div class="grid3">
           <div class="field">
@@ -363,22 +380,27 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 
       <div class="card hidden" id="z-preview-card">
         <p class="card-title">Preview &amp; Sync</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1rem;margin-bottom:1.2rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:1rem;margin-bottom:1.2rem;">
           <div style="text-align:center;"><div style="font-size:1.8rem;color:#E8C87A;" id="zs-total">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">CSV Rows</div></div>
           <div style="text-align:center;"><div style="font-size:1.8rem;color:#7dbf80;" id="zs-match">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">Matched</div></div>
           <div style="text-align:center;"><div style="font-size:1.8rem;color:#e09090;" id="zs-none">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">No Match</div></div>
+          <div style="text-align:center;"><div style="font-size:1.8rem;color:#e09090;" id="zs-dup">0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">Duplicates</div></div>
           <div style="text-align:center;"><div style="font-size:1.8rem;color:#C8A85A;" id="zs-amt">$0</div><div style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,223,200,0.35);">Total to Apply</div></div>
         </div>
         <div class="tbl-wrap" style="margin-bottom:1rem;">
           <table>
             <thead>
-              <tr><th>Date</th><th>Donor</th><th>Amount</th><th>Pledge Code</th><th>Status</th><th>Registrant</th><th>Balance After</th></tr>
+              <tr><th>Date</th><th>Donor</th><th>Amount</th><th>Pledge Code</th><th>Status</th><th>Registrant</th><th>Balance After</th><th>Flags</th></tr>
             </thead>
             <tbody id="z-preview-body"></tbody>
           </table>
         </div>
+        <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.78rem;color:rgba(232,223,200,0.5);margin-bottom:0.8rem;max-width:42rem;line-height:1.5;">
+          <input type="checkbox" id="z-confirm-overpay" style="width:auto;margin-top:0.2rem;"/>
+          <span>Include <strong style="color:#E8C87A;">overpayment</strong> rows (payments above remaining balance). Required to apply those rows in one batch.</span>
+        </label>
         <div style="display:flex;gap:0.8rem;align-items:center;flex-wrap:wrap;">
-          <button class="btn" id="z-sync-btn" onclick="doZeffySync()" disabled>Sync Matched Records →</button>
+          <button class="btn" id="z-sync-btn" onclick="doZeffySync()" disabled>Apply approved rows →</button>
           <button class="btn-outline" onclick="resetZeffyCSV()">Clear &amp; Re-import</button>
           <span id="z-sync-status" style="font-size:0.78rem;color:rgba(232,223,200,0.38);"></span>
         </div>
@@ -472,664 +494,7 @@ tbody tr:hover td { background: rgba(200,168,90,0.04); }
 
 </div>
 
-<script>
-/* ── STATE ── */
-var PIN     = '';
-var currentReg  = null;
-var reportData  = [];
-
-/* ── PIN ── */
-function checkPin() {
-  var v = document.getElementById('pin-input').value;
-  if (!v) return;
-  /* Set PIN BEFORE making the API call — the call reads PIN from this variable */
-  PIN = v;
-  var btn = document.querySelector('#pin-screen .btn');
-  btn.disabled = true; btn.textContent = 'Verifying…';
-  document.getElementById('pin-err').classList.add('hidden');
-  /* Any non-401 response means the PIN is correct */
-  apiCall('lookup', { value: '__pin_check__' }, function(err) {
-    btn.disabled = false; btn.textContent = 'Enter →';
-    if (err === 'Invalid PIN') return; /* apiCall already sent user back to login */
-    /* PIN valid */
-    document.getElementById('pin-screen').classList.add('hidden');
-    document.getElementById('main-screen').classList.remove('hidden');
-    document.getElementById('pay-date').value = new Date().toISOString().slice(0,10);
-    var szd = document.getElementById('sz-date'); if(szd) szd.value = new Date().toISOString().slice(0,10);
-  });
-}
-
-/* ── TABS ── */
-function showTab(name) {
-  document.querySelectorAll('.tab-btn').forEach(function(b,i){
-    b.className = 'tab-btn' + (['payment','zelle','zeffy','report'][i]===name?' on':'');
-  });
-  document.querySelectorAll('.tab-panel').forEach(function(p){ p.className='tab-panel'; });
-  document.getElementById('tab-'+name).className = 'tab-panel on';
-}
-
-/* ── API ── */
-function apiCall(action, payload, cb) {
-  fetch('/api/admin', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pin: PIN, action: action, payload: payload }),
-  })
-  .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
-  .then(function(r){
-    if (!r.ok) {
-      if (r.data.error === 'Invalid PIN') {
-        /* Wrong pin — go back to login */
-        PIN = '';
-        document.getElementById('main-screen').classList.add('hidden');
-        document.getElementById('pin-screen').classList.remove('hidden');
-        document.getElementById('pin-err').classList.remove('hidden');
-        document.getElementById('pin-input').value = '';
-        cb('Invalid PIN', null);
-      } else {
-        cb(r.data.error || 'Request failed', null);
-      }
-    } else {
-      cb(null, r.data);
-    }
-  })
-  .catch(function(e){ cb('Network error: ' + e.message, null); });
-}
-
-/* ── LOOKUP ── */
-function lookupReg() {
-  var v = document.getElementById('lu-val').value.trim();
-  if (!v) return;
-  var btn = document.getElementById('lu-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Looking up…';
-  showMsg('lu-msg', '');
-  apiCall('lookup', { value: v }, function(err, data) {
-    btn.disabled = false; btn.textContent = 'Look Up →';
-    if (err) { showMsg('lu-msg', err, 'err'); return; }
-    currentReg = data.registration;
-    renderRegCard(currentReg);
-    document.getElementById('reg-card').classList.remove('hidden');
-    document.getElementById('payment-card').classList.remove('hidden');
-    document.getElementById('lookup-card').style.opacity = '0.5';
-  });
-}
-
-function renderRegCard(r) {
-  var pled = regTotalPledged(r);
-  var paid = parseFloat(r.amount_paid);
-  paid = isFinite(paid) ? paid : 0;
-  var remaining = Math.max(0, pled - paid);
-  var pct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
-  document.getElementById('reg-display').innerHTML =
-    '<div class="pledge-code">'+esc(r.pledge_code)+'</div>'+
-    '<div class="reg-name">'+esc(r.first_name+' '+r.last_name)+'</div>'+
-    '<div class="reg-grid" style="margin-bottom:1rem;">'+
-      '<span class="reg-lbl">Email</span>       <span class="reg-val">'+esc(r.email)+'</span>'+
-      '<span class="reg-lbl">Church</span>      <span class="reg-val">'+esc(r.church||'—')+'</span>'+
-      '<span class="reg-lbl">City</span>        <span class="reg-val">'+esc(r.city||'—')+'</span>'+
-      '<span class="reg-lbl">Tier</span>        <span class="reg-val">'+esc(r.tier||'—')+'</span>'+
-    '</div>'+
-    '<div class="balance-row"><span class="lbl">Total Pledged</span>   <span class="val">$'+pled.toFixed(2)+'</span></div>'+
-    '<div class="balance-row"><span class="lbl">Amount Paid</span>    <span class="val val-paid">$'+paid.toFixed(2)+'</span></div>'+
-    '<div class="balance-row"><span class="lbl">Remaining Balance</span>'+
-      '<span class="val '+(pled>0&&remaining<=0?'val-full':'val-due')+'">'+
-      (pled>0&&remaining<=0?'Fully Paid ✓':'$'+remaining.toFixed(2))+'</span></div>'+
-    '<div style="margin-top:0.8rem;">'+
-      '<div style="display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(232,223,200,0.4);margin-bottom:0.3rem;">'+
-        '<span>Payment progress</span><span>'+pct+'%</span>'+
-      '</div>'+
-      '<div class="prog-track"><div class="prog-fill" style="width:'+Math.min(100,pct)+'%;"></div></div>'+
-    '</div>';
-}
-
-function clearLookup() {
-  currentReg = null;
-  document.getElementById('lu-val').value = '';
-  document.getElementById('reg-card').classList.add('hidden');
-  document.getElementById('payment-card').classList.add('hidden');
-  document.getElementById('lookup-card').style.opacity = '1';
-  showMsg('lu-msg', '');
-  showMsg('pay-msg', '');
-}
-
-/* ── RECORD PAYMENT ── */
-function recordPayment() {
-  if (!currentReg) return;
-  var amt    = parseFloat(document.getElementById('pay-amt').value||0);
-  var date   = document.getElementById('pay-date').value;
-  var method = document.getElementById('pay-method').value;
-  var notes  = document.getElementById('pay-notes').value;
-
-  if (!amt || amt <= 0) { showMsg('pay-msg', 'Please enter a valid amount.', 'err'); return; }
-
-  var pled = regTotalPledged(currentReg);
-  var paid = parseFloat(currentReg.amount_paid);
-  paid = isFinite(paid) ? paid : 0;
-  var remaining = Math.max(0, pled - paid);
-  if (amt > remaining + 0.01) {
-    if (!confirm('Amount ($'+amt.toFixed(2)+') exceeds remaining balance ($'+remaining.toFixed(2)+'). Continue?')) return;
-  }
-
-  var btn = document.getElementById('pay-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Recording…';
-  showMsg('pay-msg', '');
-
-  apiCall('update_payment', {
-    registration_id: currentReg.id,
-    pledge_code:     currentReg.pledge_code,
-    amount_to_add:   amt,
-    date_received:   date,
-    method:          method,
-    notes:           notes,
-  }, function(err, data) {
-    btn.disabled = false; btn.textContent = 'Record This Payment →';
-    if (err) { showMsg('pay-msg', err, 'err'); return; }
-
-    /* Update local state */
-    currentReg.amount_paid = data.new_paid;
-    currentReg.status      = data.new_status;
-
-    /* Refresh the reg display */
-    renderRegCard(currentReg);
-
-    /* Show success */
-    var bal = data.new_balance;
-    showMsg('pay-msg',
-      '✓ $'+amt.toFixed(2)+' recorded via '+method+'. ' +
-      (bal <= 0 ? 'Registration is now fully paid!' : 'Remaining balance: $'+bal.toFixed(2)),
-      'ok'
-    );
-
-    /* Clear the payment form */
-    document.getElementById('pay-amt').value   = '';
-    document.getElementById('pay-notes').value = '';
-  });
-}
-
-/* ── REPORT ── */
-function loadReport() {
-  var btn = document.getElementById('report-load-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Loading…';
-  document.getElementById('report-status').textContent = '';
-  apiCall('report', {}, function(err, data) {
-    btn.disabled = false; btn.textContent = 'Refresh Report';
-    if (err) { document.getElementById('report-status').textContent = '✗ '+err; return; }
-    reportData = data.registrations || [];
-    renderReport(reportData);
-    document.getElementById('report-dl-btn').classList.remove('hidden');
-    document.getElementById('report-status').textContent = reportData.length + ' registrations loaded';
-  });
-}
-
-function renderReport(rows) {
-  var totalPledged = 0, totalPaid = 0, nComplete = 0, nPartialPending = 0;
-  rows.forEach(function(r){
-    var tp = regTotalPledged(r);
-    totalPledged += tp;
-    var ap = parseFloat(r.amount_paid); ap = isFinite(ap)?ap:0;
-    totalPaid    += ap;
-    if (r.status==='complete') nComplete++;
-    else nPartialPending++;
-  });
-  var outstanding = totalPledged - totalPaid;
-  var pct = totalPledged > 0 ? Math.round((totalPaid/totalPledged)*100) : 0;
-
-  /* Stats */
-  setText('rs-total',       rows.length);
-  setText('rs-complete',    nComplete);
-  setText('rs-partial',     nPartialPending);
-  setText('rs-collected',   '$'+totalPaid.toFixed(2));
-  setText('rs-outstanding', '$'+outstanding.toFixed(2));
-  setText('rs-pct',         pct+'%');
-  document.getElementById('rs-bar').style.width = Math.min(100,pct)+'%';
-  document.getElementById('report-summary').classList.remove('hidden');
-
-  /* Table */
-  var tbody = document.getElementById('report-body');
-  tbody.innerHTML = '';
-  rows.forEach(function(r) {
-    var pled = regTotalPledged(r);
-    var paid = parseFloat(r.amount_paid); paid = isFinite(paid)?paid:0;
-    var rem = Math.max(0, pled - paid);
-    var rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
-    var badgeCls = r.status==='complete'?'b-complete':(r.status==='partial'?'b-partial':'b-pending');
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+esc(r.pledge_code)+'</td>'+
-      '<td>'+esc((r.first_name||'')+' '+(r.last_name||''))+'</td>'+
-      '<td style="font-size:0.72rem;">'+esc(r.email)+'</td>'+
-      '<td>'+esc(r.church||'—')+'</td>'+
-      '<td>'+esc(r.city||'—')+'</td>'+
-      '<td>'+esc(r.tier||'—')+'</td>'+
-      '<td>$'+pled.toFixed(2)+'</td>'+
-      '<td style="color:#7dbf80;">$'+paid.toFixed(2)+'</td>'+
-      '<td style="color:'+(pled>0&&rem<=0?'#7dbf80':'#E8C87A')+';">'+(pled>0&&rem<=0?'Paid ✓':'$'+rem.toFixed(2))+'</td>'+
-      '<td>'+
-        '<div style="display:flex;align-items:center;gap:0.4rem;">'+
-          '<div style="background:rgba(255,255,255,0.07);height:4px;width:60px;border-radius:2px;">'+
-            '<div style="background:#C8A85A;height:4px;border-radius:2px;width:'+Math.min(100,rPct)+'%;"></div>'+
-          '</div>'+
-          '<span style="font-size:0.72rem;color:rgba(232,223,200,0.4);">'+rPct+'%</span>'+
-        '</div>'+
-      '</td>'+
-      '<td><span class="badge '+badgeCls+'">'+esc(r.status||'pending')+'</span></td>'+
-      '<td style="font-size:0.72rem;color:rgba(232,223,200,0.4);">'+(r.created_at||'').slice(0,10)+'</td>';
-    tbody.appendChild(tr);
-  });
-  document.getElementById('report-table-wrap').classList.remove('hidden');
-}
-
-function downloadCSV() {
-  if (!reportData.length) return;
-  var headers = ['Pledge Code','First Name','Last Name','Email','Phone','Church','City','Tier','Total Pledged','Amount Paid','Balance','Status','Registered'];
-  var rows = reportData.map(function(r) {
-    var pled = regTotalPledged(r);
-    var paid = parseFloat(r.amount_paid); paid = isFinite(paid)?paid:0;
-    var bal = Math.max(0, pled - paid);
-    return [
-      r.pledge_code, r.first_name, r.last_name, r.email, r.phone||'',
-      r.church||'', r.city||'', r.tier||'',
-      pled.toFixed(2), paid.toFixed(2), bal.toFixed(2),
-      r.status||'', (r.created_at||'').slice(0,10)
-    ].map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
-  });
-  var csv = [headers.join(',')].concat(rows).join('\n');
-  var blob = new Blob([csv], { type: 'text/csv' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href   = url;
-  a.download = 'crm2026-registrations-' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ── UTILS ── */
-function showMsg(id, msg, type) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  if (!msg) { el.className=''; el.textContent=''; return; }
-  el.className = 'msg msg-'+(type||'inf');
-  el.textContent = msg;
-}
-function setText(id, v) { var el=document.getElementById(id); if(el) el.textContent=v; }
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function regTotalPledged(reg) {
-  if (!reg) return 0;
-  var raw = (reg.total_pledged != null && reg.total_pledged !== '') ? reg.total_pledged : reg.total_amount;
-  var t = parseFloat(raw);
-  return isFinite(t) ? t : 0;
-}
-
-/* ══════════════════════════════════════════════
-   ZEFFY CSV IMPORT
-══════════════════════════════════════════════ */
-var zCsvRows = [];
-var zMatchedRows = [];
-
-/* Drag and drop */
-var zDrop = document.getElementById('z-drop-zone');
-if (zDrop) {
-  zDrop.addEventListener('dragover',  function(e){ e.preventDefault(); zDrop.classList.add('over'); });
-  zDrop.addEventListener('dragleave', function(){ zDrop.classList.remove('over'); });
-  zDrop.addEventListener('drop', function(e){ e.preventDefault(); zDrop.classList.remove('over'); handleZeffyFile(e.dataTransfer.files[0]); });
-}
-
-function handleZeffyFile(file) {
-  if (!file) return;
-  var st = document.getElementById('z-csv-status');
-  st.textContent = 'Reading ' + file.name + '…'; st.style.color = '#C8A85A';
-  var reader = new FileReader();
-  reader.onload = function(e) { parseZeffyCSV(e.target.result); };
-  reader.readAsText(file);
-}
-
-function parseZeffyCSV(text) {
-  var st = document.getElementById('z-csv-status');
-  var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
-  if (lines.length < 2) { st.textContent = 'Error: CSV appears empty.'; st.style.color = '#e09090'; return; }
-
-  var headers = splitCSV(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
-
-  function col(kws) {
-    for (var ki=0;ki<kws.length;ki++)
-      for (var hi=0;hi<headers.length;hi++)
-        if (headers[hi].indexOf(kws[ki]) > -1) return hi;
-    return -1;
-  }
-
-  var cDate   = col(['date','created']);
-  var cFirst  = col(['first']);
-  var cLast   = col(['last']);
-  var cName   = col(['name','buyer','donor']);
-  var cAmt    = col(['amount','total','donation']);
-  var cStatus = col(['status','payment status']);
-  var cCode   = col(['registration code','pledge code','conference code','registration']);
-
-  if (cAmt === -1) { st.textContent = 'Error: No Amount column found. Headers: ' + headers.join(', '); st.style.color = '#e09090'; return; }
-  if (cCode === -1) { st.textContent = 'Error: No "Registration Code" column found. Make sure to export Itemized Payments with custom question answers. Headers: ' + headers.join(', '); st.style.color = '#e09090'; return; }
-
-  zCsvRows = [];
-  for (var i=1; i<lines.length; i++) {
-    var cols = splitCSV(lines[i]);
-    if (cols.length < 2) continue;
-    var amt = parseFloat((cols[cAmt]||'').replace(/[$,\s]/g,''));
-    if (isNaN(amt) || amt <= 0) continue;
-    var status = cStatus > -1 ? (cols[cStatus]||'').toLowerCase() : 'paid';
-    if (status.indexOf('refund') > -1 || status.indexOf('cancel') > -1 || status.indexOf('fail') > -1) {
-      zCsvRows.push({ skip:true, reason:status, date:'', donor:'', amount:amt, code:'' }); continue;
-    }
-    var donor = cFirst > -1 && cLast > -1 ? ((cols[cFirst]||'')+' '+(cols[cLast]||'')).trim() : (cols[cName]||'').trim();
-    var code  = (cols[cCode]||'').replace(/\s/g,'').toUpperCase();
-    var date  = cDate > -1 ? (cols[cDate]||'').trim() : '';
-    zCsvRows.push({ skip:false, date:date, donor:donor, amount:amt, code:code });
-  }
-
-  var valid = zCsvRows.filter(function(r){ return !r.skip; });
-  st.textContent = '✓ Parsed ' + valid.length + ' valid rows (' + (zCsvRows.length-valid.length) + ' skipped).';
-  st.style.color = '#7dbf80';
-  lookupZeffyCodes();
-}
-
-function lookupZeffyCodes() {
-  var codes = [];
-  zCsvRows.forEach(function(r){ if(!r.skip && r.code && codes.indexOf(r.code)===-1) codes.push(r.code); });
-  if (!codes.length) { renderZeffyPreview([]); return; }
-
-  /* Look up each code via /api/admin */
-  var regMap = {};
-  var pending = codes.length;
-  codes.forEach(function(code) {
-    apiCall('lookup', { value: code }, function(err, data) {
-      if (!err && data && data.registration) regMap[code] = data.registration;
-      pending--;
-      if (pending === 0) {
-        zMatchedRows = zCsvRows.map(function(r){
-          return Object.assign({}, r, { reg: (!r.skip && r.code) ? (regMap[r.code]||null) : null });
-        });
-        renderZeffyPreview(zMatchedRows);
-      }
-    });
-  });
-}
-
-function renderZeffyPreview(rows) {
-  var nMatch=0, nNone=0, nSkip=0, total=0;
-  rows.forEach(function(r){ if(r.skip) nSkip++; else if(r.reg){nMatch++;total+=r.amount;} else nNone++; });
-  document.getElementById('zs-total').textContent = rows.length;
-  document.getElementById('zs-match').textContent = nMatch;
-  document.getElementById('zs-none').textContent  = nNone;
-  document.getElementById('zs-amt').textContent   = '$'+total.toFixed(2);
-
-  var tbody = document.getElementById('z-preview-body');
-  tbody.innerHTML = '';
-  rows.forEach(function(r) {
-    var tr = document.createElement('tr');
-    if (r.skip) {
-      tr.innerHTML = '<td>—</td><td>—</td><td>$'+r.amount.toFixed(2)+'</td><td>—</td>'+
-        '<td><span style="font-size:0.62rem;color:rgba(232,223,200,0.35);">'+esc(r.reason)+'</span></td><td>—</td><td>—</td>';
-    } else {
-      var pled = r.reg ? regTotalPledged(r.reg) : 0;
-      var afterPaid = r.reg ? ((parseFloat(r.reg.amount_paid)||0)+r.amount) : null;
-      var afterRem  = r.reg ? (pled - afterPaid) : null;
-      var badgeCls  = r.reg ? 'b-match' : (r.code ? 'b-none' : 'b-skip');
-      var badgeTxt  = r.reg ? 'Match' : (r.code ? 'No Match' : 'No Code');
-      var balTd = !r.reg
-        ? '—'
-        : (pled > 0 && afterRem <= 0 ? '<span style="color:#7dbf80;">Fully Paid</span>' : '$' + afterRem.toFixed(2) + ' left');
-      tr.innerHTML =
-        '<td>'+esc(r.date)+'</td>'+
-        '<td>'+esc(r.donor)+'</td>'+
-        '<td>$'+r.amount.toFixed(2)+'</td>'+
-        '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">'+esc(r.code||'—')+'</td>'+
-        '<td><span class="badge '+(r.reg?'b-complete':'b-pending')+'">'+badgeTxt+'</span></td>'+
-        '<td>'+(r.reg?esc(r.reg.first_name+' '+r.reg.last_name):'—')+'</td>'+
-        '<td>'+balTd+'</td>';
-    }
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById('z-preview-card').classList.remove('hidden');
-  document.getElementById('z-sync-btn').disabled = nMatch === 0;
-}
-
-function doZeffySync() {
-  var btn = document.getElementById('z-sync-btn');
-  var log = document.getElementById('z-sync-log');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Syncing…';
-  log.innerHTML = ''; log.classList.remove('hidden');
-  var toSync = zMatchedRows.filter(function(r){ return !r.skip && r.reg; });
-  zLog(log, 'inf', 'Starting sync of ' + toSync.length + ' record(s)…');
-  var i = 0;
-  function next() {
-    if (i >= toSync.length) {
-      zLog(log, 'ok', '✓ Done. ' + toSync.length + ' updated.');
-      btn.textContent = '✓ Complete';
-      document.getElementById('z-sync-status').textContent = 'Done — ' + toSync.length + ' updated.';
-      return;
-    }
-    var r = toSync[i++];
-    apiCall('update_payment', {
-      registration_id: r.reg.id,
-      pledge_code:     r.reg.pledge_code,
-      amount_to_add:   r.amount,
-      date_received:   r.date || new Date().toISOString().slice(0,10),
-      method:          'zeffy',
-    }, function(err, data) {
-      if (err) zLog(log, 'err', '✗ '+r.reg.pledge_code+' — '+err);
-      else     zLog(log, 'ok',  '✓ '+r.reg.pledge_code+' ('+r.reg.first_name+') +$'+r.amount.toFixed(2)+' → paid: $'+data.new_paid.toFixed(2));
-      next();
-    });
-  }
-  next();
-}
-
-function resetZeffyCSV() {
-  zCsvRows = []; zMatchedRows = [];
-  document.getElementById('z-csv-file').value = '';
-  document.getElementById('z-csv-status').textContent = '';
-  document.getElementById('z-preview-card').classList.add('hidden');
-}
-
-function zLog(el, cls, msg) {
-  var colors = {ok:'#7dbf80', err:'#e09090', inf:'#C8A85A'};
-  el.innerHTML += '<span style="color:'+colors[cls]+'">'+msg+'</span>\n';
-  el.scrollTop = el.scrollHeight;
-}
-
-function splitCSV(line) {
-  var result=[], cur='', inQ=false;
-  for (var i=0;i<line.length;i++) {
-    var c=line[i];
-    if (c==='"') { inQ=!inQ; }
-    else if (c===',' && !inQ) { result.push(cur); cur=''; }
-    else { cur+=c; }
-  }
-  result.push(cur);
-  return result.map(function(s){ return s.replace(/^"|"$/g,'').trim(); });
-}
-
-/* Add drop-zone CSS for zeffy tab */
-document.head.insertAdjacentHTML('beforeend',
-  '<style>.drop-zone{border:2px dashed rgba(200,168,90,0.28);padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s;margin-bottom:1rem;position:relative;}.drop-zone:hover,.drop-zone.over{border-color:#C8A85A;}.drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}.b-match{background:rgba(100,180,100,0.15);color:#7dbf80;border:1px solid rgba(100,180,100,0.3);}.b-none{background:rgba(180,80,80,0.12);color:#e09090;border:1px solid rgba(180,80,80,0.25);}.b-skip{background:rgba(150,150,150,0.12);color:rgba(232,223,200,0.35);border:1px solid rgba(150,150,150,0.25);}</style>'
-);
-
-
-/* ══════════════════════════════════════════════
-   ZELLE — SINGLE ENTRY
-══════════════════════════════════════════════ */
-var szReg = null;
-
-function singleZelleLookup() {
-  var code = document.getElementById('sz-code').value.trim().toUpperCase();
-  var amt  = parseFloat(document.getElementById('sz-amt').value || 0);
-  var errEl = document.getElementById('sz-error');
-  errEl.style.display = 'none';
-  document.getElementById('sz-result').style.display = 'none';
-  if (!code) { errEl.textContent = 'Please enter a pledge code.'; errEl.style.display = 'block'; return; }
-  if (!amt || amt <= 0) { errEl.textContent = 'Please enter a valid amount.'; errEl.style.display = 'block'; return; }
-  apiCall('lookup', { value: code }, function(err, data) {
-    if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
-    szReg = data.registration;
-    var pled = regTotalPledged(szReg);
-    var paid = parseFloat(szReg.amount_paid);
-    paid = isFinite(paid) ? paid : 0;
-    var rem     = Math.max(0, pled - paid);
-    var newPaid = paid + amt;
-    var newRem  = pled - newPaid;
-    document.getElementById('sz-reg-info').innerHTML =
-      '<strong style="color:#E8C87A;font-size:1rem;">' + esc(szReg.first_name + ' ' + szReg.last_name) + '</strong><br/>' +
-      'Email: ' + esc(szReg.email) + ' &nbsp;·&nbsp; Church: ' + esc(szReg.church||'—') + '<br/>' +
-      'Current balance: <strong style="color:#E8C87A;">$' + rem.toFixed(2) + '</strong><br/>' +
-      'Payment to apply: <strong style="color:#7dbf80;">$' + amt.toFixed(2) + '</strong><br/>' +
-      'New balance after: <strong style="color:' + (pled > 0 && newRem<=0?'#7dbf80':'#E8C87A') + ';">' +
-        (pled > 0 && newRem<=0 ? 'Fully Paid ✓' : '$' + newRem.toFixed(2)) + '</strong>';
-    document.getElementById('sz-result').style.display = 'block';
-  });
-}
-
-function confirmSingleZelle() {
-  if (!szReg) return;
-  var amt  = parseFloat(document.getElementById('sz-amt').value || 0);
-  var date = document.getElementById('sz-date').value;
-  var name = document.getElementById('sz-name').value;
-  var btn  = document.getElementById('sz-confirm-btn');
-  var st   = document.getElementById('sz-status');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Recording…';
-  apiCall('update_payment', {
-    registration_id: szReg.id,
-    pledge_code:     szReg.pledge_code,
-    amount_to_add:   amt,
-    date_received:   date || new Date().toISOString().slice(0,10),
-    method:          'zelle',
-    notes:           name ? 'Sent by ' + name : '',
-  }, function(err, data) {
-    btn.disabled = false; btn.textContent = 'Confirm & Record →';
-    if (err) { st.textContent = '✗ ' + err; st.style.color = '#e09090'; return; }
-    st.textContent = '✓ Recorded — new paid: $' + data.new_paid.toFixed(2) +
-      (data.new_balance <= 0 ? ' — Fully Paid!' : ' — Balance: $' + data.new_balance.toFixed(2));
-    st.style.color = '#7dbf80';
-    szReg = null;
-    ['sz-code','sz-amt','sz-name'].forEach(function(id){ document.getElementById(id).value=''; });
-    setTimeout(function(){ document.getElementById('sz-result').style.display='none'; }, 3500);
-  });
-}
-
-function cancelSingleZelle() {
-  szReg = null;
-  document.getElementById('sz-result').style.display = 'none';
-}
-
-/* ══════════════════════════════════════════════
-   ZELLE — BATCH ENTRY
-══════════════════════════════════════════════ */
-var batchRows = [];
-
-function parseBatch() {
-  var text = document.getElementById('batch-text').value.trim();
-  var lines = text.split('\n').filter(function(l){ return l.trim(); });
-  if (!lines.length) { document.getElementById('batch-parse-status').textContent = 'No rows found.'; return; }
-
-  var parsed = lines.map(function(line) {
-    var parts = line.split(',').map(function(s){ return s.trim(); });
-    return {
-      code:   (parts[0]||'').toUpperCase(),
-      amount: parseFloat(parts[1]||0),
-      date:   parts[2] || new Date().toISOString().slice(0,10),
-      name:   parts[3] || '',
-      reg:    null
-    };
-  }).filter(function(r){ return r.code && r.amount > 0; });
-
-  if (!parsed.length) {
-    document.getElementById('batch-parse-status').textContent = 'No valid rows. Format: CODE, AMOUNT, DATE, NAME';
-    return;
-  }
-  batchRows = parsed;
-  document.getElementById('batch-parse-status').textContent = 'Looking up ' + parsed.length + ' code(s)…';
-
-  /* Look up each code */
-  var regMap = {};
-  var pending = batchRows.length;
-  batchRows.forEach(function(r) {
-    apiCall('lookup', { value: r.code }, function(err, data) {
-      if (!err && data && data.registration) regMap[r.code] = data.registration;
-      pending--;
-      if (pending === 0) {
-        batchRows.forEach(function(r){ r.reg = regMap[r.code] || null; });
-        renderBatchPreview();
-      }
-    });
-  });
-}
-
-function renderBatchPreview() {
-  var nMatch = batchRows.filter(function(r){ return r.reg; }).length;
-  document.getElementById('batch-parse-status').textContent =
-    nMatch + ' of ' + batchRows.length + ' matched.';
-
-  var tbody = document.getElementById('batch-body');
-  tbody.innerHTML = '';
-  batchRows.forEach(function(r) {
-    var pled = r.reg ? regTotalPledged(r.reg) : 0;
-    var afterPaid = r.reg ? ((parseFloat(r.reg.amount_paid)||0) + r.amount) : null;
-    var afterRem  = r.reg ? (pled - afterPaid) : null;
-    var tr = document.createElement('tr');
-    var balCell = !r.reg
-      ? '—'
-      : (pled > 0 && afterRem <= 0
-          ? '<span style="color:#7dbf80;">Fully Paid ✓</span>'
-          : '$' + afterRem.toFixed(2) + ' left');
-    tr.innerHTML =
-      '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">' + esc(r.code) + '</td>' +
-      '<td>$' + r.amount.toFixed(2) + '</td>' +
-      '<td>' + esc(r.date) + '</td>' +
-      '<td>' + esc(r.name || '—') + '</td>' +
-      '<td><span class="badge ' + (r.reg ? 'b-complete' : 'b-pending') + '">' + (r.reg ? 'Match' : 'No Match') + '</span></td>' +
-      '<td>' + (r.reg ? esc(r.reg.first_name + ' ' + r.reg.last_name) : '—') + '</td>' +
-      '<td>' + balCell + '</td>';
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById('batch-preview').style.display = 'block';
-  document.getElementById('batch-apply-btn').disabled = nMatch === 0;
-}
-
-function applyBatch() {
-  var btn = document.getElementById('batch-apply-btn');
-  var log = document.getElementById('batch-log');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Applying…';
-  log.innerHTML = ''; log.classList.remove('hidden');
-
-  var toApply = batchRows.filter(function(r){ return r.reg; });
-  zLog(log, 'inf', 'Applying ' + toApply.length + ' payment(s)…');
-  var i = 0;
-  function next() {
-    if (i >= toApply.length) {
-      zLog(log, 'ok', '✓ Done. ' + toApply.length + ' applied.');
-      btn.textContent = '✓ Done';
-      document.getElementById('batch-apply-status').textContent = 'Done — ' + toApply.length + ' applied.';
-      return;
-    }
-    var r = toApply[i++];
-    apiCall('update_payment', {
-      registration_id: r.reg.id,
-      pledge_code:     r.reg.pledge_code,
-      amount_to_add:   r.amount,
-      date_received:   r.date,
-      method:          'zelle',
-      notes:           r.name ? 'Sent by ' + r.name : '',
-    }, function(err, data) {
-      if (err) zLog(log, 'err', '✗ ' + r.code + ' — ' + err);
-      else     zLog(log, 'ok',  '✓ ' + r.code + ' (' + r.reg.first_name + ') +$' + r.amount.toFixed(2) + ' → paid: $' + data.new_paid.toFixed(2));
-      next();
-    });
-  }
-  next();
-}
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/admin-sync-app.js"></script>
 </body>
 </html>

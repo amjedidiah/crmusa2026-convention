@@ -5,10 +5,16 @@
    POST body may include total_pledged and/or total_amount (legacy column).
 ───────────────────────────────────────────────────────────────────── */
 
+import { serverLog } from './_lib/server-log.js';
+
 const FROM_ADDRESS = 'pastor@gracelifecenter.com';
-const REPLY_TO     = 'mok2003@gmail.com';
-const SITE_URL     = 'https://crmusa2026-convention.vercel.app';
-const ZELLE_EMAIL  = 'crmnaexec@gmail.com';
+const REPLY_TO = 'mok2003@gmail.com';
+const DEFAULT_SITE_URL = 'https://crmusa2026-convention.vercel.app';
+const ZELLE_EMAIL = 'crmnaexec@gmail.com';
+
+function publicSiteUrl() {
+  return (process.env.SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, '');
+}
 
 const NOTIFY_LIST = [
   'Jessybenn@yahoo.com',
@@ -34,8 +40,10 @@ const TIER_LABELS = {
 
 export async function sendConfirmationEmails(payload) {
   const {
+    registration_id: registrationId,
     first_name, last_name, email, phone, church,
     pledge_code, tier, total_pledged, total_amount, amount_paid, attendees,
+    lookup_url,
   } = payload || {};
 
   if (!email || !pledge_code) {
@@ -116,7 +124,7 @@ export async function sendConfirmationEmails(payload) {
               pledge_code + '</strong> ' +
               'in the <strong style="color:#E8C87A;">Conference Registration Code</strong> field.' +
             '</p>' +
-            '<a href="' + SITE_URL + '#register" style="display:inline-block;padding:11px 28px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Return to Convention Site</a>' +
+            '<a href="' + publicSiteUrl() + '#register" style="display:inline-block;padding:11px 28px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Return to Convention Site</a>' +
           '</td></tr>' +
         '</table>'
       : trulyFullyPaid
@@ -133,6 +141,19 @@ export async function sendConfirmationEmails(payload) {
       : trulyFullyPaid
         ? 'Fully Paid'
         : '$0 — verify total in Supabase if fee expected';
+
+  var lookupLinkBlock = lookup_url
+    ? '<table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(125,191,128,0.06);border:1px solid rgba(125,191,128,0.22);margin-bottom:26px;">' +
+        '<tr><td style="padding:20px 24px;">' +
+          '<p style="margin:0 0 8px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(125,191,128,0.7);">Your secure registration link</p>' +
+          '<p style="margin:0 0 16px;font-size:13px;color:rgba(245,239,224,0.65);line-height:1.75;">' +
+            'Bookmark or save this link to check your balance and payment options without entering your pledge code. ' +
+            'The link expires in 30 days; you can request a fresh link from the convention site using your email and pledge code.' +
+          '</p>' +
+          '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:12px 28px;background:#7dbf80;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">View registration &amp; balance</a>' +
+        '</td></tr>' +
+      '</table>'
+    : '';
 
   /* ── Confirmation email to registrant ── */
   var confirmHtml =
@@ -163,6 +184,7 @@ export async function sendConfirmationEmails(payload) {
           '</p>' +
         '</td></tr>' +
       '</table>' +
+      lookupLinkBlock +
       /* Balance table */
       '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(200,168,90,0.15);margin-bottom:26px;">' +
         '<tr style="background:rgba(200,168,90,0.07);">' +
@@ -193,7 +215,7 @@ export async function sendConfirmationEmails(payload) {
           '<p style="margin:0 0 4px;font-size:13px;color:rgba(245,239,224,0.7);">July 29 - August 2, 2026</p>' +
           '<p style="margin:0 0 4px;font-size:13px;color:rgba(245,239,224,0.7);">Holiday Inn NW Houston</p>' +
           '<p style="margin:0 0 16px;font-size:12px;color:rgba(245,239,224,0.38);">3539 N Sam Houston Pkwy West, Houston, TX 77086</p>' +
-          '<a href="' + SITE_URL + '" style="display:inline-block;padding:9px 22px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">View Convention Site</a>' +
+          '<a href="' + publicSiteUrl() + '" style="display:inline-block;padding:9px 22px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">View Convention Site</a>' +
         '</td></tr>' +
       '</table>' +
       '<p style="margin:0;font-size:12px;color:rgba(245,239,224,0.3);line-height:1.8;">' +
@@ -267,15 +289,33 @@ export async function sendConfirmationEmails(payload) {
   ]);
 
   if (confirmResult.status === 'rejected') {
-    console.error('[confirm] Confirmation email FAILED:', confirmResult.reason);
+    serverLog('error', 'confirm.registration_email_failed', {
+      route: 'confirm.sendConfirmationEmails',
+      registration_id: registrationId || null,
+      pledge_code: pledge_code || null,
+      detail: String(confirmResult.reason),
+    });
   } else {
-    console.log('[confirm] Confirmation sent OK to:', email);
+    serverLog('info', 'confirm.registration_email_sent', {
+      route: 'confirm.sendConfirmationEmails',
+      registration_id: registrationId || null,
+      pledge_code: pledge_code || null,
+    });
   }
 
   if (notifyResult.status === 'rejected') {
-    console.error('[confirm] Staff notification FAILED:', notifyResult.reason);
+    serverLog('error', 'confirm.staff_notification_failed', {
+      route: 'confirm.sendConfirmationEmails',
+      registration_id: registrationId || null,
+      pledge_code: pledge_code || null,
+      detail: String(notifyResult.reason),
+    });
   } else {
-    console.log('[confirm] Staff notification sent OK to', NOTIFY_LIST.length, 'recipients');
+    serverLog('info', 'confirm.staff_notification_sent', {
+      route: 'confirm.sendConfirmationEmails',
+      registration_id: registrationId || null,
+      recipient_count: NOTIFY_LIST.length,
+    });
   }
 
   return {
@@ -287,6 +327,61 @@ export async function sendConfirmationEmails(payload) {
       notifyResult.status  === 'rejected' ? notifyResult.reason  : null,
     ].filter(Boolean),
   };
+}
+
+export async function sendLookupLinkEmail({ email, first_name, lookup_url, registration_id: registrationId }) {
+  if (!email || !lookup_url) {
+    throw new Error('Missing email or lookup_url');
+  }
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  const greeting = esc(first_name || 'there');
+  const html =
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>' +
+    '<body style="margin:0;padding:0;background:#EDE8DF;font-family:Georgia,serif;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;">' +
+    '<tr><td align="center" style="padding:32px 16px;">' +
+    '<table width="600" cellpadding="0" cellspacing="0" style="background:#0B1628;max-width:600px;border:1px solid rgba(200,168,90,0.15);">' +
+    '<tr><td style="padding:32px 40px;">' +
+      '<p style="margin:0 0 18px;font-size:15px;color:rgba(245,239,224,0.8);">Hello ' + greeting + ',</p>' +
+      '<p style="margin:0 0 22px;font-size:14px;color:rgba(245,239,224,0.65);line-height:1.75;">' +
+        'Here is your secure link to view your convention registration summary and balance. ' +
+        'This link expires in 30 days.' +
+      '</p>' +
+      '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:14px 32px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Open my registration</a>' +
+      '<p style="margin:28px 0 0;font-size:12px;color:rgba(245,239,224,0.35);line-height:1.8;">' +
+        'If you did not request this email, you can ignore it. Questions? ' +
+        '<a href="mailto:' + REPLY_TO + '" style="color:#C8A85A;">' + REPLY_TO + '</a>' +
+      '</p>' +
+    '</td></tr>' +
+    '</table></td></tr></table></body></html>';
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + process.env.RESEND_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
+      to: [email],
+      reply_to: REPLY_TO,
+      subject: 'Your CRM 2026 registration link',
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Resend request failed');
+  }
+
+  serverLog('info', 'confirm.lookup_link_email_sent', {
+    route: 'confirm.sendLookupLinkEmail',
+    registration_id: registrationId || null,
+  });
 }
 
 export default async function handler(req, res) {
