@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { getRequestOrigin } from '../../api/_lib/site.js';
+import {
+  buildStaffMagicLinkRedirectUrl,
+  getRequestOrigin,
+} from '../../api/_lib/site.js';
 
 function restoreSiteUrl(prev) {
   if (prev === undefined) delete process.env.SITE_URL;
   else process.env.SITE_URL = prev;
+}
+
+function restoreStaffMagicLinkRedirect(prev) {
+  if (prev === undefined) delete process.env.STAFF_MAGIC_LINK_REDIRECT;
+  else process.env.STAFF_MAGIC_LINK_REDIRECT = prev;
 }
 
 test('getRequestOrigin uses SITE_URL when set', () => {
@@ -80,5 +88,38 @@ test('getRequestOrigin rejects newline in host', () => {
     );
   } finally {
     restoreSiteUrl(prev);
+  }
+});
+
+test('buildStaffMagicLinkRedirectUrl uses SITE_URL + admin-sync path', () => {
+  const prevSite = process.env.SITE_URL;
+  const prevStaff = process.env.STAFF_MAGIC_LINK_REDIRECT;
+  process.env.SITE_URL = 'http://127.0.0.1:3000/';
+  delete process.env.STAFF_MAGIC_LINK_REDIRECT;
+  try {
+    assert.equal(
+      buildStaffMagicLinkRedirectUrl({ headers: {} }),
+      'http://127.0.0.1:3000/admin-sync.html'
+    );
+  } finally {
+    restoreSiteUrl(prevSite);
+    restoreStaffMagicLinkRedirect(prevStaff);
+  }
+});
+
+test('buildStaffMagicLinkRedirectUrl prefers STAFF_MAGIC_LINK_REDIRECT', () => {
+  const prevSite = process.env.SITE_URL;
+  const prevStaff = process.env.STAFF_MAGIC_LINK_REDIRECT;
+  process.env.SITE_URL = 'https://ignored.example/';
+  process.env.STAFF_MAGIC_LINK_REDIRECT =
+    'https://preview.vercel.app/admin-sync.html/';
+  try {
+    assert.equal(
+      buildStaffMagicLinkRedirectUrl({ headers: {} }),
+      'https://preview.vercel.app/admin-sync.html'
+    );
+  } finally {
+    restoreSiteUrl(prevSite);
+    restoreStaffMagicLinkRedirect(prevStaff);
   }
 });

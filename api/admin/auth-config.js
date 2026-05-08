@@ -1,6 +1,7 @@
 import { decodeJwtPayload } from '../_lib/jwt-payload.js';
 import { staffCorsHeaders, handleStaffOptions } from '../_lib/staff-auth.js';
 import { serverLog } from '../_lib/server-log.js';
+import { buildStaffMagicLinkRedirectUrl } from '../_lib/site.js';
 
 export default async function handler(req, res) {
   Object.entries(staffCorsHeaders(req)).forEach(([k, v]) =>
@@ -43,5 +44,6 @@ export default async function handler(req, res) {
   return res.status(200).json({
     supabase_url: url.replace(/\/+$/, ''),
     supabase_anon_key: anon,
+    staff_magic_link_redirect: buildStaffMagicLinkRedirectUrl(req),
   });
 }

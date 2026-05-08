@@ -99,16 +99,18 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 
 ### Email
 
-| Variable            | Required          | Used by                                                                                                                                             |
-| ------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EMAIL_TRANSPORT`   | No                | `resend` or `smtp` (Mailpit). If unset: **Resend** when `VERCEL_ENV` is `production` or `preview`; otherwise **SMTP** (local dev, `NODE_ENV=test`). |
-| `RESEND_API_KEY`    | When using Resend | `POST /api/register` confirmation, `POST /api/lookup-request`, `api/confirm.js`, `/api/remind`                                                      |
-| `MAILPIT_SMTP_HOST` | No                | SMTP host for Mailpit / dev relay. Default `127.0.0.1`.                                                                                             |
-| `MAILPIT_SMTP_PORT` | No                | Default `1025` (Mailpit).                                                                                                                           |
+| Variable            | Required          | Used by                                                                                                                                                                                                                                                  |
+| ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EMAIL_TRANSPORT`   | No                | `resend` or `smtp` (Mailpit). If unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY`** is set (skips host Mailpit during local `vercel dev`); otherwise **SMTP**. `NODE_ENV=test` → **SMTP** unless overridden. |
+| `RESEND_API_KEY`    | When using Resend | `POST /api/register` confirmation, `POST /api/lookup-request`, `api/confirm.js`, `/api/remind`                                                                                                                                                           |
+| `MAILPIT_SMTP_HOST` | No                | SMTP host for Mailpit / dev relay. Default `127.0.0.1`.                                                                                                                                                                                                  |
+| `MAILPIT_SMTP_PORT` | No                | If unset: **54325** when `SUPABASE_URL` is local CLI (`http://127.0.0.1:54321` etc.—shared Mailpit with Auth); else **1025** (standalone Mailpit). Set explicitly if your relay differs.                                                                 |
 
-**Local:** Run [Mailpit](https://github.com/axllent/mailpit) (or Docker) exposing SMTP on `1025` and open the web UI (often `8025`) to read messages. No `RESEND_API_KEY` required when transport is SMTP.
+**Local SMTP:** With **Supabase CLI** (`supabase start`, `SUPABASE_URL` pointing at `:54321`), transactional mail uses Mailpit SMTP **:54325** by default (same inbox as staff magic links; web UI **http://127.0.0.1:54324**). **Standalone** Mailpit is usually **:1025** (UI often **:8025**). You can instead set `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY` and skip Mailpit.
 
-**Production / preview:** Set `RESEND_API_KEY` in Vercel (transport stays Resend automatically).
+**Production / preview:** Set `RESEND_API_KEY` in Vercel (transport stays Resend automatically when `VERCEL_ENV` is `production` or `preview`).
+
+**Routing (debugging):** Logic lives in `api/_lib/email-send.js` (`resolveEmailTransport`, `resolveMailpitSmtpPort`). If `EMAIL_TRANSPORT` is unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY` is set** (so local `vercel dev` does not require host-reachable Mailpit—GoTrue still uses Docker-internal SMTP). Otherwise **SMTP**. `NODE_ENV=test` forces **SMTP** unless you set `EMAIL_TRANSPORT`. Hosts without `VERCEL_ENV` (non-Vercel production) with no `RESEND_API_KEY` default to SMTP—set `EMAIL_TRANSPORT=resend` if you want Resend there. When `MAILPIT_SMTP_HOST` is unset, SMTP tries **127.0.0.1** then **localhost** on each port. When `MAILPIT_SMTP_PORT` is unset and **:54325** refuses on both hosts, the client **retries :1025** on those hosts before failing. **Staff magic-link** messages are sent by **Supabase Auth**, not this module.
 
 **Integration tests** (`RUN_INTEGRATION=1`): `test/load-env.mjs` sets `EMAIL_TRANSPORT=resend` by default so Resend is still mocked via `fetch`; override `EMAIL_TRANSPORT=smtp` if you run Mailpit for integration.
 
@@ -151,7 +153,7 @@ If unset, register / lookup-request still work; limits are only enforced when Up
 
 **Rate limiting:** Configure Upstash Redis (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`) to enforce limits on `POST /api/register` and `POST /api/lookup-request`. If these variables are omitted, both routes still function without Redis-backed limits.
 
-**Email:** On Vercel **production** and **preview**, transactional email uses **Resend** (`RESEND_API_KEY`). In **development** and when `NODE_ENV=test`, it uses **SMTP** to **Mailpit** by default (`127.0.0.1:1025`) unless you set `EMAIL_TRANSPORT=resend`. Create a Resend API key and verify the sending domain for hosted sends.
+**Transactional email:** See **### Email** (Vercel `production` / `preview` → Resend; otherwise SMTP and Mailpit ports documented there). Staff magic links use **Supabase Auth**, not `email-send.js`.
 
 ### Example `.env.local`
 

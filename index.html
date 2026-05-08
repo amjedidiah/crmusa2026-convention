@@ -4262,7 +4262,10 @@
           }
           var msg =
             (data && data.message) ||
-            "If a registration matches this email and pledge code, we sent a secure link. Check your inbox and spam folder.";
+            "If the email and pledge code you entered match a registration on file, we emailed a secure link to that address. " +
+            "Most messages arrive within a few minutes. Check inbox, spam, and promotions. " +
+            'Look for the subject line: "Your CRM 2026 registration link." ' +
+            "If nothing arrives after about 15 minutes, try again or contact convention@crmusanational.org.";
           if (fbEl) {
             fbEl.textContent = msg;
             fbEl.style.display = "block";

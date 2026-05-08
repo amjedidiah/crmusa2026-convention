@@ -336,6 +336,7 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
   assertTransactionalEmailReady();
 
   const greeting = esc(first_name || 'there');
+  const plainName = String(first_name || 'there').replace(/[\r\n\u2028\u2029]/g, ' ').trim() || 'there';
   const html =
     '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>' +
     '<body style="margin:0;padding:0;background:#EDE8DF;font-family:Georgia,serif;">' +
@@ -356,12 +357,20 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
     '</td></tr>' +
     '</table></td></tr></table></body></html>';
 
+  const text =
+    'Hello ' + plainName + ',\n\n' +
+    'Here is your secure link to view your CRM USA 2026 convention registration summary and balance. ' +
+    'This link expires in 7 days.\n\n' +
+    lookup_url + '\n\n' +
+    'If you did not request this email, you can ignore it. Questions? ' + REPLY_TO + '\n';
+
   await sendTransactionalEmail({
     from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
     to: [email],
     replyTo: REPLY_TO,
     subject: 'Your CRM 2026 registration link',
     html,
+    text,
   });
 
   serverLog('info', 'confirm.lookup_link_email_sent', {

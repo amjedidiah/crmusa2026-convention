@@ -5,8 +5,18 @@ import { enforceRateLimit, getLookupRequestRateLimiter } from './_lib/rate-limit
 import { buildLookupUrlForRegistration } from './_lib/site.js';
 import { supabaseRestRequest } from './_lib/supabase.js';
 
+/** Same copy for every outcome (anti-enumeration). Strong enough to act on without implying we confirmed a match. */
 const GENERIC_MESSAGE =
-  'If a registration matches this email and pledge code, we sent a secure link. Check your inbox and spam folder.';
+  'If the email and pledge code you entered match a registration on file, we emailed a secure link to that address. ' +
+  'Most messages arrive within a few minutes. Check inbox, spam, and promotions. ' +
+  'Look for the subject line: "Your CRM 2026 registration link." ' +
+  'If nothing arrives after about 15 minutes, try again or contact convention@crmusanational.org.';
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
 
 function normalizePledgeCode(value) {
   return String(value || '')
@@ -68,12 +78,27 @@ export default async function handler(req, res) {
       lookup_url: lookupUrl,
       registration_id: reg.id,
     });
-  } catch (error) {
-    serverLog('error', 'lookup_request.email_failed', {
+  } catch (firstError) {
+    serverLog('warn', 'lookup_request.email_retry', {
       route: '/api/lookup-request',
       registration_id: reg.id,
-      detail: error instanceof Error ? error.message : 'unknown_error',
+      detail: firstError instanceof Error ? firstError.message : 'unknown_error',
     });
+    try {
+      await delay(900);
+      await sendLookupLinkEmail({
+        email: reg.email,
+        first_name: reg.first_name,
+        lookup_url: lookupUrl,
+        registration_id: reg.id,
+      });
+    } catch (error) {
+      serverLog('error', 'lookup_request.email_failed', {
+        route: '/api/lookup-request',
+        registration_id: reg.id,
+        detail: error instanceof Error ? error.message : 'unknown_error',
+      });
+    }
   }
 
   return res.status(200).json({ ok: true, message: GENERIC_MESSAGE });

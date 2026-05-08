@@ -1,6 +1,8 @@
 /* global supabase */
 
 let sb = null;
+/** From `/api/admin/auth-config` — matches GoTrue allowlist / SITE_URL host. */
+let staffMagicLinkRedirect = null;
 let currentReg = null;
 let reportData = [];
 let zMatchedRows = [];
@@ -55,6 +57,11 @@ async function loadAuthConfig() {
 
 async function initSupabase() {
   let cfg = await loadAuthConfig();
+  let rawRedirect = cfg.staff_magic_link_redirect;
+  staffMagicLinkRedirect =
+    typeof rawRedirect === "string" && rawRedirect.trim()
+      ? rawRedirect.trim()
+      : null;
   sb = supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key, {
     auth: {
       // Magic links are often opened in the mail app's browser — no PKCE verifier there.
@@ -142,11 +149,21 @@ async function sendMagicLink() {
   msg.className = "msg msg-inf";
   msg.textContent = "Sending link…";
   try {
-    // Always return to this app on the admin path (not `/`), so the hash is handled here.
-    let redirect = new URL("/admin-sync.html", globalThis.location.origin).href;
+    // Prefer server-built URL (SITE_URL / forwarded Host) so GoTrue allowlist matches
+    // local `site_url` — browser `location.origin` alone often yields localhost vs 127 mismatch.
+    let path = globalThis.location.pathname || "";
+    if (!/\/admin-sync\.html$/i.test(path)) {
+      path = "/admin-sync.html";
+    }
+    if (!path.startsWith("/")) path = "/" + path;
+    let redirect =
+      staffMagicLinkRedirect ||
+      new URL(path, globalThis.location.origin).href;
     let res = await sb.auth.signInWithOtp({
       email: email,
-      options: { emailRedirectTo: redirect },
+      options: {
+        emailRedirectTo: redirect,
+      },
     });
     if (res.error) throw res.error;
     msg.className = "msg msg-ok";

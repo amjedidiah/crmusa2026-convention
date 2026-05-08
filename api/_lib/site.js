@@ -59,6 +59,32 @@ export function getRequestOrigin(req) {
   return `${proto}://${String(host).trim()}`;
 }
 
+const STAFF_ADMIN_HTML = '/admin-sync.html';
+
+/**
+ * Absolute URL for Supabase `signInWithOtp` → `emailRedirectTo`. Must match an entry
+ * in GoTrue redirect allowlist. Uses `SITE_URL` when set so local dev matches
+ * Supabase CLI `site_url` (avoids localhost vs 127.0.0.1 mismatches that make GoTrue
+ * fall back to site root).
+ *
+ * Optional override: `STAFF_MAGIC_LINK_REDIRECT` (full URL, e.g. preview deploy).
+ */
+export function buildStaffMagicLinkRedirectUrl(req) {
+  const fromEnv = (process.env.STAFF_MAGIC_LINK_REDIRECT || '').trim();
+  if (fromEnv) {
+    try {
+      const u = new URL(fromEnv);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+      return u.href.replace(/\/+$/, '');
+    } catch {
+      return null;
+    }
+  }
+  const origin = getRequestOrigin(req);
+  if (!origin) return null;
+  return `${origin.replace(/\/+$/, '')}${STAFF_ADMIN_HTML}`;
+}
+
 export function buildLookupUrlForRegistration(req, registration) {
   const origin = getRequestOrigin(req);
   if (

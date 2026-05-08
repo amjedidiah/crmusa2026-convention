@@ -25,8 +25,9 @@ port = 54323
 
 [auth]
 enabled = true
-# Convention site + admin (magic-link return). Include host variants used with `vercel dev`.
-site_url = "http://127.0.0.1:3000"
+# Staff magic-link fallback must land on admin-sync (implicit flow reads hash here).
+# Public registration uses app routes on the same origin; keep additional_redirect_urls for roots.
+site_url = "http://127.0.0.1:3000/admin-sync.html"
 additional_redirect_urls = [
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3000/admin-sync.html",
