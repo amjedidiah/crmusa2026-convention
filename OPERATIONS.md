@@ -43,6 +43,14 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 2. Search logs for `confirm.registration_email_failed`, `confirm.lookup_link_email_sent`, `lookup_request.email_failed`, `remind.email_send_failed`.
 3. Registration and lookup-request endpoints are designed to **return success to the client** after persistence even when email fails; treat missing email as an ops follow-up, not a silent user failure.
 
+### Staff magic links (Supabase Auth SMTP)
+
+Convention **`EMAIL_TRANSPORT`**, **`RESEND_API_KEY`**, and app **`SMTP_*`** affect **transactional** mail only (`email-send.js`). **Staff** sign-in emails (`admin-sync.html` magic link) are sent by **Supabase Auth (GoTrue)**.
+
+1. **Hosted:** Configure **Dashboard → Authentication → SMTP** on **each** Supabase project staff use (production and preview/staging if separate). See [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+2. **Redirect / URL errors:** If `signInWithOtp` fails with redirect-related messages, fix **Authentication → URL Configuration** (allowlist for `admin-sync.html`) and align **`SITE_URL`** / **`STAFF_MAGIC_LINK_REDIRECT`** with [`api/_lib/site.js`](./api/_lib/site.js) (`buildStaffMagicLinkRedirectUrl`).
+3. **Triage:** Prefer **Supabase Dashboard → Authentication** (logs, users) and the mail provider over Vercel logs alone for Auth SMTP rejection or spam-folder issues.
+
 ### Lookup / resend recovery (anti-enumeration)
 
 `POST /api/lookup-request` and `POST /api/resend-confirmation` must keep the **same HTTP 200 body** for match, no match, bad input, and send failure (after attempting send)—by design, so callers cannot infer registered emails or pledge codes from the response. **Do not** “improve” registrant UX by branching success text or status on lookup outcome; use logs (`confirm.lookup_link_email_sent`, `lookup_request.email_failed`, `resend_confirmation.email_failed`) instead.

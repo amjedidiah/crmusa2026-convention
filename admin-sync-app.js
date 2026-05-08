@@ -145,6 +145,7 @@ async function sendMagicLink() {
     return;
   }
   btn.disabled = true;
+  btn.setAttribute("aria-busy", "true");
   msg.classList.remove("hidden");
   msg.className = "msg msg-inf";
   msg.textContent = "Sending link…";
@@ -168,12 +169,13 @@ async function sendMagicLink() {
     if (res.error) throw res.error;
     msg.className = "msg msg-ok";
     msg.textContent =
-      "Check your email for the sign-in link. You can close this tab after clicking it.";
+      "Check your email for the sign-in link (inbox, spam, Promotions). You can close this tab after clicking it.";
   } catch (e) {
     msg.className = "msg msg-err";
     msg.textContent = e.message || "Could not send sign-in email.";
   } finally {
     btn.disabled = false;
+    btn.removeAttribute("aria-busy");
   }
 }
 

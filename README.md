@@ -59,7 +59,26 @@ supabase status      # API URL, anon key, service_role key — copy into .env.lo
 - `supabase/seed.sql` — sample registrations / payments for dev
 - `supabase_migration.sql` — legacy pointer; prefer `supabase/migrations/`
 
-**Hosted Supabase:** push the same migrations via CLI (`supabase db push`) or run SQL from those files in the dashboard SQL editor (not ideal long-term).
+**Hosted Supabase (CLI link + push):**
+
+1. Install and log in: `supabase login`.
+2. From `crmusa2026-convention/`, link this folder to your cloud project (Dashboard → **Project Settings** → **General** → reference ID / API URL shows `https://<project-ref>.supabase.co`):
+
+   ```bash
+   supabase link --project-ref <YOUR_PROJECT_REF>
+   ```
+
+3. Push migration history to the remote database:
+
+   ```bash
+   supabase db push
+   ```
+
+   This applies **only** SQL files under `supabase/migrations/`. It does **not** run `supabase/seed.sql`.
+
+**Seed data (`seed.sql`):** Defined in `[db.seed]` in `supabase/config.toml` and executed **only** when you run **`supabase db reset`** against your **local** stack (`supabase start`). Hosted production is unaffected unless you manually paste seed SQL into the Dashboard (don’t). Keep sample rows out of migration files.
+
+Alternatively you can paste migration SQL into the Dashboard SQL editor once; using the CLI keeps drift visible and repeatable.
 
 ---
 
@@ -99,27 +118,29 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 
 ### Email
 
-| Variable            | Required          | Used by                                                                                                                                                                                                                                                  |
-| ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EMAIL_TRANSPORT`   | No                | `resend` or `smtp` (Mailpit). If unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY`** is set (skips host Mailpit during local `vercel dev`); otherwise **SMTP**. `NODE_ENV=test` → **SMTP** unless overridden. |
-| `RESEND_API_KEY`    | When using Resend | `POST /api/register` confirmation, `POST /api/lookup-request`, `POST /api/resend-confirmation`, `api/confirm.js`, `/api/remind`                                                                                                                                                           |
-| `CONVENTION_MAIL_FROM` | **Yes** in strict production\* | From header for convention mail (`api/confirm.js`, `/api/remind`). Bare email or full `Name <email>`. |
-| `CONVENTION_MAIL_REPLY_TO` | **Yes** in strict production\* | Reply-To for those sends. |
-| `CONVENTION_ZELLE_EMAIL` | **Yes** in strict production\* | Zelle address shown in balance-due confirmation copy. |
-| `CONVENTION_STAFF_NOTIFY_EMAILS` | **Yes** in strict production\* | Staff list for NEW REGISTRATION (comma/newline; deduped). If unset outside strict mode, falls back to a legacy dev list. |
-| `CONVENTION_CONFIRM_SECRET` | If using `POST /api/confirm` | Bearer token for manual confirm endpoint; if unset, route returns 503. |
-| `MAILPIT_SMTP_HOST` | No                | SMTP host for Mailpit / dev relay. Default `127.0.0.1`.                                                                                                                                                                                                  |
-| `MAILPIT_SMTP_PORT` | No                | If unset: **54325** when `SUPABASE_URL` is local CLI (`http://127.0.0.1:54321` etc.—shared Mailpit with Auth); else **1025** (standalone Mailpit). Set explicitly if your relay differs.                                                                 |
+| Variable                         | Required                       | Used by                                                                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EMAIL_TRANSPORT`                | No                             | `resend` or `smtp` (Mailpit). If unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY`** is set (skips host Mailpit during local `vercel dev`); otherwise **SMTP**. `NODE_ENV=test` → **SMTP** unless overridden. |
+| `RESEND_API_KEY`                 | When using Resend              | `POST /api/register` confirmation, `POST /api/lookup-request`, `POST /api/resend-confirmation`, `api/confirm.js`, `/api/remind`                                                                                                                          |
+| `CONVENTION_MAIL_FROM`           | **Yes** in strict production\* | From header for convention mail (`api/confirm.js`, `/api/remind`). Bare email or full `Name <email>`.                                                                                                                                                    |
+| `CONVENTION_MAIL_REPLY_TO`       | **Yes** in strict production\* | Reply-To for those sends.                                                                                                                                                                                                                                |
+| `CONVENTION_ZELLE_EMAIL`         | **Yes** in strict production\* | Zelle address shown in balance-due confirmation copy.                                                                                                                                                                                                    |
+| `CONVENTION_STAFF_NOTIFY_EMAILS` | **Yes** in strict production\* | Staff list for NEW REGISTRATION (comma/newline; deduped). If unset outside strict mode, falls back to a legacy dev list.                                                                                                                                 |
+| `CONVENTION_CONFIRM_SECRET`      | If using `POST /api/confirm`   | Bearer token for manual confirm endpoint; if unset, route returns 503.                                                                                                                                                                                   |
+| `MAILPIT_SMTP_HOST`              | No                             | SMTP host for Mailpit / dev relay. Default `127.0.0.1`.                                                                                                                                                                                                  |
+| `MAILPIT_SMTP_PORT`              | No                             | If unset: **54325** when `SUPABASE_URL` is local CLI (`http://127.0.0.1:54321` etc.—shared Mailpit with Auth); else **1025** (standalone Mailpit). Set explicitly if your relay differs.                                                                 |
 
 \* **Strict production:** `VERCEL_ENV=production` **or** (`NODE_ENV=production` and `VERCEL` is not `1`, e.g. self‑hosted Node). Vercel Preview (`VERCEL=1`, `VERCEL_ENV=preview`) may omit these and still use legacy defaults.
 
-**Local SMTP:** With **Supabase CLI** (`supabase start`, `SUPABASE_URL` pointing at `:54321`), transactional mail uses Mailpit SMTP **:54325** by default (same inbox as staff magic links; web UI **http://127.0.0.1:54324**). **Standalone** Mailpit is usually **:1025** (UI often **:8025**). You can instead set `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY` and skip Mailpit.
+**Local SMTP:** With **Supabase CLI** (`supabase start`, `SUPABASE_URL` pointing at `:54321`), transactional mail uses Mailpit SMTP **:54325** by default (same inbox as staff magic links; web UI **<http://127.0.0.1:54324>**). **Standalone** Mailpit is usually **:1025** (UI often **:8025**). You can instead set `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY` and skip Mailpit.
 
 **Production / preview:** Set `RESEND_API_KEY` in Vercel (transport stays Resend automatically when `VERCEL_ENV` is `production` or `preview`).
 
 **Routing (debugging):** Logic lives in `api/_lib/email-send.js` (`resolveEmailTransport`, `resolveMailpitSmtpPort`). If `EMAIL_TRANSPORT` is unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY` is set** (so local `vercel dev` does not require host-reachable Mailpit—GoTrue still uses Docker-internal SMTP). Otherwise **SMTP**. `NODE_ENV=test` forces **SMTP** unless you set `EMAIL_TRANSPORT`. Hosts without `VERCEL_ENV` (non-Vercel production) with no `RESEND_API_KEY` default to SMTP—set `EMAIL_TRANSPORT=resend` if you want Resend there. When `MAILPIT_SMTP_HOST` is unset, SMTP tries **127.0.0.1** then **localhost** on each port. When `MAILPIT_SMTP_PORT` is unset and **:54325** refuses on both hosts, the client **retries :1025** on those hosts before failing. **Staff magic-link** messages are sent by **Supabase Auth**, not this module.
 
-**Email go-live checklist (registration + reminders)**
+**Staff magic links vs transactional mail:** `SMTP_*` / `RESEND_API_KEY` / `EMAIL_TRANSPORT` in **this app’s** `.env.local` (Vercel) control **only** convention transactional email (`email-send.js`). **Staff** sign-in (`admin-sync.html` → `signInWithOtp`) is delivered by **Supabase Auth (GoTrue)**. Configure **Custom SMTP** per hosted project in the [Dashboard → Authentication → SMTP](https://supabase.com/docs/guides/auth/auth-smtp), or optional `[auth.email.smtp]` in [`supabase/config.toml`](./supabase/config.toml) for local `supabase start` (CLI reads project-root `.env` for `env()`, not `.env.local`). Production, preview, and local stacks each have **separate** Auth mail settings—a preview deployment still needs SMTP set on **that** Supabase project if default Auth mail is not enough.
+
+**Email go-live checklist (registration + reminders):**
 
 - Set **`RESEND_API_KEY`** (or SMTP / Mailpit for local) per the table above.
 - In **strict production** (`VERCEL_ENV=production`, or `NODE_ENV=production` on non-Vercel hosts where `VERCEL` is not `1`), set **`CONVENTION_MAIL_FROM`**, **`CONVENTION_MAIL_REPLY_TO`**, **`CONVENTION_ZELLE_EMAIL`**, and a non-empty **`CONVENTION_STAFF_NOTIFY_EMAILS`** (comma/newline-separated). Omitting these causes confirmation sends to fail fast. Vercel Preview may still rely on legacy defaults when unset.
@@ -162,7 +183,7 @@ If unset, register / lookup-request / resend-confirmation still work; limits are
 
 \*If both are unset, CORS allowlist falls back to **`SITE_URL`** (typical same-deployment admin + API). Add explicit origins for previews or when `SITE_URL` does not match where `admin-sync.html` is opened (e.g. `http://localhost:3000`).
 
-**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under URL configuration, add the production and preview origins for `admin-sync.html` (for example `https://<project>.vercel.app/admin-sync.html`). Staff open the admin page, sign in with an allowlisted email, and the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data. Staff APIs only emit `Access-Control-Allow-Origin` for allowlisted origins (see `STAFF_ORIGINS` / `SITE_URL`).
+**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under **URL configuration**, add every origin staff use for `admin-sync.html` (production, preview, local). Misconfigured redirects cause `signInWithOtp` errors even when SMTP is fine. For production mail delivery, enable **Custom SMTP** on that project (see **Staff magic links vs transactional mail** above)—do not rely on Vercel `SMTP_*` alone. Staff open the admin page, sign in with an allowlisted email, and the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data. Staff APIs only emit `Access-Control-Allow-Origin` for allowlisted origins (see `STAFF_ORIGINS` / `SITE_URL`).
 
 **Reminder cron:** Vercel Cron invokes `GET /api/remind` per `vercel.json`. Set `CRON_SECRET` in Vercel and configure the cron job to send `Authorization: Bearer <CRON_SECRET>` (the handler also accepts `?secret=` for manual curls).
 

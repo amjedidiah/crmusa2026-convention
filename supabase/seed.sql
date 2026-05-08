@@ -1,3 +1,6 @@
+-- LOCAL DEVELOPMENT ONLY — applied by `supabase db reset`, NOT by `supabase db push`.
+-- Never put this data in migration files for production.
+--
 -- Sample registrations / payments for local dev.
 -- Totals match api/_lib/registration.js PRICING_CENTS (same $ amounts as index.html #register).
 -- created_at falls inside each tier’s registration window (America/Chicago calendar dates).

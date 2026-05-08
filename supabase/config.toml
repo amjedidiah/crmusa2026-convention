@@ -10,9 +10,10 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [db.seed]
+# Runs only on local `supabase db reset` — not on `supabase db push` to a hosted project.
 enabled = true
 sql_paths = ["./seed.sql"]
 
@@ -39,3 +40,17 @@ jwt_expiry = 3600
 [storage]
 enabled = true
 file_size_limit = "50MiB"
+
+# --- Optional: send Auth emails (staff magic links) via your SMTP relay instead of local Mailpit ---
+# Uncomment `[auth.email.smtp]` and provide secrets in project-root `.env` (Supabase CLI `env()` reads this file).
+# Not the same as `.env.local` used by `vercel dev`. Restart: `supabase stop` && `supabase start`.
+# Confirm field names against `supabase init` output for your CLI version.
+#
+# [auth.email.smtp]
+# enabled = true
+# host = "env(SMTP_HOST)"
+# port = 465
+# user = "env(SMTP_USER)"
+# pass = "env(SMTP_PASS)"
+# admin_email = "env(SMTP_USER)"
+# sender_name = "CRM 2026 Convention"
