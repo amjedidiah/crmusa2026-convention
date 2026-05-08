@@ -102,15 +102,30 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 | Variable            | Required          | Used by                                                                                                                                                                                                                                                  |
 | ------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `EMAIL_TRANSPORT`   | No                | `resend` or `smtp` (Mailpit). If unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY`** is set (skips host Mailpit during local `vercel dev`); otherwise **SMTP**. `NODE_ENV=test` → **SMTP** unless overridden. |
-| `RESEND_API_KEY`    | When using Resend | `POST /api/register` confirmation, `POST /api/lookup-request`, `api/confirm.js`, `/api/remind`                                                                                                                                                           |
+| `RESEND_API_KEY`    | When using Resend | `POST /api/register` confirmation, `POST /api/lookup-request`, `POST /api/resend-confirmation`, `api/confirm.js`, `/api/remind`                                                                                                                                                           |
+| `CONVENTION_MAIL_FROM` | **Yes** in strict production\* | From header for convention mail (`api/confirm.js`, `/api/remind`). Bare email or full `Name <email>`. |
+| `CONVENTION_MAIL_REPLY_TO` | **Yes** in strict production\* | Reply-To for those sends. |
+| `CONVENTION_ZELLE_EMAIL` | **Yes** in strict production\* | Zelle address shown in balance-due confirmation copy. |
+| `CONVENTION_STAFF_NOTIFY_EMAILS` | **Yes** in strict production\* | Staff list for NEW REGISTRATION (comma/newline; deduped). If unset outside strict mode, falls back to a legacy dev list. |
+| `CONVENTION_CONFIRM_SECRET` | If using `POST /api/confirm` | Bearer token for manual confirm endpoint; if unset, route returns 503. |
 | `MAILPIT_SMTP_HOST` | No                | SMTP host for Mailpit / dev relay. Default `127.0.0.1`.                                                                                                                                                                                                  |
 | `MAILPIT_SMTP_PORT` | No                | If unset: **54325** when `SUPABASE_URL` is local CLI (`http://127.0.0.1:54321` etc.—shared Mailpit with Auth); else **1025** (standalone Mailpit). Set explicitly if your relay differs.                                                                 |
+
+\* **Strict production:** `VERCEL_ENV=production` **or** (`NODE_ENV=production` and `VERCEL` is not `1`, e.g. self‑hosted Node). Vercel Preview (`VERCEL=1`, `VERCEL_ENV=preview`) may omit these and still use legacy defaults.
 
 **Local SMTP:** With **Supabase CLI** (`supabase start`, `SUPABASE_URL` pointing at `:54321`), transactional mail uses Mailpit SMTP **:54325** by default (same inbox as staff magic links; web UI **http://127.0.0.1:54324**). **Standalone** Mailpit is usually **:1025** (UI often **:8025**). You can instead set `EMAIL_TRANSPORT=resend` and `RESEND_API_KEY` and skip Mailpit.
 
 **Production / preview:** Set `RESEND_API_KEY` in Vercel (transport stays Resend automatically when `VERCEL_ENV` is `production` or `preview`).
 
 **Routing (debugging):** Logic lives in `api/_lib/email-send.js` (`resolveEmailTransport`, `resolveMailpitSmtpPort`). If `EMAIL_TRANSPORT` is unset: **Resend** when `VERCEL_ENV` is `production` or `preview`, or when **`RESEND_API_KEY` is set** (so local `vercel dev` does not require host-reachable Mailpit—GoTrue still uses Docker-internal SMTP). Otherwise **SMTP**. `NODE_ENV=test` forces **SMTP** unless you set `EMAIL_TRANSPORT`. Hosts without `VERCEL_ENV` (non-Vercel production) with no `RESEND_API_KEY` default to SMTP—set `EMAIL_TRANSPORT=resend` if you want Resend there. When `MAILPIT_SMTP_HOST` is unset, SMTP tries **127.0.0.1** then **localhost** on each port. When `MAILPIT_SMTP_PORT` is unset and **:54325** refuses on both hosts, the client **retries :1025** on those hosts before failing. **Staff magic-link** messages are sent by **Supabase Auth**, not this module.
+
+**Email go-live checklist (registration + reminders)**
+
+- Set **`RESEND_API_KEY`** (or SMTP / Mailpit for local) per the table above.
+- In **strict production** (`VERCEL_ENV=production`, or `NODE_ENV=production` on non-Vercel hosts where `VERCEL` is not `1`), set **`CONVENTION_MAIL_FROM`**, **`CONVENTION_MAIL_REPLY_TO`**, **`CONVENTION_ZELLE_EMAIL`**, and a non-empty **`CONVENTION_STAFF_NOTIFY_EMAILS`** (comma/newline-separated). Omitting these causes confirmation sends to fail fast. Vercel Preview may still rely on legacy defaults when unset.
+- Set **`CONVENTION_CONFIRM_SECRET`** if you still use **`POST /api/confirm`** from tooling; send `Authorization: Bearer <secret>`. Without the secret, the route returns 503.
+- Smoke-test: free registration, paid registration with **$0** pay-today intent, paid with partial intent; confirm Mailpit or inbox receives **CRM 2026 Registration Confirmed** and staff **NEW REGISTRATION** (register path only; **`POST /api/resend-confirmation`** is registrant-only).
+- Logs: watch for `register.email_failed_after_persist`, `confirm.registration_email_failed`, `confirm.staff_notification_failed`, `resend_confirmation.email_failed`.
 
 **Integration tests** (`RUN_INTEGRATION=1`): `test/load-env.mjs` sets `EMAIL_TRANSPORT=resend` by default so Resend is still mocked via `fetch`; override `EMAIL_TRANSPORT=smtp` if you run Mailpit for integration.
 
@@ -124,7 +139,7 @@ Create **`.env.local`** for Vercel CLI / local experiments, and set the same key
 
 ### Rate limiting (Phase 3, optional)
 
-If unset, register / lookup-request still work; limits are only enforced when Upstash is configured.
+If unset, register / lookup-request / resend-confirmation still work; limits are only enforced when Upstash is configured.
 
 | Variable                   | Required | Used by                  |
 | -------------------------- | -------- | ------------------------ |
@@ -151,7 +166,7 @@ If unset, register / lookup-request still work; limits are only enforced when Up
 
 **Reminder cron:** Vercel Cron invokes `GET /api/remind` per `vercel.json`. Set `CRON_SECRET` in Vercel and configure the cron job to send `Authorization: Bearer <CRON_SECRET>` (the handler also accepts `?secret=` for manual curls).
 
-**Rate limiting:** Configure Upstash Redis (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`) to enforce limits on `POST /api/register` and `POST /api/lookup-request`. If these variables are omitted, both routes still function without Redis-backed limits.
+**Rate limiting:** Configure Upstash Redis (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`) to enforce limits on `POST /api/register`, `POST /api/lookup-request`, and `POST /api/resend-confirmation`. If these variables are omitted, those routes still function without Redis-backed limits.
 
 **Transactional email:** See **### Email** (Vercel `production` / `preview` → Resend; otherwise SMTP and Mailpit ports documented there). Staff magic links use **Supabase Auth**, not `email-send.js`.
 
@@ -200,7 +215,9 @@ UPSTASH_REDIS_REST_TOKEN=...
 
 - `POST /api/register` — create registration
 - `GET /api/lookup?token=...` — tokenized summary
-- `POST /api/lookup-request` — email + pledge → generic response + optional transactional email (Resend or SMTP per `EMAIL_TRANSPORT`)
+- `POST /api/lookup-request` — email + pledge → **identical generic JSON on every HTTP 200** (anti-enumeration); optional transactional email (Resend or SMTP per `EMAIL_TRANSPORT`)
+- `POST /api/resend-confirmation` — same **200 / anti-enumeration** contract as lookup-request; resends **registrant** confirmation only (no staff blast)
+- `POST /api/confirm` — manual tooling only; requires `Authorization: Bearer <CONVENTION_CONFIRM_SECRET>`; returns **503** if secret unset
 
 ### Staff (Bearer = Supabase session JWT, email on allowlist)
 

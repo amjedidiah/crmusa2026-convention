@@ -8,6 +8,7 @@ function redisConfigured() {
 
 let registerLimiter;
 let lookupRequestLimiter;
+let resendConfirmationLimiter;
 
 function getRedis() {
   return Redis.fromEnv();
@@ -37,6 +38,19 @@ export function getLookupRequestRateLimiter() {
     });
   }
   return lookupRequestLimiter;
+}
+
+export function getResendConfirmationRateLimiter() {
+  if (!redisConfigured()) return null;
+  if (!resendConfirmationLimiter) {
+    resendConfirmationLimiter = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(20, '1 m'),
+      analytics: false,
+      prefix: 'ratelimit:resend-confirmation',
+    });
+  }
+  return resendConfirmationLimiter;
 }
 
 export function getClientIp(req) {

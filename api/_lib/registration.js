@@ -21,6 +21,24 @@ export function normalizeEmail(email) {
     .toLowerCase();
 }
 
+/**
+ * Digits-only key for duplicate registration checks. Returns null when the
+ * value is blank or too short to treat as a reliable unique contact (so shared
+ * extensions / partial numbers do not block everyone).
+ */
+export function normalizePhoneForDedup(phone) {
+  const raw = String(phone ?? "").trim();
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return digits.slice(1);
+  }
+  if (digits.length === 10) return digits;
+  if (digits.length > 10) return digits;
+  return null;
+}
+
 export function activeTierForDate(input = new Date()) {
   // If a plain date string like "2026-07-01" is passed, parse it as wall-clock
   // components directly to avoid UTC-midnight → previous-day drift in Chicago.
@@ -104,4 +122,19 @@ export function formatUsdFromCents(cents) {
     style: "currency",
     currency: "USD",
   }).format(amount);
+}
+
+/** Normalize Supabase `attendees_json` (object or JSON string) to attendee array. */
+export function parseAttendeesFromColumn(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }

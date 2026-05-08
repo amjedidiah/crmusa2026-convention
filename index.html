@@ -2545,8 +2545,10 @@
                       id="ph"
                       type="tel"
                       placeholder="+1 (555) 000-0000"
+                      aria-describedby="ph-err s1-err"
                       autocomplete="tel"
                     />
+                    <p class="field-error" id="ph-err" aria-live="polite"></p>
                   </div>
                   <div class="field">
                     <label for="ch">Church / Ministry</label
@@ -2655,14 +2657,17 @@
                     onclick="go4()"
                     disabled
                   >
-                    Proceed to Payment →
+                    Next: review &amp; submit →
                   </button>
                 </div>
               </div>
 
               <!-- Step 4 -->
               <div class="step" id="s4">
-                <h3 class="step-title">Complete Payment</h3>
+                <h3 class="step-title">Review &amp; submit</h3>
+                <p class="reg-muted" style="margin: -0.35rem 0 0.85rem; font-size: 0.78rem; line-height: 1.55">
+                  Submitting saves your registration. You will receive payment instructions and your pledge code by email.
+                </p>
                 <div id="pay-summary"></div>
                 <div
                   class="error-msg"
@@ -2962,7 +2967,7 @@
           "Contact information",
           "Who is attending",
           "Review your order",
-          "Complete payment",
+          "Review and submit registration",
         ];
         announceReg("Step " + n + " of 4: " + labels[n - 1] + ".");
         var _r = document.getElementById("register");
@@ -3432,6 +3437,7 @@
           first_name: { input: "fn", msg: "fn-err" },
           last_name: { input: "ln", msg: "ln-err" },
           email: { input: "em", msg: "em-err" },
+          phone: { input: "ph", msg: "ph-err" },
         };
         Object.keys(fieldMap).forEach(function (key) {
           if (!fieldErrors[key]) return;
@@ -3466,6 +3472,26 @@
           } else {
             var e1 = document.getElementById("s1-err");
             if (e1) e1.focus();
+          }
+        } else if (res.step === "payment") {
+          showErrEl(document.getElementById("s4-err"), res.message);
+          setStep(4);
+          renderStep4();
+          var payInp = document.getElementById("reg-pay-amt");
+          if (payInp) {
+            setTimeout(function () {
+              payInp.focus();
+            }, 0);
+          } else {
+            var freeBtn = document.getElementById("complete-free-btn");
+            if (freeBtn) {
+              setTimeout(function () {
+                freeBtn.focus();
+              }, 0);
+            } else {
+              var s4e = document.getElementById("s4-err");
+              if (s4e) s4e.focus();
+            }
           }
         } else {
           setAttendeeFieldErrors(res.attendeeErrors);
@@ -3924,7 +3950,17 @@
           ? '<p class="reg-email-warn" style="margin-top:0.6rem;">A confirmation email is on its way to <strong>' +
             esc(contact.em) +
             "</strong></p>"
-          : '<p class="reg-email-warn" style="margin-top:0.6rem;"><strong>Registration saved.</strong> Confirmation email retry is pending. Save your pledge code below and contact <a href="mailto:convention@crmusanational.org">convention@crmusanational.org</a> if you need a copy.</p>';
+          : '<div class="reg-email-warn" style="margin-top:0.6rem;padding:0.75rem;border:1px solid rgba(200,90,90,0.35);background:rgba(200,90,90,0.08);border-radius:4px;">' +
+            '<p style="margin:0 0 0.5rem;"><strong>Registration saved.</strong> We could not send your confirmation email automatically.</p>' +
+            '<p style="margin:0 0 0.65rem;font-size:0.85rem;line-height:1.5;">Save your pledge code below. You can resend the confirmation email, or contact <a href="mailto:convention@crmusanational.org">convention@crmusanational.org</a>.</p>' +
+            '<button type="button" class="quick" id="resend-confirm-btn" onclick="resendRegistrationConfirmation()">Resend confirmation email</button>' +
+            '<p id="resend-confirm-status" class="reg-muted" style="margin:0.5rem 0 0;font-size:0.75rem;line-height:1.45;" role="status" aria-live="polite"></p>' +
+            "</div>";
+
+        var staffNotifyNote =
+          emailOk && saved && saved.emailNotifyOk === false
+            ? '<p class="reg-muted" style="margin-top:0.45rem;font-size:0.72rem;line-height:1.45;">Your confirmation email was sent. A separate staff notification may not have delivered—registrations are still saved in our system.</p>'
+            : "";
 
         var summaryHtml =
           '<div class="confirm-summary" aria-label="Saved registration summary">' +
@@ -3965,6 +4001,7 @@
           "</p>" +
           summaryHtml +
           emailNote +
+          staffNotifyNote +
           "</div>" +
           '<div class="code-box" style="display:block;margin-bottom:1.5rem;">' +
           '<p class="code-lbl">Your Pledge Code \u2014 Save This</p>' +
@@ -4003,31 +4040,80 @@
         }
       }
 
+      async function resendRegistrationConfirmation() {
+        var btn = document.getElementById("resend-confirm-btn");
+        var statusEl = document.getElementById("resend-confirm-status");
+        if (!btn || !registrationSaved) return;
+        btn.disabled = true;
+        if (statusEl) statusEl.textContent = "Sending…";
+        try {
+          var r = await fetch("/api/resend-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: contact.em,
+              pledge_code: currentPledgeCode,
+            }),
+          });
+          var data = null;
+          try {
+            data = await r.json();
+          } catch (e) {
+            data = null;
+          }
+          if (statusEl) {
+            statusEl.textContent =
+              data && data.message
+                ? data.message
+                : "If your registration matches, a confirmation email will arrive shortly. Check spam.";
+          }
+        } catch (e) {
+          if (statusEl) {
+            statusEl.textContent =
+              "Could not reach the server. Try again in a moment or email convention@crmusanational.org.";
+          }
+        }
+        btn.disabled = false;
+      }
+
       /* ── SAVE VIA SERVER API ── */
       async function saveRegistrationNow() {
         var gate = assertRegistrationReady("full");
         if (!gate.ok) {
           throw new Error(gate.message);
         }
+        var payload = {
+          contact: {
+            first_name: contact.fn,
+            last_name: contact.ln,
+            email: contact.em,
+            phone: contact.ph,
+            church: contact.ch,
+            city: contact.ci,
+          },
+          attendees: atts.map(function (att) {
+            return {
+              name: att.name,
+              age: att.age,
+            };
+          }),
+        };
+        grandTotal = calcTotal();
+        if (grandTotal > 0) {
+          var amtEl = document.getElementById("reg-pay-amt");
+          var rawAmt = amtEl ? String(amtEl.value).trim() : "0";
+          var dollars = parseFloat(rawAmt);
+          if (isNaN(dollars)) dollars = 0;
+          dollars = Math.max(0, Math.min(dollars, grandTotal));
+          payload.payment_intent_cents = Math.round(dollars * 100);
+        } else {
+          payload.payment_intent_cents = 0;
+        }
+
         var response = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contact: {
-              first_name: contact.fn,
-              last_name: contact.ln,
-              email: contact.em,
-              phone: contact.ph,
-              church: contact.ch,
-              city: contact.ci,
-            },
-            attendees: atts.map(function (att) {
-              return {
-                name: att.name,
-                age: att.age,
-              };
-            }),
-          }),
+          body: JSON.stringify(payload),
         });
         var data = null;
         try {
@@ -4066,6 +4152,7 @@
         return {
           registration: data.registration,
           emailOk: !!(data.email && data.email.confirm_sent),
+          emailNotifyOk: !!(data.email && data.email.notification_sent),
         };
       }
 
@@ -4262,10 +4349,11 @@
           }
           var msg =
             (data && data.message) ||
-            "If the email and pledge code you entered match a registration on file, we emailed a secure link to that address. " +
-            "Most messages arrive within a few minutes. Check inbox, spam, and promotions. " +
-            'Look for the subject line: "Your CRM 2026 registration link." ' +
-            "If nothing arrives after about 15 minutes, try again or contact convention@crmusanational.org.";
+            "If your email and pledge code match a registration on file, we sent a secure link to that address. " +
+            "You will always see this same message—for privacy we never confirm whether there was a match. " +
+            "Delivery is usually within a few minutes; check inbox, spam, and Promotions. " +
+            'Subject line: "Your CRM 2026 registration link." ' +
+            "If nothing arrives after about 15 minutes, try again or email convention@crmusanational.org.";
           if (fbEl) {
             fbEl.textContent = msg;
             fbEl.style.display = "block";

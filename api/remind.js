@@ -9,9 +9,12 @@ import {
   assertTransactionalEmailReady,
   sendTransactionalEmail,
 } from './_lib/email-send.js';
+import {
+  assertConventionOutboundIdentity,
+  resolveConventionMailFrom,
+  resolveConventionMailReplyTo,
+} from './_lib/convention-mail.js';
 
-const FROM_ADDRESS = 'pastor@gracelifecenter.com';
-const REPLY_TO = 'mok2003@gmail.com';
 const BREEZE_URL = 'https://gracelifecenter.breezechms.com/give/online';
 
 const TIER_LABELS = {
@@ -64,8 +67,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase env vars not set' });
   }
 
+  let fromAddr;
+  let replyTo;
   try {
     assertTransactionalEmailReady();
+    assertConventionOutboundIdentity();
+    fromAddr = resolveConventionMailFrom();
+    replyTo = resolveConventionMailReplyTo();
   } catch (e) {
     serverLog('error', 'remind.email_not_configured', {
       route: '/api/remind',
@@ -133,13 +141,13 @@ export default async function handler(req, res) {
     const paidUsd = paidCents / 100;
     const remUsd = remCents / 100;
 
-    const html = buildReminderEmail(reg, remUsd, totalUsd, paidUsd);
+    const html = buildReminderEmail(reg, remUsd, totalUsd, paidUsd, replyTo);
 
     try {
       await sendTransactionalEmail({
-        from: `CRM 2026 Convention <${FROM_ADDRESS}>`,
+        from: fromAddr,
         to: [reg.email],
-        replyTo: REPLY_TO,
+        replyTo,
         subject: `CRM 2026 — Balance Reminder: $${remUsd.toFixed(2)} remaining`,
         html,
       });
@@ -194,7 +202,7 @@ export default async function handler(req, res) {
   return res.status(200).json({ sent, skipped, failed, errors });
 }
 
-function buildReminderEmail(reg, remaining, total, paid) {
+function buildReminderEmail(reg, remaining, total, paid, replyTo) {
   const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
   const tierLabel = TIER_LABELS[reg.tier] || reg.tier || '';
   const firstName = reg.first_name || 'Friend';
@@ -335,8 +343,8 @@ function buildReminderEmail(reg, remaining, total, paid) {
       <p style="margin:16px 0 0;font-size:11px;color:rgba(245,239,224,0.25);
           line-height:1.8;text-align:center;">
         To unsubscribe from these reminders, reply with "unsubscribe".<br/>
-        Questions? <a href="mailto:${REPLY_TO}"
-        style="color:#C8A85A;">${REPLY_TO}</a>
+        Questions? <a href="mailto:${esc(replyTo)}"
+        style="color:#C8A85A;">${esc(replyTo)}</a>
       </p>
     </td>
   </tr>

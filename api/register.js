@@ -26,12 +26,35 @@ function firstContactFocusId(fieldErrors) {
   if (fieldErrors.first_name) return 'fn';
   if (fieldErrors.last_name) return 'ln';
   if (fieldErrors.email) return 'em';
+  if (fieldErrors.phone) return 'ph';
   return 'fn';
 }
 
+const DUPLICATE_EMAIL_MESSAGE =
+  'This email already has a registration. If you need your pledge code, use Find registration from the site. If you are registering someone else separately, use a different email or contact convention@crmusanational.org.';
+
+const DUPLICATE_PHONE_MESSAGE =
+  'This phone number is already tied to a registration. If several households share one line, use a different number on this form or contact convention@crmusanational.org.';
+
+function duplicateRegistrationError(field) {
+  const err = new Error('duplicate_registration');
+  err.duplicateField = field;
+  return err;
+}
+
 function isPledgeCodeConflict(response) {
+  if (response?.status !== 409) return false;
   const message = JSON.stringify(response?.data || '');
-  return response?.status === 409 || /pledge_code|23505/i.test(message);
+  return /pledge_code|registrations_pledge_code/i.test(message);
+}
+
+/** PostgREST 409 body mentions the violated unique index / column. */
+function duplicateRegistrationFieldFromResponse(response) {
+  if (response?.status !== 409) return null;
+  const message = JSON.stringify(response?.data || '');
+  if (/email_normalized/i.test(message)) return 'email';
+  if (/phone_normalized/i.test(message)) return 'phone';
+  return null;
 }
 
 async function insertRegistration(registration) {
@@ -48,6 +71,11 @@ async function insertRegistration(registration) {
 
     if (response.ok && Array.isArray(response.data) && response.data[0]) {
       return response.data[0];
+    }
+
+    const dupField = duplicateRegistrationFieldFromResponse(response);
+    if (dupField) {
+      throw duplicateRegistrationError(dupField);
     }
 
     if (isPledgeCodeConflict(response)) {
@@ -74,7 +102,7 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests. Please try again later.' });
   }
 
-  const { contact, attendees } = req.body || {};
+  const { contact, attendees, payment_intent_cents: rawPaymentIntent } = req.body || {};
   const validatedContact = validateContact(contact);
   if (!validatedContact.valid) {
     return res.status(400).json(
@@ -100,6 +128,36 @@ export default async function handler(req, res) {
 
   const tier = activeTierForDate();
   const totalCents = calculateRegistrationTotalCents(validatedAttendees.normalized, tier);
+
+  let paymentIntentCents = 0;
+  if (rawPaymentIntent !== undefined && rawPaymentIntent !== null && rawPaymentIntent !== '') {
+    const n = Number(rawPaymentIntent);
+    if (!Number.isInteger(n) || n < 0) {
+      return res.status(400).json(
+        createRegistrationGate(
+          'payment',
+          'Enter a valid payment amount on the submit step, or contact convention@crmusanational.org.',
+        )
+      );
+    }
+    paymentIntentCents = n;
+  }
+
+  if (totalCents === 0) {
+    if (paymentIntentCents !== 0) {
+      return res.status(400).json(
+        createRegistrationGate('payment', 'This registration is free; remove any payment amount and try again.')
+      );
+    }
+  } else if (paymentIntentCents > totalCents) {
+    return res.status(400).json(
+      createRegistrationGate(
+        'payment',
+        'The amount you plan to pay today cannot exceed your registration total. Adjust the amount and try again.'
+      )
+    );
+  }
+
   const amountPaidCents = 0;
   const status = deriveRegistrationStatus(totalCents, amountPaidCents);
 
@@ -111,6 +169,7 @@ export default async function handler(req, res) {
       email: validatedContact.normalized.email,
       email_normalized: validatedContact.normalized.email_normalized,
       phone: validatedContact.normalized.phone,
+      phone_normalized: validatedContact.normalized.phone_normalized,
       church: validatedContact.normalized.church,
       city: validatedContact.normalized.city,
       tier,
@@ -120,9 +179,25 @@ export default async function handler(req, res) {
       attendees_json: validatedAttendees.normalized,
       metadata: {
         source: 'public-site',
+        ...(totalCents > 0
+          ? {
+              payment_intent_cents: paymentIntentCents,
+              payment_intent_submitted_at: new Date().toISOString(),
+            }
+          : {}),
       },
     });
   } catch (error) {
+    const dupField = error && typeof error.duplicateField === 'string' ? error.duplicateField : null;
+    if (dupField === 'email' || dupField === 'phone') {
+      const message = dupField === 'email' ? DUPLICATE_EMAIL_MESSAGE : DUPLICATE_PHONE_MESSAGE;
+      return res.status(400).json(
+        createRegistrationGate('contact', message, {
+          focusId: dupField === 'email' ? 'em' : 'ph',
+          fieldErrors: { [dupField]: message },
+        }),
+      );
+    }
     serverLog('error', 'register.save_failed', {
       route: '/api/register',
       detail: error instanceof Error ? error.message : 'unknown_error',
@@ -153,6 +228,7 @@ export default async function handler(req, res) {
       tier,
       total_pledged: totalCents / 100,
       amount_paid: 0,
+      payment_intent_cents: totalCents > 0 ? paymentIntentCents : 0,
       attendees: validatedAttendees.normalized,
       lookup_url: lookupUrl,
     });

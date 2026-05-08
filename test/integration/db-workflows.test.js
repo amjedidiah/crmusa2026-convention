@@ -4,7 +4,10 @@
  * against the same local Supabase instance with Resend mocked.
  *
  * Run: RUN_INTEGRATION=1 bun run test:integration
- * Requires: migrations + seed, `.env.local` with SUPABASE_URL, SUPABASE_SERVICE_KEY, LOOKUP_TOKEN_SECRET.
+ * Requires: migrations + seed, `.env.local` with SUPABASE_URL, SUPABASE_SERVICE_KEY, LOOKUP_TOKEN_SECRET,
+ * and a **reachable** Supabase API (e.g. `supabase start` for local :54321).
+ *
+ * If every test is skipped with "cannot reach Supabase", start Docker + run `supabase start`.
  *
  * For HTTP-level checks against a running app, use: SMOKE_BASE_URL=… bun run test:smoke-http
  */
@@ -16,6 +19,7 @@ import { consola } from "consola";
 import "../load-env.mjs";
 
 import registerHandler from "../../api/register.js";
+import resendConfirmationHandler from "../../api/resend-confirmation.js";
 import { staffApplyRegistrationPayment } from "../../api/_lib/apply-payment.js";
 import {
   activeTierForDate,
@@ -25,6 +29,52 @@ import { createLookupToken, verifyLookupToken } from "../../api/_lib/tokens.js";
 import { supabaseRestRequest } from "../../api/_lib/supabase.js";
 
 const RUN = process.env.RUN_INTEGRATION === "1";
+
+/** Set true only after a successful lightweight REST probe (see preflight below). */
+let integrationSupabaseReachable = false;
+
+async function runIntegrationPreflight() {
+  if (!RUN) return;
+  if (
+    !process.env.SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_KEY ||
+    !process.env.LOOKUP_TOKEN_SECRET
+  ) {
+    return;
+  }
+  try {
+    const r = await supabaseRestRequest("GET", "registrations?select=id&limit=1", {
+      timeoutMs: 4000,
+    });
+    if (r.ok) {
+      integrationSupabaseReachable = true;
+      return;
+    }
+    consola.warn(
+      `SKIP integration: Supabase HTTP ${r.status} — check SUPABASE_URL and SUPABASE_SERVICE_KEY`,
+    );
+  } catch (e) {
+    const code = e?.cause?.code ?? e?.code;
+    const name = e?.name;
+    if (name === "AbortError") {
+      consola.warn(
+        "SKIP integration: Supabase request timed out — is the API up?",
+      );
+      return;
+    }
+    if (code === "ECONNREFUSED" || code === "ENOTFOUND") {
+      consola.warn(
+        `SKIP integration: cannot reach Supabase (${code} at ${process.env.SUPABASE_URL}). Run \`supabase start\` or fix SUPABASE_URL.`,
+      );
+      return;
+    }
+    consola.warn(
+      `SKIP integration: Supabase probe error: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
+}
+
+await runIntegrationPreflight();
 const SEED_PENDING_ID = "11111111-1111-1111-1111-111111111111";
 const SEED_PARTIAL_ID = "33333333-3333-3333-3333-333333333333";
 const INTEGRATION_MANUAL_REF = "integration-static-test-ref";
@@ -44,6 +94,9 @@ function requireEnvOrSkip() {
   }
   if (!process.env.LOOKUP_TOKEN_SECRET) {
     consola.warn("SKIP integration: LOOKUP_TOKEN_SECRET not set");
+    return false;
+  }
+  if (!integrationSupabaseReachable) {
     return false;
   }
   return true;
@@ -238,6 +291,7 @@ test(
               city: "Houston",
             },
             attendees,
+            payment_intent_cents: 0,
           },
         };
         const res = createMockRes();
@@ -287,6 +341,8 @@ test(
       assert.equal(row.status, "pending");
       assert.equal(row.lookup_token_version, 1);
       assert.equal(row.metadata?.source, "public-site");
+      assert.equal(row.metadata?.payment_intent_cents, 0);
+      assert.ok(typeof row.metadata?.payment_intent_submitted_at === "string");
       assert.deepEqual(row.attendees_json, attendees);
 
       const tokenRaw = String(
@@ -302,6 +358,304 @@ test(
         verified.payload.lookup_token_version,
         row.lookup_token_version,
       );
+    } finally {
+      if (prevSiteUrl === undefined) delete process.env.SITE_URL;
+      else process.env.SITE_URL = prevSiteUrl;
+      if (prevResendKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = prevResendKey;
+      await deleteRegistrationIfPresent(insertedId);
+    }
+  },
+);
+
+test(
+  "integration: POST /api/register rejects duplicate email with contact gate",
+  { skip: !requireEnvOrSkip() },
+  async () => {
+    const attendees = [{ name: "Dup Email Person", age: 40 }];
+    const uniqueEmail = `integration.dupemail.${Date.now()}@example.com`;
+    const sharedPhone = "555-200-0001";
+    const prevSiteUrl = process.env.SITE_URL;
+    const prevResendKey = process.env.RESEND_API_KEY;
+    let firstId = null;
+
+    process.env.SITE_URL = "https://integration.example.test";
+    process.env.RESEND_API_KEY = "integration-resend-key";
+
+    try {
+      await withMockedResend(async () => {
+        const req1 = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "First",
+              last_name: "Submit",
+              email: uniqueEmail,
+              phone: sharedPhone,
+              church: "Chapel",
+              city: "Houston",
+            },
+            attendees,
+            payment_intent_cents: 0,
+          },
+        };
+        const res1 = createMockRes();
+        await registerHandler(req1, res1);
+        assert.equal(res1.statusCode, 201);
+        firstId = res1.body?.registration?.id;
+
+        const req2 = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "Second",
+              last_name: "Submit",
+              email: uniqueEmail,
+              phone: "555-200-0002",
+              church: "Chapel",
+              city: "Dallas",
+            },
+            attendees,
+            payment_intent_cents: 0,
+          },
+        };
+        const res2 = createMockRes();
+        await registerHandler(req2, res2);
+        assert.equal(res2.statusCode, 400);
+        assert.equal(res2.body?.ok, false);
+        assert.equal(res2.body?.step, "contact");
+        assert.ok(res2.body?.fieldErrors?.email);
+      });
+    } finally {
+      if (prevSiteUrl === undefined) delete process.env.SITE_URL;
+      else process.env.SITE_URL = prevSiteUrl;
+      if (prevResendKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = prevResendKey;
+      await deleteRegistrationIfPresent(firstId);
+    }
+  },
+);
+
+test(
+  "integration: POST /api/register rejects duplicate normalized phone",
+  { skip: !requireEnvOrSkip() },
+  async () => {
+    const attendees = [{ name: "Dup Phone Person", age: 40 }];
+    const email1 = `integration.dupphone.a.${Date.now()}@example.com`;
+    const email2 = `integration.dupphone.b.${Date.now()}@example.com`;
+    const prevSiteUrl = process.env.SITE_URL;
+    const prevResendKey = process.env.RESEND_API_KEY;
+    let firstId = null;
+
+    process.env.SITE_URL = "https://integration.example.test";
+    process.env.RESEND_API_KEY = "integration-resend-key";
+
+    try {
+      await withMockedResend(async () => {
+        const req1 = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "A",
+              last_name: "Phone",
+              email: email1,
+              phone: "+1 (555) 201-3344",
+              church: "Chapel",
+              city: "Houston",
+            },
+            attendees,
+            payment_intent_cents: 0,
+          },
+        };
+        const res1 = createMockRes();
+        await registerHandler(req1, res1);
+        assert.equal(res1.statusCode, 201);
+        firstId = res1.body?.registration?.id;
+
+        const req2 = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "B",
+              last_name: "Phone",
+              email: email2,
+              phone: "5552013344",
+              church: "Chapel",
+              city: "Dallas",
+            },
+            attendees,
+            payment_intent_cents: 0,
+          },
+        };
+        const res2 = createMockRes();
+        await registerHandler(req2, res2);
+        assert.equal(res2.statusCode, 400);
+        assert.equal(res2.body?.ok, false);
+        assert.equal(res2.body?.step, "contact");
+        assert.ok(res2.body?.fieldErrors?.phone);
+      });
+    } finally {
+      if (prevSiteUrl === undefined) delete process.env.SITE_URL;
+      else process.env.SITE_URL = prevSiteUrl;
+      if (prevResendKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = prevResendKey;
+      await deleteRegistrationIfPresent(firstId);
+    }
+  },
+);
+
+test(
+  "integration: POST /api/register stores payment_intent_cents and references it in confirmation email",
+  { skip: !requireEnvOrSkip() },
+  async () => {
+    const attendees = [
+      { name: "Intent Adult", age: 40 },
+      { name: "Intent Child", age: 9 },
+    ];
+    const expectedTier = activeTierForDate();
+    const expectedTotal = calculateRegistrationTotalCents(
+      attendees,
+      expectedTier,
+    );
+    const paymentIntentCents = Math.min(15_000, expectedTotal);
+    const intentUsd = (paymentIntentCents / 100).toFixed(2);
+    const uniqueEmail = `integration.intent.${Date.now()}@example.com`;
+    const prevSiteUrl = process.env.SITE_URL;
+    const prevResendKey = process.env.RESEND_API_KEY;
+    let insertedId = null;
+
+    process.env.SITE_URL = "https://integration.example.test";
+    process.env.RESEND_API_KEY = "integration-resend-key";
+
+    try {
+      await withMockedResend(async (resendCalls) => {
+        const req = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "Intent",
+              last_name: "Pay",
+              email: uniqueEmail,
+              phone: "555-0100",
+              church: "Integration Chapel",
+              city: "Houston",
+            },
+            attendees,
+            payment_intent_cents: paymentIntentCents,
+          },
+        };
+        const res = createMockRes();
+        await registerHandler(req, res);
+        assert.equal(res.statusCode, 201);
+        assert.equal(res.body?.email?.confirm_sent, true);
+        insertedId = res.body.registration.id;
+
+        const registrantCall = resendCalls.find(
+          (c) => Array.isArray(c.to) && c.to.includes(uniqueEmail),
+        );
+        assert.ok(registrantCall?.html);
+        assert.ok(
+          registrantCall.html.includes(`$${intentUsd}`),
+          "confirmation HTML should mention stated pay-today amount",
+        );
+        assert.ok(
+          /not[\s\S]*recorded until staff reconcile Zelle or Zeffy/i.test(
+            registrantCall.html,
+          ),
+          "confirmation HTML should clarify intent is not yet posted",
+        );
+      });
+
+      const persisted = await supabaseRestRequest(
+        "GET",
+        `registrations?id=eq.${encodeURIComponent(insertedId)}&select=metadata&limit=1`,
+      );
+      assert.equal(persisted.ok, true);
+      assert.equal(
+        persisted.data?.[0]?.metadata?.payment_intent_cents,
+        paymentIntentCents,
+      );
+    } finally {
+      if (prevSiteUrl === undefined) delete process.env.SITE_URL;
+      else process.env.SITE_URL = prevSiteUrl;
+      if (prevResendKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = prevResendKey;
+      await deleteRegistrationIfPresent(insertedId);
+    }
+  },
+);
+
+test(
+  "integration: POST /api/resend-confirmation sends one registrant email (no staff notification)",
+  { skip: !requireEnvOrSkip() },
+  async () => {
+    const attendees = [{ name: "Resend Solo", age: 40 }];
+    const uniqueEmail = `integration.resend.${Date.now()}@example.com`;
+    const prevSiteUrl = process.env.SITE_URL;
+    const prevResendKey = process.env.RESEND_API_KEY;
+    let insertedId = null;
+    let pledgeCode = null;
+
+    process.env.SITE_URL = "https://integration.example.test";
+    process.env.RESEND_API_KEY = "integration-resend-key";
+
+    try {
+      await withMockedResend(async () => {
+        const req = {
+          method: "POST",
+          headers: {},
+          body: {
+            contact: {
+              first_name: "Resend",
+              last_name: "Test",
+              email: uniqueEmail,
+              phone: "555-0101",
+              church: "Integration Chapel",
+              city: "Houston",
+            },
+            attendees,
+            payment_intent_cents: 0,
+          },
+        };
+        const res = createMockRes();
+        await registerHandler(req, res);
+        assert.equal(res.statusCode, 201);
+        insertedId = res.body.registration.id;
+        pledgeCode = res.body.registration.pledge_code;
+      });
+
+      await withMockedResend(async (calls) => {
+        const res = createMockRes();
+        await resendConfirmationHandler(
+          {
+            method: "POST",
+            headers: {},
+            body: {
+              email: uniqueEmail,
+              pledge_code: pledgeCode,
+            },
+          },
+          res,
+        );
+        assert.equal(res.statusCode, 200);
+        assert.equal(res.body?.ok, true);
+        assert.ok(String(res.body?.message).length > 20);
+        assert.equal(calls.length, 1);
+        const to = calls[0].to;
+        const toList = Array.isArray(to) ? to : [to];
+        assert.ok(toList.includes(uniqueEmail));
+        assert.match(
+          calls[0].subject || "",
+          /Registration Confirmed/i,
+          "expected registrant subject, not staff NEW REGISTRATION",
+        );
+        assert.doesNotMatch(calls[0].subject || "", /^NEW REGISTRATION:/);
+      });
     } finally {
       if (prevSiteUrl === undefined) delete process.env.SITE_URL;
       else process.env.SITE_URL = prevSiteUrl;

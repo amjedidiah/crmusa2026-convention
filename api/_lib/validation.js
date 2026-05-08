@@ -1,4 +1,4 @@
-import { normalizeEmail } from './registration.js';
+import { normalizeEmail, normalizePhoneForDedup } from './registration.js';
 
 export function isBlank(value) {
   return String(value || '').trim() === '';
@@ -18,6 +18,8 @@ export function validateContact(contact) {
     errors.email = 'Email must be valid.';
   }
 
+  const phone = String(candidate.phone || '').trim();
+
   return {
     valid: Object.keys(errors).length === 0,
     errors,
@@ -27,7 +29,8 @@ export function validateContact(contact) {
       email_raw: String(candidate.email || '').trim(),
       email,
       email_normalized: email,
-      phone: String(candidate.phone || '').trim(),
+      phone,
+      phone_normalized: normalizePhoneForDedup(phone),
       church: String(candidate.church || '').trim(),
       city: String(candidate.city || '').trim(),
     },

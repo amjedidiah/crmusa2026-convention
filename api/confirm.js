@@ -1,40 +1,28 @@
 /* ─────────────────────────────────────────────────────────────────────
    /api/confirm  —  Registration confirmation + staff notification
-   Reused by /api/register after persistence succeeds and available as a
-   standalone compatibility endpoint for manual confirmation sends.
-   POST body may include total_pledged and/or total_amount (legacy column).
+   Reused by /api/register after persistence succeeds. POST requires
+   Authorization: Bearer <CONVENTION_CONFIRM_SECRET> (manual / tooling only).
 ───────────────────────────────────────────────────────────────────── */
 
 import { serverLog } from './_lib/server-log.js';
+import {
+  assertConventionConfirmationRouting,
+  assertConventionOutboundIdentity,
+  parseStaffNotifyEmails,
+  resolveConventionMailFrom,
+  resolveConventionMailReplyTo,
+  resolveZelleRecipientEmail,
+} from './_lib/convention-mail.js';
 import {
   assertTransactionalEmailReady,
   sendTransactionalEmail,
 } from './_lib/email-send.js';
 
-const FROM_ADDRESS = 'pastor@gracelifecenter.com';
-const REPLY_TO = 'mok2003@gmail.com';
 const DEFAULT_SITE_URL = 'https://crmusa2026-convention.vercel.app';
-const ZELLE_EMAIL = 'crmnaexec@gmail.com';
 
 function publicSiteUrl() {
   return (process.env.SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, '');
 }
-
-const NOTIFY_LIST = [
-  'Jessybenn@yahoo.com',
-  'modims2@yahoo.com',
-  'pastortonycbz@yahoo.com',
-  'soinikori@gmail.com',
-  'pastorpeter.crmnano@gmail.com',
-  'emekaok@hotmail.com',
-  'inyeredave@gmail.com',
-  'emekaok77@gmail.com',
-  'pastor@gracelifecenter.com',
-  'mike.u.ekwem@gmail.com',
-  'fellyokey@gmail.com',
-  'mok2003@gmail.com',
-  'ezekwennap@gmail.com',
-];
 
 const TIER_LABELS = {
   earlybird: 'Early Bird (Apr 1 - Jun 15)',
@@ -57,13 +45,40 @@ export async function sendConfirmationEmails(payload) {
     first_name, last_name, email, phone, church,
     pledge_code, tier, total_pledged, total_amount, amount_paid, attendees,
     lookup_url,
+    payment_intent_cents: rawIntentCents,
+    include_staff_notification: includeStaffRaw,
   } = payload || {};
+
+  const includeStaffNotification = includeStaffRaw !== false;
 
   if (!email || !pledge_code) {
     throw new Error('Missing email or pledge_code');
   }
 
   assertTransactionalEmailReady();
+  assertConventionConfirmationRouting({ includeStaffNotification });
+
+  const fromAddr = resolveConventionMailFrom();
+  const replyTo = resolveConventionMailReplyTo();
+  const zelleEmail = resolveZelleRecipientEmail();
+
+  let notifyList = [];
+  if (includeStaffNotification) {
+    notifyList = parseStaffNotifyEmails();
+    if (notifyList.length === 0) {
+      serverLog('error', 'confirm.staff_notify_empty', {
+        route: 'confirm.sendConfirmationEmails',
+        registration_id: registrationId || null,
+        pledge_code: pledge_code || null,
+      });
+    }
+  }
+
+  let intentCents = 0;
+  if (rawIntentCents !== undefined && rawIntentCents !== null && rawIntentCents !== '') {
+    const n = Number(rawIntentCents);
+    if (Number.isFinite(n)) intentCents = Math.max(0, Math.floor(n));
+  }
 
   const paidNum = Number(amount_paid);
   const paid = Number.isFinite(paidNum) ? paidNum : 0;
@@ -118,6 +133,13 @@ export async function sendConfirmationEmails(payload) {
       'Complete payment using the instructions below.';
   }
 
+  if (intentCents > 0 && total > 0 && !trulyFullyPaid) {
+    bodyPara +=
+      ' You indicated you plan to pay <strong style="color:#E8C87A;">$' +
+      fmtUsd(intentCents / 100) +
+      '</strong> today; that amount is <strong>not</strong> recorded until staff reconcile Zelle or Zeffy.';
+  }
+
   var remLabel =
     remaining > 0 ? '$' + fmtUsd(remaining) : trulyFullyPaid ? 'Fully Paid ✓' : '$' + fmtUsd(0);
   var remColor =
@@ -130,7 +152,7 @@ export async function sendConfirmationEmails(payload) {
             '<p style="margin:0 0 12px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(200,168,90,0.6);">How to Pay</p>' +
             '<p style="margin:0 0 6px;font-size:13px;color:rgba(245,239,224,0.8);"><strong style="color:#E8C87A;">Option 1 - Zelle (Free, instant):</strong></p>' +
             '<p style="margin:0 0 14px;font-size:13px;color:rgba(245,239,224,0.6);line-height:1.8;">' +
-              'Send to <strong style="color:#E8C87A;">' + ZELLE_EMAIL + '</strong>. ' +
+              'Send to <strong style="color:#E8C87A;">' + esc(zelleEmail) + '</strong>. ' +
               'Put your pledge code <strong style="color:#E8C87A;letter-spacing:3px;font-family:Courier New,monospace;">' +
               safePledge + '</strong> in the Memo/Note field.' +
             '</p>' +
@@ -158,6 +180,14 @@ export async function sendConfirmationEmails(payload) {
       : trulyFullyPaid
         ? 'Fully Paid'
         : '$' + fmtUsd(0) + ' — verify total in Supabase if fee expected';
+
+  var intentStaffRow =
+    intentCents > 0
+      ? notifyRow(
+          'Pay-today (intent, not posted)',
+          '<span style="color:#666;">$' + fmtUsd(intentCents / 100) + '</span>'
+        )
+      : '';
 
   var lookupLinkBlock = lookup_url
     ? '<table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(125,191,128,0.06);border:1px solid rgba(125,191,128,0.22);margin-bottom:26px;">' +
@@ -236,7 +266,7 @@ export async function sendConfirmationEmails(payload) {
         '</td></tr>' +
       '</table>' +
       '<p style="margin:0;font-size:12px;color:rgba(245,239,224,0.3);line-height:1.8;">' +
-        'Questions? Reply to this email or contact us at <a href="mailto:' + REPLY_TO + '" style="color:#C8A85A;">' + REPLY_TO + '</a>' +
+        'Questions? Reply to this email or contact us at <a href="mailto:' + esc(replyTo) + '" style="color:#C8A85A;">' + esc(replyTo) + '</a>' +
       '</p>' +
     '</td></tr>' +
     '<tr><td align="center" style="padding:18px 40px;border-top:1px solid rgba(200,168,90,0.1);">' +
@@ -259,6 +289,7 @@ export async function sendConfirmationEmails(payload) {
       notifyRow('Tier',          esc(tierLabel)) +
       notifyRow('Total Pledged', '$' + fmtUsd(total)) +
       notifyRow('Amount Paid',   '<span style="color:green;">$' + fmtUsd(paid) + '</span>') +
+      intentStaffRow +
       notifyRow('Balance Due',   '<span style="color:' + (remaining > 0 ? '#B8860B' : trulyFullyPaid ? 'green' : '#888') + ';font-weight:bold;">' +
                                  staffBalanceText + '</span>') +
       notifyRow('Attendees',     attList.length + ' person(s)') +
@@ -266,26 +297,32 @@ export async function sendConfirmationEmails(payload) {
     '<p style="margin:16px 0 0;font-size:12px;color:#999;">Automated notification from CRM 2026 convention registration system.</p>' +
     '</div>';
 
-  /* ── Send both emails in parallel — independent of each other ── */
-  const [confirmResult, notifyResult] = await Promise.allSettled([
+  /* ── Registrant email + optional staff notification ── */
+  const confirmTask = sendTransactionalEmail({
+    from: fromAddr,
+    to: [email],
+    replyTo,
+    subject: 'CRM 2026 Registration Confirmed - Code: ' + subjectPledge,
+    html: confirmHtml,
+  });
 
-    sendTransactionalEmail({
-      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
-      to: [email],
-      replyTo: REPLY_TO,
-      subject: 'CRM 2026 Registration Confirmed - Code: ' + subjectPledge,
-      html: confirmHtml,
-    }),
+  const tasks = [confirmTask];
+  if (includeStaffNotification && notifyList.length > 0) {
+    tasks.push(
+      sendTransactionalEmail({
+        from: fromAddr,
+        to: notifyList,
+        replyTo,
+        subject: 'NEW REGISTRATION: ' + fullName + ' - Code ' + subjectPledge,
+        html: notifyHtml,
+      })
+    );
+  }
 
-    sendTransactionalEmail({
-      from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
-      to: NOTIFY_LIST,
-      replyTo: REPLY_TO,
-      subject: 'NEW REGISTRATION: ' + fullName + ' - Code ' + subjectPledge,
-      html: notifyHtml,
-    }),
-
-  ]);
+  const settled = await Promise.allSettled(tasks);
+  const confirmResult = settled[0];
+  const notifyResult =
+    includeStaffNotification && notifyList.length > 0 ? settled[1] : { status: 'fulfilled', value: undefined };
 
   if (confirmResult.status === 'rejected') {
     serverLog('error', 'confirm.registration_email_failed', {
@@ -302,28 +339,37 @@ export async function sendConfirmationEmails(payload) {
     });
   }
 
-  if (notifyResult.status === 'rejected') {
-    serverLog('error', 'confirm.staff_notification_failed', {
-      route: 'confirm.sendConfirmationEmails',
-      registration_id: registrationId || null,
-      pledge_code: pledge_code || null,
-      detail: String(notifyResult.reason),
-    });
-  } else {
-    serverLog('info', 'confirm.staff_notification_sent', {
-      route: 'confirm.sendConfirmationEmails',
-      registration_id: registrationId || null,
-      recipient_count: NOTIFY_LIST.length,
-    });
+  if (includeStaffNotification && notifyList.length > 0) {
+    if (notifyResult.status === 'rejected') {
+      serverLog('error', 'confirm.staff_notification_failed', {
+        route: 'confirm.sendConfirmationEmails',
+        registration_id: registrationId || null,
+        pledge_code: pledge_code || null,
+        detail: String(notifyResult.reason),
+      });
+    } else {
+      serverLog('info', 'confirm.staff_notification_sent', {
+        route: 'confirm.sendConfirmationEmails',
+        registration_id: registrationId || null,
+        recipient_count: notifyList.length,
+      });
+    }
   }
+
+  const notificationSent =
+    includeStaffNotification && notifyList.length > 0
+      ? notifyResult.status === 'fulfilled'
+      : false;
 
   return {
     ok              : true,
     confirmSent     : confirmResult.status === 'fulfilled',
-    notificationSent: notifyResult.status === 'fulfilled',
+    notificationSent,
     errors          : [
       confirmResult.status === 'rejected' ? confirmResult.reason : null,
-      notifyResult.status  === 'rejected' ? notifyResult.reason  : null,
+      includeStaffNotification && notifyList.length > 0 && notifyResult.status === 'rejected'
+        ? notifyResult.reason
+        : null,
     ].filter(Boolean),
   };
 }
@@ -334,6 +380,10 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
   }
 
   assertTransactionalEmailReady();
+  assertConventionOutboundIdentity();
+
+  const fromAddr = resolveConventionMailFrom();
+  const replyTo = resolveConventionMailReplyTo();
 
   const greeting = esc(first_name || 'there');
   const plainName = String(first_name || 'there').replace(/[\r\n\u2028\u2029]/g, ' ').trim() || 'there';
@@ -352,7 +402,7 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
       '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:14px 32px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Open my registration</a>' +
       '<p style="margin:28px 0 0;font-size:12px;color:rgba(245,239,224,0.35);line-height:1.8;">' +
         'If you did not request this email, you can ignore it. Questions? ' +
-        '<a href="mailto:' + REPLY_TO + '" style="color:#C8A85A;">' + REPLY_TO + '</a>' +
+        '<a href="mailto:' + esc(replyTo) + '" style="color:#C8A85A;">' + esc(replyTo) + '</a>' +
       '</p>' +
     '</td></tr>' +
     '</table></td></tr></table></body></html>';
@@ -362,12 +412,12 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
     'Here is your secure link to view your CRM USA 2026 convention registration summary and balance. ' +
     'This link expires in 7 days.\n\n' +
     lookup_url + '\n\n' +
-    'If you did not request this email, you can ignore it. Questions? ' + REPLY_TO + '\n';
+    'If you did not request this email, you can ignore it. Questions? ' + replyTo + '\n';
 
   await sendTransactionalEmail({
-    from: 'CRM 2026 Convention <' + FROM_ADDRESS + '>',
+    from: fromAddr,
     to: [email],
-    replyTo: REPLY_TO,
+    replyTo,
     subject: 'Your CRM 2026 registration link',
     html,
     text,
@@ -382,6 +432,16 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const secret = process.env.CONVENTION_CONFIRM_SECRET?.trim();
+  if (!secret) {
+    return res.status(503).json({ error: 'Confirmation endpoint is not configured.' });
+  }
+  const auth = req.headers.authorization || '';
+  const bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (bearer !== secret) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   if (!req.body?.email || !req.body?.pledge_code) {

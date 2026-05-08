@@ -43,6 +43,10 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 2. Search logs for `confirm.registration_email_failed`, `confirm.lookup_link_email_sent`, `lookup_request.email_failed`, `remind.email_send_failed`.
 3. Registration and lookup-request endpoints are designed to **return success to the client** after persistence even when email fails; treat missing email as an ops follow-up, not a silent user failure.
 
+### Lookup / resend recovery (anti-enumeration)
+
+`POST /api/lookup-request` and `POST /api/resend-confirmation` must keep the **same HTTP 200 body** for match, no match, bad input, and send failure (after attempting send)—by design, so callers cannot infer registered emails or pledge codes from the response. **Do not** “improve” registrant UX by branching success text or status on lookup outcome; use logs (`confirm.lookup_link_email_sent`, `lookup_request.email_failed`, `resend_confirmation.email_failed`) instead.
+
 ## Zeffy import mismatches
 
 1. Always run **preview** before apply; review flags `unmatched`, `duplicate`, `overpayment`, skipped refunds.

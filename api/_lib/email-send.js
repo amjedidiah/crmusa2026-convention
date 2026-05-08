@@ -15,11 +15,12 @@ const RESEND_TIMEOUT_MS = 15_000;
  *
  * Override with `EMAIL_TRANSPORT=resend` or `EMAIL_TRANSPORT=smtp` (alias: `mailpit`).
  *
- * SMTP default port: `MAILPIT_SMTP_PORT` if set; else **54325** when `SUPABASE_URL` is the
- * local CLI API (e.g. `http://127.0.0.1:54321`) so transactional mail shares Supabase's Mailpit with GoTrue;
- * else **1025** (standalone Mailpit). If `MAILPIT_SMTP_PORT` is unset and **:54325** refuses
- * (`ECONNREFUSED`), one retry uses **:1025** (Supabase stopped but standalone Mailpit running).
- * When `MAILPIT_SMTP_HOST` is unset, tries **127.0.0.1** then **localhost** on each port (loopback / OS quirks).
+ * SMTP default port: `SMTP_PORT` or `MAILPIT_SMTP_PORT` if set; else **587** when only `SMTP_HOST` is set;
+ * else **54325** when `SUPABASE_URL` is the local CLI API (e.g. `http://127.0.0.1:54321`);
+ * else **1025** (standalone Mailpit). If Mailpit **:54325** refuses (`ECONNREFUSED`), one retry uses **:1025**.
+ * When `MAILPIT_SMTP_HOST` / `SMTP_HOST` is unset, tries **127.0.0.1** then **localhost** on each port (loopback / OS quirks).
+ *
+ * **Praise Center parity:** set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` (same as `crm_praise_center` client). These override `MAILPIT_SMTP_*` when both are set (`SMTP_*` wins for host/port/auth; see `resolveMailpitSmtpPort`).
  */
 export function resolveEmailTransport() {
   const explicit = (process.env.EMAIL_TRANSPORT || "").trim().toLowerCase();
@@ -38,15 +39,17 @@ export function resolveEmailTransport() {
 }
 
 /**
- * SMTP port for Mailpit. `MAILPIT_SMTP_PORT` wins when set.
- * Supabase CLI exposes Mailpit SMTP on **54325** (UI **54324**); GoTrue uses that automatically.
- * Standalone Mailpit's default is usually **1025**.
+ * SMTP port: `SMTP_PORT` or `MAILPIT_SMTP_PORT` when set; else **587** if `SMTP_HOST` is set (external relay, port omitted); else Mailpit defaults from Supabase URL.
+ * Supabase CLI exposes Mailpit SMTP on **54325** (UI **54324**); standalone Mailpit is usually **1025**.
  */
 export function resolveMailpitSmtpPort() {
-  const fromEnv = (process.env.MAILPIT_SMTP_PORT || "").trim();
+  const fromEnv = (process.env.SMTP_PORT || process.env.MAILPIT_SMTP_PORT || "").trim();
   if (fromEnv) {
     const n = parseInt(fromEnv, 10);
     return Number.isFinite(n) && n > 0 ? n : 1025;
+  }
+  if ((process.env.SMTP_HOST || "").trim()) {
+    return 587;
   }
   const urlStr = (process.env.SUPABASE_URL || "").trim();
   try {
@@ -134,13 +137,30 @@ async function sendViaResend({ from, to, replyTo, subject, html, text }) {
   }
 }
 
+function resolveSmtpAuth() {
+  const user = (process.env.SMTP_USER || process.env.MAILPIT_SMTP_USER || "").trim();
+  const pass = (process.env.SMTP_PASS || process.env.MAILPIT_SMTP_PASS || "").trim();
+  return {
+    user: user || undefined,
+    pass: pass || undefined,
+  };
+}
+
+/** @param {number} port */
+function resolveSmtpSecure(port) {
+  const raw = (process.env.SMTP_SECURE || "").trim().toLowerCase();
+  if (raw === "true" || raw === "1") return true;
+  if (raw === "false" || raw === "0") return false;
+  return port === 465;
+}
+
 function createSmtpTransport(host, port) {
-  const user = process.env.MAILPIT_SMTP_USER || undefined;
-  const pass = process.env.MAILPIT_SMTP_PASS || undefined;
+  const { user, pass } = resolveSmtpAuth();
+  const secure = resolveSmtpSecure(port);
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure,
     ...(user || pass ? { auth: { user: user || "", pass: pass || "" } } : {}),
   });
 }
@@ -171,24 +191,29 @@ function smtpFailureHint(detail, host, port) {
   if (p === 1025 && (h === "127.0.0.1" || h === "localhost" || h === "[::1]")) {
     return "Start Mailpit on :1025 (see project README), or set RESEND_API_KEY and EMAIL_TRANSPORT=resend in .env.local.";
   }
-  return "Verify MAILPIT_SMTP_HOST / MAILPIT_SMTP_PORT and that an SMTP server is reachable.";
+  return "Verify SMTP_HOST / SMTP_PORT (or MAILPIT_SMTP_*) and that an SMTP server is reachable.";
 }
 
-/** Hosts for outbound SMTP when `MAILPIT_SMTP_HOST` is unset (GoTrue inside Docker can still reach Mailpit). */
+/** Hosts for outbound SMTP when `SMTP_HOST` / `MAILPIT_SMTP_HOST` is unset (GoTrue inside Docker can still reach Mailpit). */
 function smtpConnectHosts() {
-  const raw = (process.env.MAILPIT_SMTP_HOST || "").trim();
+  const raw = (process.env.SMTP_HOST || process.env.MAILPIT_SMTP_HOST || "").trim();
   if (raw) return [raw];
   return ["127.0.0.1", "localhost"];
 }
 
 async function sendViaSmtp(opts) {
   const hosts = smtpConnectHosts();
-  const explicitPort = (process.env.MAILPIT_SMTP_PORT || "").trim();
+  const explicitPort = (
+    process.env.SMTP_PORT ||
+    process.env.MAILPIT_SMTP_PORT ||
+    ""
+  ).trim();
   const primary = resolveMailpitSmtpPort();
+  const externalSmtp = !!(process.env.SMTP_HOST || "").trim();
   const ports =
     explicitPort.length > 0
       ? [primary]
-      : primary === 54325
+      : !externalSmtp && primary === 54325
         ? [54325, 1025]
         : [primary];
 

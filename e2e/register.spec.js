@@ -23,7 +23,7 @@ test.describe('registration wizard', () => {
     await page.locator('#an-1').fill('Pat Lee');
     await page.locator('#aa-1').fill('40');
     await page.getByRole('button', { name: /Review Order/i }).click();
-    await page.getByRole('button', { name: /Proceed to Payment/i }).click();
+    await page.getByRole('button', { name: /Next: review & submit/i }).click();
 
     const completeBtn = page.locator('#complete-btn');
     await expect(completeBtn).toBeVisible();
@@ -51,7 +51,7 @@ test.describe('registration wizard', () => {
     await page.locator('#an-1').fill('E2E Playwright');
     await page.locator('#aa-1').fill('40');
     await page.getByRole('button', { name: /Review Order/i }).click();
-    await page.getByRole('button', { name: /Proceed to Payment/i }).click();
+    await page.getByRole('button', { name: /Next: review & submit/i }).click();
 
     await page.locator('#reg-pay-amt').fill('0');
     await page.locator('#reg-consent').check();

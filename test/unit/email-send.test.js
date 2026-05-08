@@ -11,6 +11,41 @@ function restore(name, prev) {
   else process.env[name] = prev;
 }
 
+test('resolveMailpitSmtpPort respects SMTP_PORT over MAILPIT_SMTP_PORT', () => {
+  const prevSp = process.env.SMTP_PORT;
+  const prevMp = process.env.MAILPIT_SMTP_PORT;
+  const prevUrl = process.env.SUPABASE_URL;
+  process.env.SMTP_PORT = '465';
+  process.env.MAILPIT_SMTP_PORT = '3111';
+  process.env.SUPABASE_URL = 'http://127.0.0.1:54321';
+  try {
+    assert.equal(resolveMailpitSmtpPort(), 465);
+  } finally {
+    restore('SMTP_PORT', prevSp);
+    restore('MAILPIT_SMTP_PORT', prevMp);
+    restore('SUPABASE_URL', prevUrl);
+  }
+});
+
+test('resolveMailpitSmtpPort is 587 when SMTP_HOST set and no port env', () => {
+  const prevHost = process.env.SMTP_HOST;
+  const prevSp = process.env.SMTP_PORT;
+  const prevMp = process.env.MAILPIT_SMTP_PORT;
+  const prevUrl = process.env.SUPABASE_URL;
+  process.env.SMTP_HOST = 'smtpout.secureserver.net';
+  delete process.env.SMTP_PORT;
+  delete process.env.MAILPIT_SMTP_PORT;
+  process.env.SUPABASE_URL = 'https://abcdefgh.supabase.co';
+  try {
+    assert.equal(resolveMailpitSmtpPort(), 587);
+  } finally {
+    restore('SMTP_HOST', prevHost);
+    restore('SMTP_PORT', prevSp);
+    restore('MAILPIT_SMTP_PORT', prevMp);
+    restore('SUPABASE_URL', prevUrl);
+  }
+});
+
 test('resolveMailpitSmtpPort respects MAILPIT_SMTP_PORT', () => {
   const prevPort = process.env.MAILPIT_SMTP_PORT;
   const prevUrl = process.env.SUPABASE_URL;
