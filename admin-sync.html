@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRM 2026 — Admin</title>
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <style>
       *,
@@ -23,6 +24,24 @@
       .wrap {
         max-width: 820px;
         margin: 0 auto;
+      }
+      .page-utility {
+        margin-bottom: 0.85rem;
+      }
+      .page-utility a {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(232, 223, 200, 0.62);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(200, 168, 90, 0.28);
+        padding-bottom: 0.12rem;
+      }
+      .page-utility a:hover,
+      .page-utility a:focus-visible {
+        color: #e8c87a;
+        border-bottom-color: #c8a85a;
+        outline: none;
       }
 
       .page-title {
@@ -401,6 +420,39 @@
       #report-body tr:hover td {
         background: rgba(200, 168, 90, 0.11);
       }
+      .report-code-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+      }
+      .report-code-text {
+        font-family: monospace;
+        color: #e8c87a;
+        letter-spacing: 0.1em;
+      }
+      .report-copy-code-btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.22rem;
+        margin: 0;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: rgba(232, 223, 200, 0.42);
+        cursor: pointer;
+        line-height: 0;
+      }
+      .report-copy-code-btn:hover {
+        color: #c8a85a;
+        background: rgba(200, 168, 90, 0.12);
+      }
+      .report-copy-code-btn:focus-visible {
+        outline: 2px solid rgba(200, 168, 90, 0.55);
+        outline-offset: 2px;
+      }
       .report-logic-cell {
         font-size: 0.68rem;
         line-height: 1.38;
@@ -565,6 +617,9 @@
   </head>
   <body>
     <div class="wrap">
+      <p class="page-utility">
+        <a href="index.html">← Back to convention site</a>
+      </p>
       <h1 class="page-title">CRM 2026 — Admin</h1>
       <p class="page-sub">
         Convention payment management · Staff sign-in (magic link)

@@ -178,12 +178,14 @@ If unset, register / lookup-request / resend-confirmation still work; limits are
 | Variable                | Required | Used by                                                                                                                                                                                                                                                                                        |
 | ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `STAFF_EMAIL_ALLOWLIST` | Yes      | Comma- or newline-separated emails allowed after Supabase magic-link sign-in. If empty, **all** staff API calls return 403. Changes require updating Vercel (or host) env and **redeploy**; see [PRODUCTION_PLAN.md](./PRODUCTION_PLAN.md) → _Staff email allowlist (launch) and offboarding_. |
+| `ADMIN_BASIC_AUTH_USER` | Yes      | Username for the middleware gate on `admin-sync.html`, `admin-sync-app.js`, and `/api/admin/*`. If missing with the password, those admin paths return **503** (fail closed). |
+| `ADMIN_BASIC_AUTH_PASSWORD` | Yes  | Password for the middleware gate on the admin paths above. Use a long random value and rotate it when staff access changes. |
 | `STAFF_ORIGINS`         | No\*     | Allowed browser `Origin` values for `/api/admin/*` CORS (comma/newline-separated; echoed back with `Vary: Origin`). Never `*`.                                                                                                                                                                 |
 | `STAFF_ORIGIN`          | No\*     | Single origin when you only need one; ignored if `STAFF_ORIGINS` is set.                                                                                                                                                                                                                       |
 
 \*If both are unset, CORS allowlist falls back to **`SITE_URL`** (typical same-deployment admin + API). Add explicit origins for previews or when `SITE_URL` does not match where `admin-sync.html` is opened (e.g. `http://localhost:3000`).
 
-**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under **URL configuration**, add every origin staff use for `admin-sync.html` (production, preview, local). Misconfigured redirects cause `signInWithOtp` errors even when SMTP is fine. For production mail delivery, enable **Custom SMTP** on that project (see **Staff magic links vs transactional mail** above)—do not rely on Vercel `SMTP_*` alone. Staff open the admin page, sign in with an allowlisted email, and the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data. Staff APIs only emit `Access-Control-Allow-Origin` for allowlisted origins (see `STAFF_ORIGINS` / `SITE_URL`).
+**Staff login (hosted):** In Supabase Dashboard → Authentication → Providers, enable **Email** (magic link). Under **URL configuration**, add every origin staff use for `admin-sync.html` (production, preview, local). Misconfigured redirects cause `signInWithOtp` errors even when SMTP is fine. For production mail delivery, enable **Custom SMTP** on that project (see **Staff magic links vs transactional mail** above)—do not rely on Vercel `SMTP_*` alone. Staff first pass the middleware Basic Auth gate on `admin-sync.html`, `admin-sync-app.js`, and `/api/admin/*`, then sign in with an allowlisted email; after that, the SPA sends `Authorization: Bearer <session JWT>` to `/api/admin/*`. The anon key is exposed only to that admin page for Auth session bootstrap—not for public registration data. Staff APIs only emit `Access-Control-Allow-Origin` for allowlisted origins (see `STAFF_ORIGINS` / `SITE_URL`).
 
 **Reminder cron:** Vercel Cron invokes `GET /api/remind` per `vercel.json`. Set `CRON_SECRET` in Vercel and configure the cron job to send `Authorization: Bearer <CRON_SECRET>` (the handler also accepts `?secret=` for manual curls).
 
@@ -207,6 +209,8 @@ LOOKUP_TOKEN_SECRET=use-a-long-random-string
 # LOOKUP_TOKEN_TTL_SECONDS=2592000
 CRON_SECRET=another-long-random-secret
 STAFF_EMAIL_ALLOWLIST=finance@example.org,ops@example.org
+ADMIN_BASIC_AUTH_USER=staff
+ADMIN_BASIC_AUTH_PASSWORD=use-a-long-random-password
 
 # Optional: admin API CORS (defaults to SITE_URL if unset). Add previews/extra hosts as needed.
 # STAFF_ORIGINS=https://crmusa2026-convention.vercel.app

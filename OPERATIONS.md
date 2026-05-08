@@ -31,6 +31,8 @@ Server routes emit **one JSON object per line** to stdout/stderr (searchable in 
 
 Treat **`admin-sync.html`** session data and API responses as **sensitive** (screen sharing, recordings, support tickets).
 
+`admin-sync.html`, `admin-sync-app.js`, and `/api/admin/*` are also behind a middleware **Basic Auth** gate. If those paths start returning **401**, verify the browser still has the current shared credentials. If they return **503**, the deployment is missing `ADMIN_BASIC_AUTH_USER` and/or `ADMIN_BASIC_AUTH_PASSWORD`.
+
 ## Registration failures
 
 1. Check Vercel logs for `register.save_failed` (database / validation from PostgREST) vs `register.persisted` (row created).

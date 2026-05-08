@@ -662,6 +662,19 @@ function initStaffPaymentForms() {
     el.addEventListener("input", handler);
     el.addEventListener("change", handler);
   });
+
+  let reportWrap = document.getElementById("report-table-wrap");
+  if (reportWrap && !reportWrap.dataset.copyDelegate) {
+    reportWrap.dataset.copyDelegate = "1";
+    reportWrap.addEventListener("click", function (ev) {
+      let btn = ev.target.closest(".report-copy-code-btn");
+      if (!btn || !reportWrap.contains(btn)) return;
+      ev.preventDefault();
+      let code = btn.dataset.code;
+      if (code === undefined || code === "") return;
+      copyReportPledgeCode(code, btn);
+    });
+  }
 }
 
 /* ── LOOKUP ── */
@@ -995,10 +1008,17 @@ function renderReport(rows) {
     }
     let tr = document.createElement("tr");
     tr.className = "report-row";
+    let code = r.pledge_code != null ? String(r.pledge_code) : "";
     tr.innerHTML =
-      '<td style="font-family:monospace;color:#E8C87A;letter-spacing:0.1em;">' +
-      esc(r.pledge_code) +
-      "</td>" +
+      '<td><div class="report-code-cell">' +
+      '<span class="report-code-text">' +
+      esc(code) +
+      "</span>" +
+      '<button type="button" class="report-copy-code-btn" data-code="' +
+      escAttr(code) +
+      '" aria-label="Copy pledge code" title="Copy pledge code">' +
+      REPORT_COPY_ICON_SVG +
+      "</button></div></td>" +
       "<td>" +
       esc((r.first_name || "") + " " + (r.last_name || "")) +
       "</td>" +
@@ -1290,9 +1310,56 @@ function esc(s) {
     .replaceAll(">", "&gt;");
 }
 
-/* ══════════════════════════════════════════════
-   ZEFFY CSV IMPORT
-══════════════════════════════════════════════ */
+/** Escape for HTML attribute values (e.g. data-code). */
+function escAttr(s) {
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;");
+}
+
+const REPORT_COPY_ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+
+const REPORT_COPIED_ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7dbf80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+function copyReportPledgeCode(code, btn) {
+  if (!code || !btn) return;
+  function ok() {
+    if (!btn.dataset.prevInner) btn.dataset.prevInner = btn.innerHTML;
+    btn.innerHTML = REPORT_COPIED_ICON_SVG;
+    btn.title = "Copied";
+    btn.setAttribute("aria-label", "Copied");
+    globalThis.clearTimeout(btn._copyTid);
+    btn._copyTid = globalThis.setTimeout(function () {
+      btn.innerHTML = btn.dataset.prevInner || REPORT_COPY_ICON_SVG;
+      btn.title = "Copy pledge code";
+      btn.setAttribute("aria-label", "Copy pledge code");
+    }, 1600);
+  }
+  function fail() {
+    btn.title = "Copy failed — select code manually";
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(ok).catch(fail);
+  } else {
+    try {
+      let ta = document.createElement("textarea");
+      ta.value = code;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      ok();
+    } catch (e) {
+      fail();
+    }
+  }
+}
 function initZeffyDropZone() {
   let zDrop = document.getElementById("z-drop-zone");
   if (zDrop) {
