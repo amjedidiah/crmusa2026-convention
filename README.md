@@ -251,7 +251,7 @@ UPSTASH_REDIS_REST_TOKEN=...
 ### Cron / legacy
 
 - `GET /api/remind` — balance reminders (`CRON_SECRET`)
-- `POST /api/admin` — **410**; replaced by routes above
+- Legacy **`POST /api/admin`** was removed; old clients get **404**.
 
 ---
 
