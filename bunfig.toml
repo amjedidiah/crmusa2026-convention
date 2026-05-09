@@ -1,0 +1,5 @@
+# Limit default `bun test` to the same scope as `npm test` (Node unit tests only).
+# Without this, Bun discovers e2e/*.spec.js (Playwright — wrong runner) and
+# test/integration/*.test.js (needs RUN_INTEGRATION=1 + mocked Resend; see package.json).
+[test]
+root = "test/unit"

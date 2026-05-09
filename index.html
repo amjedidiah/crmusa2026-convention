@@ -3073,7 +3073,11 @@
         var res = assertRegistrationReady("contact");
         if (!res.ok) {
           showErrEl(document.getElementById("s1-err"), res.message);
-          applyContactInvalidFromAssert(res);
+          if (res.fieldErrors) {
+            applyContactInvalidFromFieldErrors(res.fieldErrors);
+          } else {
+            applyContactInvalidFromAssert(res);
+          }
           var inp = document.getElementById(res.focusId || "fn");
           if (inp)
             setTimeout(function () {

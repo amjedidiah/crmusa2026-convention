@@ -1620,6 +1620,20 @@ function resetZeffyCSV() {
   document.getElementById("z-csv-file").value = "";
   document.getElementById("z-csv-status").textContent = "";
   document.getElementById("z-preview-card").classList.add("hidden");
+  let zLogEl = document.getElementById("z-sync-log");
+  if (zLogEl) {
+    zLogEl.innerHTML = "";
+    zLogEl.classList.add("hidden");
+  }
+  let zSt = document.getElementById("z-sync-status");
+  if (zSt) zSt.textContent = "";
+  let zOver = document.getElementById("z-confirm-overpay");
+  if (zOver) zOver.checked = false;
+  let zBtn = document.getElementById("z-sync-btn");
+  if (zBtn) {
+    zBtn.textContent = "Apply approved rows →";
+    zBtn.disabled = true;
+  }
 }
 
 function zLog(el, cls, msg) {
