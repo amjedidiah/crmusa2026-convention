@@ -1,6 +1,8 @@
 const DEFAULT_CLIENT_APP_URL =
   "https://www.crm-na.org/events/crm-usa-national-convention-2026";
 const RETURN_TO_STORAGE_KEY = "crm-na-client-app-return-to";
+/** Apex hostname for the public CRM NA site — `returnTo` always uses the `www.` host (matches client `convention-public.ts`). */
+const CRM_NA_PUBLIC_HOST = "crm-na.org";
 
 function normalizeReturnTo(raw) {
   if (!raw) return null;
@@ -9,13 +11,17 @@ function normalizeReturnTo(raw) {
     const url = new URL(raw, globalThis.location.origin);
     const host = url.hostname.toLowerCase();
     const isAllowedHost =
-      host === "crm-na.org" ||
-      host === "www.crm-na.org" ||
+      host === CRM_NA_PUBLIC_HOST ||
+      host === `www.${CRM_NA_PUBLIC_HOST}` ||
       host === "localhost" ||
       host === "127.0.0.1";
 
     if (!isAllowedHost) return null;
     if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+
+    if (host === CRM_NA_PUBLIC_HOST) {
+      url.hostname = `www.${CRM_NA_PUBLIC_HOST}`;
+    }
 
     return url.toString();
   } catch {
