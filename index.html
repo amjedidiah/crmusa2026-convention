@@ -2065,6 +2065,13 @@
         /><span>CRM USA · National Convention</span>
       </div>
       <ul class="nav-links">
+        <li>
+          <a
+            href="https://crm-na.org/events/crm-usa-national-convention-2026"
+            data-client-app-link
+            >CRM NA Site</a
+          >
+        </li>
         <li><a href="#about">About</a></li>
         <li><a href="#schedule">Schedule</a></li>
         <li><a href="#venue">Venue</a></li>
@@ -2829,10 +2836,33 @@
         <p class="footer-brand">CRM USA · National Convention 2026</p>
         <nav aria-label="Legal and accessibility">
           <ul class="footer-links">
-            <li><a href="privacy-policy.html">Privacy Policy</a></li>
-            <li><a href="terms-of-use.html">Terms of Use</a></li>
-            <li><a href="refund-policy.html">Refund &amp; Cancellation</a></li>
-            <li><a href="accessibility.html">Accessibility</a></li>
+            <li>
+              <a
+                href="https://crm-na.org/events/crm-usa-national-convention-2026"
+                data-client-app-link
+                >Back to CRM NA</a
+              >
+            </li>
+            <li>
+              <a href="privacy-policy.html" data-preserve-return-to
+                >Privacy Policy</a
+              >
+            </li>
+            <li>
+              <a href="terms-of-use.html" data-preserve-return-to
+                >Terms of Use</a
+              >
+            </li>
+            <li>
+              <a href="refund-policy.html" data-preserve-return-to
+                >Refund &amp; Cancellation</a
+              >
+            </li>
+            <li>
+              <a href="accessibility.html" data-preserve-return-to
+                >Accessibility</a
+              >
+            </li>
           </ul>
         </nav>
         <p class="footer-copy">
@@ -2913,7 +2943,7 @@
             location.pathname + location.search + next,
           );
         } catch (e) {
-          console.error(e)
+          console.error(e);
           location.hash = next;
         }
       }
@@ -3204,7 +3234,8 @@
         list.innerHTML = "";
         atts.forEach(function (a, idx) {
           var age = Number.parseInt(a.age);
-          var pStr = a.age !== "" && !Number.isNaN(age) ? fmt(calcPrice(age)) : "";
+          var pStr =
+            a.age !== "" && !Number.isNaN(age) ? fmt(calcPrice(age)) : "";
           var pCls = "att-price" + (pStr === "Free" ? " free" : "");
           var rowErrors = attendeeFieldErrors[idx] || {};
           var rowErrorText = attendeeRowErrorMessage(rowErrors);
@@ -3316,7 +3347,11 @@
       function attendeeAgeOk(ageRaw) {
         var v = Number.parseInt(ageRaw, 10);
         return (
-          ageRaw !== "" && ageRaw !== null && !Number.isNaN(v) && v >= 0 && v <= 120
+          ageRaw !== "" &&
+          ageRaw !== null &&
+          !Number.isNaN(v) &&
+          v >= 0 &&
+          v <= 120
         );
       }
 
@@ -3552,13 +3587,30 @@
         if (msg) announceReg(msg);
       }
 
+      function conventionPageHref(path) {
+        if (
+          globalThis.crmConventionShell &&
+          typeof globalThis.crmConventionShell.withReturnTo === "function" &&
+          typeof globalThis.crmConventionShell.getClientAppReturnTo ===
+            "function"
+        ) {
+          return globalThis.crmConventionShell.withReturnTo(
+            path,
+            globalThis.crmConventionShell.getClientAppReturnTo(),
+          );
+        }
+        return path;
+      }
+
       function registrationConsentHtml() {
         return (
           '<div class="reg-consent-box" role="group" aria-labelledby="reg-consent-heading">' +
           '<p id="reg-consent-heading" class="visually-hidden">Consent required to submit registration</p>' +
           '<label class="reg-consent-label" for="reg-consent">' +
           '<input type="checkbox" id="reg-consent" autocomplete="off" />' +
-          '<span>I agree that CRM USA may collect and use the contact and attendee information I provide for registration and operational emails (including payment reminders). I understand that payments via Zelle or Zeffy are reconciled manually by staff before my recorded balance updates. I have read the <a href="privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</span>' +
+          '<span>I agree that CRM USA may collect and use the contact and attendee information I provide for registration and operational emails (including payment reminders). I understand that payments via Zelle or Zeffy are reconciled manually by staff before my recorded balance updates. I have read the <a href="' +
+          conventionPageHref("privacy-policy.html") +
+          '" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</span>' +
           "</label>" +
           '<p id="reg-consent-err" class="field-error reg-consent-err" role="alert" aria-live="polite"></p>' +
           "</div>"
@@ -4081,7 +4133,7 @@
           try {
             data = await r.json();
           } catch (e) {
-            console.error(e)
+            console.error(e);
             data = null;
           }
           if (statusEl) {
@@ -4091,7 +4143,7 @@
                 : "If your registration matches, a confirmation email will arrive shortly. Check spam.";
           }
         } catch (e) {
-          console.error(e)
+          console.error(e);
           if (statusEl) {
             statusEl.textContent =
               "Could not reach the server. Try again in a moment or email info@crm-na.org.";
@@ -4143,7 +4195,7 @@
         try {
           data = await response.json();
         } catch (e) {
-          console.error(e)
+          console.error(e);
           data = null;
         }
 
@@ -4191,7 +4243,7 @@
           var t = params.get("token");
           return t && String(t).trim() ? String(t).trim() : null;
         } catch (e) {
-          console.error(e)
+          console.error(e);
           return null;
         }
       }
@@ -4278,7 +4330,7 @@
           try {
             data = await response.json();
           } catch (e) {
-            console.error(e)
+            console.error(e);
             data = null;
           }
 
@@ -4292,7 +4344,7 @@
                 location.pathname + location.search + "#return",
               );
             } catch (e) {
-              console.error(e)
+              console.error(e);
             }
             announceReg("Registration loaded.");
             return;
@@ -4316,7 +4368,7 @@
           }
           announceReg("Registration link could not be loaded.");
         } catch (e) {
-          console.error(e)
+          console.error(e);
           setReturnLookupState(
             "error",
             "Network error. Check your connection and try again. If you need help urgently, contact info@crm-na.org.",
@@ -4387,7 +4439,7 @@
           try {
             data = await response.json();
           } catch (e) {
-            console.error(e)
+            console.error(e);
             data = null;
           }
           if (response.status === 429) {
@@ -4417,7 +4469,7 @@
           }
           announceReg(msg);
         } catch (e) {
-          console.error(e)
+          console.error(e);
           showErr(
             errEl,
             "Network error. Check your connection and try again. If you need help urgently, contact info@crm-na.org.",
@@ -4610,9 +4662,9 @@
       }
       function esc(s) {
         return String(s || "")
-          .replaceAll('&', "&amp;")
-          .replaceAll('<', "&lt;")
-          .replaceAll('>', "&gt;")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;");
       }
       function fmtMoney(n) {
@@ -4681,7 +4733,7 @@
             bn.style.display = "block";
           }
         } catch (e) {
-          console.error(e)
+          console.error(e);
         }
       })();
       /* Scroll fade-in */
@@ -4712,7 +4764,7 @@
               });
           }
         } catch (e) {
-          console.error(e)
+          console.error(e);
         }
       })();
       /* Sticky nav */

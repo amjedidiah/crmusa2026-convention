@@ -110,13 +110,19 @@
         outline: 2px solid var(--gold);
         outline-offset: 2px;
       }
+      nav[aria-label="Policy navigation"] {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header>
         <nav aria-label="Policy navigation">
-          <a href="index.html">← Back to convention site</a>
+          <a href="index.html" data-preserve-return-to>← Back to convention site</a>
+          <a href="https://crm-na.org/events/crm-usa-national-convention-2026" data-client-app-link>Back to CRM NA</a>
         </nav>
         <h1>Refund &amp; Cancellation Policy</h1>
         <p style="font-size: 0.9rem">
