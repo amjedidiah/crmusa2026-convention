@@ -4,6 +4,8 @@
 
 Keep the public site as a static Vercel frontend, but move every state-changing and state-revealing workflow behind Vercel server-side functions/route handlers. Launch on a manual-reconciliation payment model: Zelle and Zeffy remain accepted, but only staff-recorded or imported payments can change registration balance or status. Replace public direct Supabase access and shared-PIN admin access with server-owned APIs, strict database policies, tokenized self-service lookup, staff authentication, and a production baseline for policy, SEO, and accessibility. Build and test the production plan against a local Supabase instance backed by versioned migrations and seed data.
 
+**Monorepo note:** This plan applies to **`crmusa2026-convention/`** (registration). The sibling marketing site is **`../client/`** in the same repo; see [`../docs/development_plan.md`](../docs/development_plan.md) for that product’s routing and content model.
+
 ## Phased Implementation
 
 ### Phase 1: Server-Side Data and Security Foundation

@@ -2,6 +2,8 @@
 
 This document complements [README.md](./README.md) for production and on-call tasks.
 
+**Scope:** Convention API and static registration UI only. The CRM NA marketing Next.js app (`../client/`) is documented separately under [`../docs/`](../docs/).
+
 ## Structured logs
 
 Server routes emit **one JSON object per line** to stdout/stderr (searchable in Vercel logs or any log drain). Common fields:

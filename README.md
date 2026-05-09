@@ -5,6 +5,8 @@ Official convention website for Charismatic Renewal Ministries USA.
 **Event:** July 29 – August 2, 2026  
 **Venue:** Holiday Inn NW Houston, 3539 N Sam Houston Pkwy West, Houston, TX 77086
 
+**Monorepo:** This project lives under the `crm_na` repository. The main CRM NA marketing site is the Next.js app in [`../client/`](../client/); information architecture for that surface is documented in [`../docs/development_plan.md`](../docs/development_plan.md).
+
 ---
 
 ## What’s implemented (Phases 1–5)
