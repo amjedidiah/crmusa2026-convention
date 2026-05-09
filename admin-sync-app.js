@@ -1384,6 +1384,32 @@ function initZeffyDropZone() {
       handleZeffyFile(e.dataTransfer.files[0]);
     });
   }
+  let overChk = document.getElementById("z-confirm-overpay");
+  if (overChk) {
+    overChk.addEventListener("change", function () {
+      if (!zeffyApplyBusy) syncZeffyApplyButtonState();
+    });
+  }
+}
+
+/** Same row filter as doZeffySync — used to enable Apply when overpay-only and checkbox is on. */
+function zeffyApplicableRowCount(rows) {
+  let confirmOver =
+    document.getElementById("z-confirm-overpay")?.checked || false;
+  return rows.filter(function (r) {
+    if (r.skip || !r.registration) return false;
+    let f = r.flags || [];
+    if (f.includes("duplicate") || f.includes("unmatched")) return false;
+    if (f.includes("no_pledge_code")) return false;
+    if (f.includes("overpayment") && !confirmOver) return false;
+    return true;
+  }).length;
+}
+
+function syncZeffyApplyButtonState() {
+  let btn = document.getElementById("z-sync-btn");
+  if (!btn || zeffyApplyBusy) return;
+  btn.disabled = zeffyApplicableRowCount(zMatchedRows) === 0;
 }
 
 function handleZeffyFile(file) {
@@ -1504,15 +1530,7 @@ function renderZeffyPreview(rows, summary) {
   });
 
   document.getElementById("z-preview-card").classList.remove("hidden");
-  let nApply = rows.filter(function (r) {
-    if (r.skip || !r.registration) return false;
-    let f = r.flags || [];
-    if (f.includes("duplicate") || f.includes("unmatched")) return false;
-    if (f.includes("no_pledge_code")) return false;
-    if (f.includes("overpayment")) return false;
-    return true;
-  }).length;
-  document.getElementById("z-sync-btn").disabled = nApply === 0;
+  syncZeffyApplyButtonState();
 }
 
 function doZeffySync() {
@@ -1591,7 +1609,7 @@ function doZeffySync() {
         !btn.textContent.includes("Complete") &&
         !btn.textContent.includes("Retry")
       ) {
-        btn.textContent = "Sync Matched Records →";
+        btn.textContent = "Apply approved rows →";
       }
     });
 }
