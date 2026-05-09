@@ -1,27 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://crmusa2026-convention.vercel.app/</loc>
+    <loc>https://crmusa2026-convention.crm-na.org/</loc>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://crmusa2026-convention.vercel.app/privacy-policy.html</loc>
+    <loc>https://crmusa2026-convention.crm-na.org/privacy-policy.html</loc>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://crmusa2026-convention.vercel.app/terms-of-use.html</loc>
+    <loc>https://crmusa2026-convention.crm-na.org/terms-of-use.html</loc>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://crmusa2026-convention.vercel.app/refund-policy.html</loc>
+    <loc>https://crmusa2026-convention.crm-na.org/refund-policy.html</loc>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://crmusa2026-convention.vercel.app/accessibility.html</loc>
+    <loc>https://crmusa2026-convention.crm-na.org/accessibility.html</loc>
+    <lastmod>2026-05-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>

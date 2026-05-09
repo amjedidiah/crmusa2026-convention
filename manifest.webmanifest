@@ -1,0 +1,40 @@
+{
+  "name": "CRM USA National Convention 2026",
+  "short_name": "CRM 2026",
+  "description": "Official registration and event information for the CRM USA National Convention 2026 in Houston, Texas.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1628",
+  "theme_color": "#0b1628",
+  "lang": "en-US",
+  "categories": ["events", "religion", "travel"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Register",
+      "short_name": "Register",
+      "url": "/#register",
+      "description": "Jump to attendee registration."
+    },
+    {
+      "name": "Schedule",
+      "short_name": "Schedule",
+      "url": "/#schedule",
+      "description": "View the convention programme at a glance."
+    }
+  ]
+}

@@ -8,9 +8,20 @@
       name="description"
       content="Join Charismatic Renewal Ministries USA for the 2026 National Convention in Houston, Texas — July 29 through August 2. Worship, teaching, prayer, and community. Register online."
     />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://crmusa2026-convention.vercel.app/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://crmusa2026-convention.crm-na.org/" />
     <meta name="theme-color" content="#0B1628" />
+    <meta name="application-name" content="CRM Convention 2026" />
+    <meta name="apple-mobile-web-app-title" content="CRM Convention 2026" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/icons/icon-192.png"
+    />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
@@ -24,15 +35,16 @@
     />
     <meta
       property="og:url"
-      content="https://crmusa2026-convention.vercel.app/"
+      content="https://crmusa2026-convention.crm-na.org/"
     />
     <meta property="og:site_name" content="CRM USA National Convention" />
     <meta
       property="og:image"
-      content="https://crmusa2026-convention.vercel.app/og-image.png"
+      content="https://i.ibb.co/wrKZfKCH/og-image.png"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
     <meta
       property="og:image:alt"
       content="CRM USA National Convention 2026, Houston, Texas"
@@ -49,7 +61,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://crmusa2026-convention.vercel.app/og-image.png"
+      content="https://i.ibb.co/wrKZfKCH/og-image.png"
     />
     <meta
       name="twitter:image:alt"
@@ -62,30 +74,30 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "https://crmusa2026-convention.vercel.app/#organization",
+            "@id": "https://crmusa2026-convention.crm-na.org/#organization",
             "name": "Charismatic Renewal Ministries USA",
-            "url": "https://crmusa2026-convention.vercel.app/"
+            "url": "https://crmusa2026-convention.crm-na.org/"
           },
           {
             "@type": "WebSite",
-            "@id": "https://crmusa2026-convention.vercel.app/#website",
+            "@id": "https://crmusa2026-convention.crm-na.org/#website",
             "name": "CRM USA National Convention 2026",
-            "url": "https://crmusa2026-convention.vercel.app/",
+            "url": "https://crmusa2026-convention.crm-na.org/",
             "publisher": {
-              "@id": "https://crmusa2026-convention.vercel.app/#organization"
+              "@id": "https://crmusa2026-convention.crm-na.org/#organization"
             }
           },
           {
             "@type": "Event",
-            "@id": "https://crmusa2026-convention.vercel.app/#event",
+            "@id": "https://crmusa2026-convention.crm-na.org/#event",
             "name": "CRM USA National Convention 2026",
             "description": "Annual gathering of Charismatic Renewal Ministries USA for worship, Spirit-led teaching, healing prayer, and community. Theme: Bringing In The Harvest.",
             "startDate": "2026-07-29",
             "endDate": "2026-08-02",
             "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
             "eventStatus": "https://schema.org/EventScheduled",
-            "image": "https://crmusa2026-convention.vercel.app/og-image.png",
-            "url": "https://crmusa2026-convention.vercel.app/",
+            "image": "https://i.ibb.co/wrKZfKCH/og-image.png",
+            "url": "https://crmusa2026-convention.crm-na.org/",
             "location": {
               "@type": "Place",
               "name": "Holiday Inn NW Houston",
@@ -99,7 +111,7 @@
               }
             },
             "organizer": {
-              "@id": "https://crmusa2026-convention.vercel.app/#organization"
+              "@id": "https://crmusa2026-convention.crm-na.org/#organization"
             }
           }
         ]
@@ -891,7 +903,7 @@
         margin: 1.2rem auto;
       }
 
-      /* ── NAV ── (must be #navbar only — footer has its own <nav> for legal links) */
+      /* ── NAV ── (must be #navbar only — footer has its own nav for legal links) */
       #navbar {
         position: fixed;
         top: 0;
@@ -1096,11 +1108,11 @@
       }
       .step-title {
         font-family: "Cormorant Garamond", serif;
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         font-weight: 300;
-        color: var(--cream);
-        margin-bottom: 1.5rem;
         font-style: italic;
+        color: var(--cream);
+        margin-bottom: 1.4rem;
       }
       .step-sub {
         font-family: "Jost", sans-serif;
@@ -1151,8 +1163,10 @@
 
       /* ── FIELD ERROR ── */
       .field-error {
-        font-size: 0.78rem;
-        color: #e07070;
+        min-height: 1rem;
+        font-size: 0.72rem;
+        line-height: 1.4;
+        color: #efb1b1;
         margin-bottom: 1rem;
         font-family: "Jost", sans-serif;
       }
@@ -1230,7 +1244,7 @@
       .att-num {
         font-family: "Cormorant Garamond", serif;
         font-size: 1.3rem;
-        color: rgba(200, 168, 90, 0.5);
+        color: rgba(200, 168, 90, 0.4);
         min-width: 20px;
         text-align: center;
       }
@@ -1259,13 +1273,13 @@
       }
       .att-price {
         font-family: "Cormorant Garamond", serif;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: var(--gold2);
         min-width: 50px;
         text-align: right;
       }
       .att-price.free {
-        color: #6dbf7f;
+        color: #7dbf80;
       }
       .att-remove {
         background: none;
@@ -1320,37 +1334,37 @@
       }
       .cart-table th {
         font-family: "Cinzel", serif;
-        font-size: 0.6rem;
-        letter-spacing: 0.2em;
-        color: rgba(200, 168, 90, 0.6);
+        font-size: 0.55rem;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
-        padding: 0.7rem 1.4rem;
+        color: rgba(200, 168, 90, 0.5);
+        padding: 0.55rem 1.1rem;
         text-align: left;
-        border-bottom: 1px solid rgba(200, 168, 90, 0.1);
+        border-bottom: 1px solid rgba(200, 168, 90, 0.07);
       }
       .cart-table td {
-        padding: 0.75rem 1.4rem;
+        padding: 0.6rem 1.1rem;
         font-family: "Jost", sans-serif;
-        font-size: 0.82rem;
-        color: rgba(245, 239, 224, 0.7);
-        border-bottom: 1px solid rgba(200, 168, 90, 0.07);
+        font-size: 0.8rem;
+        color: rgba(245, 239, 224, 0.65);
+        border-bottom: 1px solid rgba(200, 168, 90, 0.05);
       }
       .cart-total {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.2rem 1.4rem;
-        background: rgba(200, 168, 90, 0.06);
-        border-top: 1px solid rgba(200, 168, 90, 0.2);
+        padding: 0.9rem 1.1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(200, 168, 90, 0.15);
         font-family: "Cinzel", serif;
-        font-size: 0.7rem;
-        letter-spacing: 0.2em;
-        color: var(--gold);
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
+        color: var(--gold2);
       }
       .cart-total-amt {
         font-family: "Cormorant Garamond", serif;
-        font-size: 1.8rem;
+        font-size: 1.7rem;
         font-weight: 300;
         color: var(--gold2);
         letter-spacing: 0;
@@ -1362,12 +1376,12 @@
         justify-content: space-between;
         align-items: center;
         padding: 1rem 1.4rem;
-        background: rgba(200, 168, 90, 0.08);
+        background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(200, 168, 90, 0.2);
         margin-bottom: 1.5rem;
         font-family: "Jost", sans-serif;
         font-size: 0.82rem;
-        color: rgba(245, 239, 224, 0.6);
+        color: var(--cream);
       }
       .pay-mini-total {
         font-family: "Cormorant Garamond", serif;
@@ -1457,9 +1471,9 @@
         cursor: pointer;
       }
       .tab.on {
-        background: rgba(200, 168, 90, 0.1);
-        color: #c8a85a;
-        border-bottom: 2px solid #c8a85a;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--gold2);
+        border-bottom: 2px solid var(--gold2);
       }
 
       /* ── PANELS ── */
@@ -1491,9 +1505,9 @@
         flex-shrink: 0;
       }
       .dot.on {
-        border-color: #c8a85a;
-        color: #c8a85a;
-        background: rgba(200, 168, 90, 0.1);
+        border-color: var(--gold2);
+        color: var(--gold2);
+        background: rgba(255, 255, 255, 0.08);
       }
       .dline {
         flex: 1;
@@ -1532,14 +1546,6 @@
         display: block;
       }
 
-      .step-title {
-        font-family: "Cormorant Garamond", serif;
-        font-size: 1.5rem;
-        font-weight: 300;
-        font-style: italic;
-        margin-bottom: 1.4rem;
-      }
-
       /* ── FORM FIELDS ── */
       .grid {
         display: grid;
@@ -1564,9 +1570,9 @@
       }
       .field input {
         padding: 0.7rem 0.9rem;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(200, 168, 90, 0.2);
-        color: #f5efe0;
+        color: var(--cream);
         font-family: "Jost", sans-serif;
         font-size: 0.88rem;
         outline: none;
@@ -1576,12 +1582,6 @@
       }
       .field.field--invalid input {
         border-color: rgba(180, 60, 60, 0.55);
-      }
-      .field-error {
-        min-height: 1rem;
-        font-size: 0.72rem;
-        line-height: 1.4;
-        color: #efb1b1;
       }
       .field input::placeholder {
         color: rgba(245, 239, 224, 0.2);
@@ -1684,12 +1684,6 @@
         border-color: rgba(180, 60, 60, 0.35);
         background: rgba(180, 60, 60, 0.08);
       }
-      .att-num {
-        font-family: "Cormorant Garamond", serif;
-        font-size: 1.3rem;
-        color: rgba(200, 168, 90, 0.4);
-        min-width: 20px;
-      }
       .att-inputs {
         display: flex;
         gap: 0.5rem;
@@ -1697,9 +1691,9 @@
       }
       .att-in {
         padding: 0.5rem 0.7rem;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(200, 168, 90, 0.18);
-        color: #f5efe0;
+        color: var(--cream);
         font-family: "Jost", sans-serif;
         font-size: 0.85rem;
         outline: none;
@@ -1716,16 +1710,6 @@
       }
       .att-age {
         flex: 0 0 72px !important;
-      }
-      .att-price {
-        font-family: "Cormorant Garamond", serif;
-        font-size: 1.1rem;
-        color: #e8c87a;
-        min-width: 50px;
-        text-align: right;
-      }
-      .att-price.free {
-        color: #7dbf80;
       }
       .att-del {
         background: none;
@@ -1774,59 +1758,19 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.8rem 1.1rem;
-        background: rgba(200, 168, 90, 0.07);
+        background: rgba(255, 255, 255, 0.08);
         border-bottom: 1px solid rgba(200, 168, 90, 0.12);
         font-family: "Cinzel", serif;
         font-size: 0.6rem;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: #c8a85a;
+        color: var(--gold2);
       }
       .cart-who {
         padding: 0.65rem 1.1rem;
         font-size: 0.78rem;
         color: rgba(245, 239, 224, 0.45);
         border-bottom: 1px solid rgba(200, 168, 90, 0.07);
-      }
-      .cart-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .cart-table th {
-        font-family: "Cinzel", serif;
-        font-size: 0.55rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: rgba(200, 168, 90, 0.5);
-        padding: 0.55rem 1.1rem;
-        text-align: left;
-        border-bottom: 1px solid rgba(200, 168, 90, 0.07);
-      }
-      .cart-table td {
-        padding: 0.6rem 1.1rem;
-        font-size: 0.8rem;
-        color: rgba(245, 239, 224, 0.65);
-        border-bottom: 1px solid rgba(200, 168, 90, 0.05);
-      }
-      .cart-total {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.9rem 1.1rem;
-        background: rgba(200, 168, 90, 0.05);
-        border-top: 1px solid rgba(200, 168, 90, 0.15);
-        font-family: "Cinzel", serif;
-        font-size: 0.6rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: #c8a85a;
-      }
-      .cart-total-amt {
-        font-family: "Cormorant Garamond", serif;
-        font-size: 1.7rem;
-        font-weight: 300;
-        color: #e8c87a;
-        letter-spacing: 0;
       }
 
       /* ── PLEDGE BOX ── */
@@ -1899,8 +1843,8 @@
         cursor: pointer;
       }
       .quick:hover {
-        background: rgba(200, 168, 90, 0.1);
-        color: #c8a85a;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--gold2);
       }
 
       /* ── PAYMENT AREA ── */
@@ -1910,15 +1854,10 @@
         align-items: center;
         padding: 0.85rem 1.1rem;
         border: 1px solid rgba(200, 168, 90, 0.18);
-        background: rgba(200, 168, 90, 0.05);
+        background: rgba(255, 255, 255, 0.06);
         margin-bottom: 1.2rem;
         font-size: 0.8rem;
-        color: rgba(245, 239, 224, 0.5);
-      }
-      .pay-mini-total {
-        font-family: "Cormorant Garamond", serif;
-        font-size: 1.5rem;
-        color: #e8c87a;
+        color: var(--cream);
       }
       .pay-placeholder {
         padding: 1.5rem;
@@ -2072,10 +2011,10 @@
         display: none;
         margin-top: 0.8rem;
         padding: 0.6rem 0.9rem;
-        background: rgba(180, 60, 60, 0.15);
-        border: 1px solid rgba(180, 60, 60, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(180, 60, 60, 0.45);
         font-size: 0.78rem;
-        color: #e09090;
+        color: var(--cream);
       }
       .error-msg:focus {
         outline: 2px solid rgba(200, 168, 90, 0.45);
@@ -2661,8 +2600,16 @@
               <!-- Step 4 -->
               <div class="step" id="s4">
                 <h3 class="step-title">Review &amp; submit</h3>
-                <p class="reg-muted" style="margin: -0.35rem 0 0.85rem; font-size: 0.78rem; line-height: 1.55">
-                  Submitting saves your registration. You will receive payment instructions and your pledge code by email.
+                <p
+                  class="reg-muted"
+                  style="
+                    margin: -0.35rem 0 0.85rem;
+                    font-size: 0.78rem;
+                    line-height: 1.55;
+                  "
+                >
+                  Submitting saves your registration. You will receive payment
+                  instructions and your pledge code by email.
                 </p>
                 <div id="pay-summary"></div>
                 <div
@@ -2705,7 +2652,7 @@
                   link (always check spam).
                 </p>
 
-                <p
+                <output
                   id="lookup-token-empty"
                   class="reg-muted"
                   style="
@@ -2717,14 +2664,13 @@
                     border-radius: 6px;
                     line-height: 1.65;
                   "
-                  role="status"
                   aria-live="polite"
                 >
                   Open your secure registration link to load your balance
                   instantly, or request a new one below.
-                </p>
+                </output>
 
-                <p
+                <output
                   id="lookup-token-loading"
                   class="reg-muted"
                   style="
@@ -2736,11 +2682,10 @@
                     border-radius: 6px;
                     line-height: 1.65;
                   "
-                  role="status"
                   aria-live="polite"
                 >
                   Loading your registration…
-                </p>
+                </output>
                 <div
                   class="error-msg"
                   id="lookup-token-err"
@@ -2768,8 +2713,8 @@
                     class="reg-muted"
                     style="margin: 0 0 1rem; font-size: 0.75rem"
                   >
-                    We will only email a link if your email and pledge code match
-                    a registration (same response either way).
+                    We will only email a link if your email and pledge code
+                    match a registration (same response either way).
                   </p>
                   <div class="field full">
                     <label for="recovery-email">Registration email</label>
@@ -2810,7 +2755,7 @@
                     Email me a secure link →
                   </button>
                   <div class="error-msg" id="lookup-err" tabindex="-1"></div>
-                  <p
+                  <output
                     id="lookup-req-feedback"
                     class="reg-muted"
                     style="
@@ -2823,9 +2768,8 @@
                       border-radius: 6px;
                       line-height: 1.65;
                     "
-                    role="status"
                     aria-live="polite"
-                  ></p>
+                  ></output>
                 </div>
 
                 <div class="balance-box" id="balance-box">
@@ -2893,13 +2837,12 @@
         </nav>
         <p class="footer-copy">
           © 2026 Charismatic Renewal Ministries USA · Houston, Texas ·
-          <a href="mailto:info@crm-na.org"
-            >info@crm-na.org</a
-          >
+          <a href="mailto:info@crm-na.org">info@crm-na.org</a>
         </p>
       </div>
     </footer>
 
+    <script src="/site-shell.js" defer></script>
     <script>
       /* ═══════════════════════════════════════════════════════════════
    CRM USA 2026 — Convention Registration JS  v10
@@ -2964,8 +2907,13 @@
         var next = t === "return" ? "#return" : "#new";
         if (location.hash === next) return;
         try {
-          history.replaceState(null, "", location.pathname + location.search + next);
+          history.replaceState(
+            null,
+            "",
+            location.pathname + location.search + next,
+          );
         } catch (e) {
+          console.error(e)
           location.hash = next;
         }
       }
@@ -2975,8 +2923,8 @@
         if (!regSec) return;
         setTimeout(function () {
           var smooth = !(
-            window.matchMedia &&
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            globalThis.matchMedia &&
+            globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
           );
           regSec.scrollIntoView({
             behavior: smooth ? "smooth" : "auto",
@@ -3039,8 +2987,8 @@
         var _r = document.getElementById("register");
         if (_r) {
           var smooth = !(
-            window.matchMedia &&
-            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            globalThis.matchMedia &&
+            globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
           );
           _r.scrollIntoView({
             behavior: smooth ? "smooth" : "auto",
@@ -3255,8 +3203,8 @@
         if (!list) return;
         list.innerHTML = "";
         atts.forEach(function (a, idx) {
-          var age = parseInt(a.age);
-          var pStr = a.age !== "" && !isNaN(age) ? fmt(calcPrice(age)) : "";
+          var age = Number.parseInt(a.age);
+          var pStr = a.age !== "" && !Number.isNaN(age) ? fmt(calcPrice(age)) : "";
           var pCls = "att-price" + (pStr === "Free" ? " free" : "");
           var rowErrors = attendeeFieldErrors[idx] || {};
           var rowErrorText = attendeeRowErrorMessage(rowErrors);
@@ -3319,8 +3267,8 @@
               showErrEl(document.getElementById("s2-err"), "");
               var sp = document.getElementById("ap-" + aid);
               if (!sp) return;
-              var v = parseInt(ai2.value);
-              if (isNaN(v) || ai2.value === "") {
+              var v = Number.parseInt(ai2.value);
+              if (Number.isNaN(v) || ai2.value === "") {
                 sp.textContent = "";
                 sp.className = "att-price";
                 updateRegNavState();
@@ -3351,8 +3299,8 @@
 
       function calcTotal() {
         return atts.reduce(function (s, a) {
-          var v = parseInt(a.age);
-          return s + (!isNaN(v) && a.age !== "" ? calcPrice(v) : 0);
+          var v = Number.parseInt(a.age);
+          return s + (!Number.isNaN(v) && a.age !== "" ? calcPrice(v) : 0);
         }, 0);
       }
 
@@ -3366,9 +3314,9 @@
       }
 
       function attendeeAgeOk(ageRaw) {
-        var v = parseInt(ageRaw, 10);
+        var v = Number.parseInt(ageRaw, 10);
         return (
-          ageRaw !== "" && ageRaw !== null && !isNaN(v) && v >= 0 && v <= 120
+          ageRaw !== "" && ageRaw !== null && !Number.isNaN(v) && v >= 0 && v <= 120
         );
       }
 
@@ -3394,10 +3342,10 @@
           a.name = full;
         }
         if (
-          (a.age === "" || a.age === null || typeof a.age === "undefined") &&
+          (a.age === "" || a.age === null || a.age === undefined) &&
           attendeeAgeOk(contact.cage)
         ) {
-          a.age = String(parseInt(contact.cage, 10));
+          a.age = String(Number.parseInt(contact.cage, 10));
         }
       }
 
@@ -3420,15 +3368,15 @@
             contactFieldErrors.last_name = "Last name is required.";
           if (!trimStr(contact.em))
             contactFieldErrors.email = "Email is required.";
+          var contactFocusId = "fn";
+          if (trimStr(contact.fn)) {
+            contactFocusId = trimStr(contact.ln) ? "em" : "ln";
+          }
           return {
             ok: false,
             step: "contact",
             message: "Please fill in first name, last name, and email.",
-            focusId: !trimStr(contact.fn)
-              ? "fn"
-              : !trimStr(contact.ln)
-                ? "ln"
-                : "em",
+            focusId: contactFocusId,
             fieldErrors: contactFieldErrors,
           };
         }
@@ -3654,8 +3602,8 @@
           btn.title = "Enter an amount to pay today (you can enter 0).";
           return;
         }
-        var v = parseFloat(raw);
-        if (isNaN(v) || v < 0) {
+        var v = Number.parseFloat(raw);
+        if (Number.isNaN(v) || v < 0) {
           btn.disabled = true;
           btn.title = "Enter a valid amount between $0 and the total.";
           return;
@@ -3695,9 +3643,9 @@
       /* ── CART ── */
       function renderCart(totalOverride) {
         syncAtts();
+        var s3e = document.getElementById("s3-err");
         var ca = document.getElementById("cart-area");
         if (!ca) {
-          var s3e = document.getElementById("s3-err");
           if (s3e)
             showErrEl(
               s3e,
@@ -3706,13 +3654,13 @@
           return;
         }
         var t =
-          typeof totalOverride === "number" && !isNaN(totalOverride)
+          typeof totalOverride === "number" && !Number.isNaN(totalOverride)
             ? totalOverride
             : calcTotal();
         var rows = atts
           .map(function (a, i) {
-            var v = parseInt(a.age),
-              p = isNaN(v) ? 0 : calcPrice(v);
+            var v = Number.parseInt(a.age),
+              p = Number.isNaN(v) ? 0 : calcPrice(v);
             return (
               "<tr><td>" +
               (i + 1) +
@@ -3751,15 +3699,14 @@
           "</div>";
 
         var s3 = document.getElementById("s3");
-        var s3e = document.getElementById("s3-err");
         if (s3 && s3.classList.contains("on") && s3e) {
-          if (!assertRegistrationReady("full").ok) {
+          if (assertRegistrationReady("full").ok) {
+            showErrEl(s3e, "");
+          } else {
             showErrEl(
               s3e,
               "Your order summary may be out of date. Go back and confirm every attendee has a full name and age (0–120).",
             );
-          } else {
-            showErrEl(s3e, "");
           }
         }
       }
@@ -3774,7 +3721,7 @@
             "<span>" +
             atts.length +
             " attendee" +
-            (atts.length !== 1 ? "s" : "") +
+            (atts.length === 1 ? "" : "s") +
             " &nbsp;·&nbsp; " +
             TIER_LABEL[activeTier()] +
             "</span>" +
@@ -3925,21 +3872,8 @@
         grandTotal = calcTotal();
 
         var amt;
-        if (typeof forcedAmt !== "undefined") {
-          if (grandTotal !== 0) {
-            showErrEl(
-              s4e,
-              "Your order total is not free. Use the payment amount field to complete your registration.",
-            );
-            renderStep4();
-            setStep(4);
-            updateRegNavState();
-            refreshStep4PaymentControls();
-            return;
-          }
-          amt = 0;
-        } else {
-          if (!(grandTotal > 0)) {
+        if (forcedAmt === undefined) {
+          if (grandTotal <= 0) {
             showErrEl(
               s4e,
               "There is nothing to pay. Your order is free—confirm using the free registration option.",
@@ -3955,12 +3889,25 @@
             );
             return;
           }
-          amt = parseFloat(raw);
-          if (isNaN(amt)) {
+          amt = Number.parseFloat(raw);
+          if (Number.isNaN(amt)) {
             showErrEl(s4e, "Enter a valid payment amount.");
             return;
           }
           amt = Math.max(0, Math.min(amt, grandTotal));
+        } else {
+          if (grandTotal !== 0) {
+            showErrEl(
+              s4e,
+              "Your order total is not free. Use the payment amount field to complete your registration.",
+            );
+            renderStep4();
+            setStep(4);
+            updateRegNavState();
+            refreshStep4PaymentControls();
+            return;
+          }
+          amt = 0;
         }
 
         setCompleteButtonLoading(true);
@@ -4002,19 +3949,24 @@
         var cbf = document.getElementById("complete-free-btn");
         if (cbf) cbf.style.display = "none";
 
-        var successMsg =
-          grandTotal === 0
-            ? "Your registration is confirmed — your spot is free! We look forward to seeing you in Houston."
-            : amt > 0
-              ? 'Your registration is confirmed for <strong style="color:#E8C87A;">$' +
-                grandTotal +
-                ".00</strong>. " +
-                'You selected <strong style="color:#E8C87A;">$' +
-                amt +
-                ".00</strong> as the amount you plan to pay today. Use the Zelle or Zeffy instructions below to send payment. Your full balance remains due until staff receives and reconciles that payment."
-              : 'Your registration is confirmed for <strong style="color:#E8C87A;">$' +
-                grandTotal +
-                ".00</strong>. No payment has been recorded yet. Use the Zelle or Zeffy instructions below whenever you are ready, and your balance will be updated within 3–5 business days once payment is received.";
+        var successMsg;
+        if (grandTotal === 0) {
+          successMsg =
+            "Your registration is confirmed — your spot is free! We look forward to seeing you in Houston.";
+        } else if (amt > 0) {
+          successMsg =
+            'Your registration is confirmed for <strong style="color:#E8C87A;">$' +
+            grandTotal +
+            ".00</strong>. " +
+            'You selected <strong style="color:#E8C87A;">$' +
+            amt +
+            ".00</strong> as the amount you plan to pay today. Use the Zelle or Zeffy instructions below to send payment. Your full balance remains due until staff receives and reconciles that payment.";
+        } else {
+          successMsg =
+            'Your registration is confirmed for <strong style="color:#E8C87A;">$' +
+            grandTotal +
+            ".00</strong>. No payment has been recorded yet. Use the Zelle or Zeffy instructions below whenever you are ready, and your balance will be updated within 3–5 business days once payment is received.";
+        }
 
         var emailNote = emailOk
           ? '<p class="reg-email-warn" style="margin-top:0.6rem;">A confirmation email is on its way to <strong>' +
@@ -4103,8 +4055,8 @@
           if (el) {
             var r = document.createRange();
             r.selectNode(el);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(r);
+            globalThis.getSelection().removeAllRanges();
+            globalThis.getSelection().addRange(r);
           }
           btn.textContent = "Select & copy ↑";
         }
@@ -4129,6 +4081,7 @@
           try {
             data = await r.json();
           } catch (e) {
+            console.error(e)
             data = null;
           }
           if (statusEl) {
@@ -4138,6 +4091,7 @@
                 : "If your registration matches, a confirmation email will arrive shortly. Check spam.";
           }
         } catch (e) {
+          console.error(e)
           if (statusEl) {
             statusEl.textContent =
               "Could not reach the server. Try again in a moment or email info@crm-na.org.";
@@ -4172,8 +4126,8 @@
         if (grandTotal > 0) {
           var amtEl = document.getElementById("reg-pay-amt");
           var rawAmt = amtEl ? String(amtEl.value).trim() : "0";
-          var dollars = parseFloat(rawAmt);
-          if (isNaN(dollars)) dollars = 0;
+          var dollars = Number.parseFloat(rawAmt);
+          if (Number.isNaN(dollars)) dollars = 0;
           dollars = Math.max(0, Math.min(dollars, grandTotal));
           payload.payment_intent_cents = Math.round(dollars * 100);
         } else {
@@ -4189,6 +4143,7 @@
         try {
           data = await response.json();
         } catch (e) {
+          console.error(e)
           data = null;
         }
 
@@ -4228,7 +4183,7 @@
 
       function extractTokenFromHash() {
         var h = location.hash || "";
-        if (h.indexOf("return") === -1) return null;
+        if (!h.includes("return")) return null;
         var q = h.indexOf("?");
         if (q === -1) return null;
         try {
@@ -4236,6 +4191,7 @@
           var t = params.get("token");
           return t && String(t).trim() ? String(t).trim() : null;
         } catch (e) {
+          console.error(e)
           return null;
         }
       }
@@ -4322,6 +4278,7 @@
           try {
             data = await response.json();
           } catch (e) {
+            console.error(e)
             data = null;
           }
 
@@ -4334,7 +4291,9 @@
                 "",
                 location.pathname + location.search + "#return",
               );
-            } catch (e) {}
+            } catch (e) {
+              console.error(e)
+            }
             announceReg("Registration loaded.");
             return;
           }
@@ -4357,6 +4316,7 @@
           }
           announceReg("Registration link could not be loaded.");
         } catch (e) {
+          console.error(e)
           setReturnLookupState(
             "error",
             "Network error. Check your connection and try again. If you need help urgently, contact info@crm-na.org.",
@@ -4387,10 +4347,10 @@
           ? pledgeEl.value
               .trim()
               .toUpperCase()
-              .replace(/[^A-Z0-9]/g, "")
+              .replaceAll(/[^A-Z0-9]/g, "")
           : "";
 
-        if (!email || email.indexOf("@") === -1) {
+        if (!email || !email.includes("@")) {
           showErr(
             errEl,
             "Please enter the email address you used to register.",
@@ -4427,6 +4387,7 @@
           try {
             data = await response.json();
           } catch (e) {
+            console.error(e)
             data = null;
           }
           if (response.status === 429) {
@@ -4446,16 +4407,17 @@
           var msg =
             (data && data.message) ||
             "If your email and pledge code match a registration on file, we sent a secure link to that address. " +
-            "You will always see this same message—for privacy we never confirm whether there was a match. " +
-            "Delivery is usually within a few minutes; check inbox, spam, and Promotions. " +
-            'Subject line: "Your CRM 2026 registration link". ' +
-            "If nothing arrives after about 15 minutes, try again or email info@crm-na.org.";
+              "You will always see this same message—for privacy we never confirm whether there was a match. " +
+              "Delivery is usually within a few minutes; check inbox, spam, and Promotions. " +
+              'Subject line: "Your CRM 2026 registration link". ' +
+              "If nothing arrives after about 15 minutes, try again or email info@crm-na.org.";
           if (fbEl) {
             fbEl.textContent = msg;
             fbEl.style.display = "block";
           }
           announceReg(msg);
         } catch (e) {
+          console.error(e)
           showErr(
             errEl,
             "Network error. Check your connection and try again. If you need help urgently, contact info@crm-na.org.",
@@ -4648,14 +4610,14 @@
       }
       function esc(s) {
         return String(s || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
+          .replaceAll('&', "&amp;")
+          .replaceAll('<', "&lt;")
+          .replaceAll('>', "&gt;")
+          .replaceAll('"', "&quot;");
       }
       function fmtMoney(n) {
         var x = Number(n);
-        if (!isFinite(x)) x = 0;
+        if (!Number.isFinite(x)) x = 0;
         return x.toFixed(2);
       }
       function setText(id, t) {
@@ -4680,10 +4642,10 @@
           r.total_pledged != null && r.total_pledged !== ""
             ? r.total_pledged
             : r.total_amount;
-        var t2 = parseFloat(rawT);
-        if (!isFinite(t2)) t2 = 0;
-        var p2 = parseFloat(r.amount_paid);
-        if (!isFinite(p2)) p2 = 0;
+        var t2 = Number.parseFloat(rawT);
+        if (!Number.isFinite(t2)) t2 = 0;
+        var p2 = Number.parseFloat(r.amount_paid);
+        if (!Number.isFinite(p2)) p2 = 0;
         var rem2 = Math.max(0, Math.round((t2 - p2) * 100) / 100);
         return { total: t2, paid: p2, remaining: rem2 };
       }
@@ -4718,12 +4680,14 @@
             bn.textContent = "★ Currently: " + TIER_LABEL[t];
             bn.style.display = "block";
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(e)
+        }
       })();
       /* Scroll fade-in */
       (function () {
         try {
-          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+          if (globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches)
             return;
           var obs = new IntersectionObserver(
             function (en) {
@@ -4737,7 +4701,7 @@
             { threshold: 0.05, rootMargin: "0px 0px -20px 0px" },
           );
           /* Only animate on desktop/mouse devices — skip on mobile/touch to prevent invisible content */
-          if (!window.matchMedia("(hover:none)").matches) {
+          if (!globalThis.matchMedia("(hover:none)").matches) {
             document
               .querySelectorAll(".about-stat,.schedule-day,.venue-item")
               .forEach(function (el) {
@@ -4747,7 +4711,9 @@
                 obs.observe(el);
               });
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(e)
+        }
       })();
       /* Sticky nav */
       (function () {
@@ -4781,7 +4747,7 @@
           if (!tabs.length) return;
           var cur = tabs.indexOf(document.activeElement);
           if (cur < 0) return;
-          var next = cur;
+          var next;
           if (e.key === "ArrowRight" || e.key === "ArrowDown") {
             next = (cur + 1) % tabs.length;
             e.preventDefault();
@@ -4803,7 +4769,7 @@
         });
       })();
 
-      window.addEventListener("hashchange", function () {
+      globalThis.addEventListener("hashchange", function () {
         var token = extractTokenFromHash();
         var tab = activeTabFromHash();
         if (tab) {

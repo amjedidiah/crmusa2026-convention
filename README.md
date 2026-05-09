@@ -203,7 +203,7 @@ SUPABASE_ANON_KEY=eyJ...anon...
 RESEND_API_KEY=re_...
 # Optional: force transport — resend | smtp (see “Email” table above).
 # EMAIL_TRANSPORT=resend
-SITE_URL=https://crmusa2026-convention.vercel.app
+SITE_URL=https://crmusa2026-convention.crm-na.org
 LOOKUP_TOKEN_SECRET=use-a-long-random-string
 # Optional: lookup link TTL in seconds (default 604800 = 7 days; max 31536000).
 # LOOKUP_TOKEN_TTL_SECONDS=2592000
@@ -211,7 +211,7 @@ CRON_SECRET=another-long-random-secret
 STAFF_EMAIL_ALLOWLIST=finance@example.org,ops@example.org
 
 # Optional: admin API CORS (defaults to SITE_URL if unset). Add previews/extra hosts as needed.
-# STAFF_ORIGINS=https://crmusa2026-convention.vercel.app
+# STAFF_ORIGINS=https://crmusa2026-convention.crm-na.org
 
 # Optional: Auth verify apikey override (staff-auth.js); prefer SUPABASE_ANON_KEY.
 # SUPABASE_AUTH_KEY=
@@ -300,7 +300,7 @@ UPSTASH_REDIS_REST_TOKEN=...
 
 ## URLs
 
-- **Live site:** <https://crmusa2026-convention.vercel.app>
+- **Live site:** <https://crmusa2026-convention.crm-na.org>
 - **GitHub:** <https://github.com/oxofoegbu/crmusa2026-convention>
 
 ---

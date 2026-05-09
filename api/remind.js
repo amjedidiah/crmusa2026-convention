@@ -4,33 +4,32 @@
    Uses authoritative cents columns; stamps last_reminder_at after each send.
 ───────────────────────────────────────────────────────────────────── */
 
-import { serverLog } from './_lib/server-log.js';
+import { serverLog } from "./_lib/server-log.js";
 import {
   assertTransactionalEmailReady,
   sendTransactionalEmail,
-} from './_lib/email-send.js';
+} from "./_lib/email-send.js";
 import {
   assertConventionOutboundIdentity,
   resolveConventionMailFrom,
   resolveConventionMailReplyTo,
-} from './_lib/convention-mail.js';
+} from "./_lib/convention-mail.js";
 
 const ZEFFY_URL =
-  'https://www.zeffy.com/en-US/donation-form/donate-to-facilitate-the-work-of-this-ministry';
+  "https://www.zeffy.com/en-US/donation-form/donate-to-facilitate-the-work-of-this-ministry";
 
 const TIER_LABELS = {
-  earlybird: 'Early Bird (Apr 1 – Jun 15)',
-  regular: 'Regular (Jun 16 – Jul 16)',
-  late: 'Late (Jul 17+)',
+  earlybird: "Early Bird (Apr 1 – Jun 15)",
+  regular: "Regular (Jun 16 – Jul 16)",
+  late: "Late (Jul 17+)",
 };
 
 const REMINDER_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 function publicSiteUrl() {
-  return (process.env.SITE_URL || 'https://crmusa2026-convention.vercel.app').replace(
-    /\/+$/,
-    ''
-  );
+  return (
+    process.env.SITE_URL || "https://crmusa2026-convention.crm-na.org"
+  ).replace(/\/+$/, "");
 }
 
 function remainingCents(reg) {
@@ -42,7 +41,7 @@ function remainingCents(reg) {
 function shouldSendReminder(reg) {
   if (!reg.email) return false;
   if (remainingCents(reg) <= 0) return false;
-  if (!['pending', 'partial'].includes(reg.status)) return false;
+  if (!["pending", "partial"].includes(reg.status)) return false;
   if (!reg.last_reminder_at) return true;
   const last = new Date(reg.last_reminder_at).getTime();
   if (Number.isNaN(last)) return true;
@@ -50,22 +49,22 @@ function shouldSendReminder(reg) {
 }
 
 export default async function handler(req, res) {
-  const authHeader = req.headers.authorization || '';
-  const querySecret = req.query.secret || '';
-  const cronSecret = process.env.CRON_SECRET || '';
+  const authHeader = req.headers.authorization || "";
+  const querySecret = req.query.secret || "";
+  const cronSecret = process.env.CRON_SECRET || "";
 
   const authorized =
     authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret;
 
   if (!cronSecret || !authorized) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const supaUrl = process.env.SUPABASE_URL;
   const supaKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supaUrl || !supaKey) {
-    return res.status(500).json({ error: 'Supabase env vars not set' });
+    return res.status(500).json({ error: "Supabase env vars not set" });
   }
 
   let fromAddr;
@@ -76,16 +75,16 @@ export default async function handler(req, res) {
     fromAddr = resolveConventionMailFrom();
     replyTo = resolveConventionMailReplyTo();
   } catch (e) {
-    serverLog('error', 'remind.email_not_configured', {
-      route: '/api/remind',
+    serverLog("error", "remind.email_not_configured", {
+      route: "/api/remind",
       detail: e instanceof Error ? e.message : String(e),
     });
     return res.status(500).json({
-      error: 'email_not_configured',
+      error: "email_not_configured",
       message:
         e instanceof Error
           ? e.message
-          : 'Set RESEND_API_KEY for Resend, or run Mailpit and use SMTP (see EMAIL_TRANSPORT).',
+          : "Set RESEND_API_KEY for Resend, or run Mailpit and use SMTP (see EMAIL_TRANSPORT).",
     });
   }
 
@@ -95,38 +94,44 @@ export default async function handler(req, res) {
       headers: {
         apikey: supaKey,
         Authorization: `Bearer ${supaKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   if (!supaRes.ok) {
     const err = await supaRes.text();
-    serverLog('error', 'remind.supabase_query_failed', {
-      route: '/api/remind',
+    serverLog("error", "remind.supabase_query_failed", {
+      route: "/api/remind",
       detail: err.slice(0, 500),
     });
-    return res.status(500).json({ error: 'Supabase query failed', detail: err });
+    return res
+      .status(500)
+      .json({ error: "Supabase query failed", detail: err });
   }
 
   const registrations = await supaRes.json();
 
   if (!Array.isArray(registrations) || registrations.length === 0) {
-    serverLog('info', 'remind.no_registrations_in_scope', { route: '/api/remind' });
-    return res.status(200).json({ sent: 0, skipped: 0, message: 'No registrations in scope' });
+    serverLog("info", "remind.no_registrations_in_scope", {
+      route: "/api/remind",
+    });
+    return res
+      .status(200)
+      .json({ sent: 0, skipped: 0, message: "No registrations in scope" });
   }
 
   const candidates = registrations.filter(shouldSendReminder);
 
   if (candidates.length === 0) {
-    serverLog('info', 'remind.none_due_this_cycle', {
-      route: '/api/remind',
+    serverLog("info", "remind.none_due_this_cycle", {
+      route: "/api/remind",
       skipped_in_scope: registrations.length,
     });
     return res.status(200).json({
       sent: 0,
       skipped: registrations.length,
-      message: 'No reminders due this cycle',
+      message: "No reminders due this cycle",
     });
   }
 
@@ -158,20 +163,20 @@ export default async function handler(req, res) {
       const patchRes = await fetch(
         `${supaUrl}/rest/v1/registrations?id=eq.${reg.id}`,
         {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
             apikey: supaKey,
             Authorization: `Bearer ${supaKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
           },
           body: JSON.stringify({ last_reminder_at: stamp }),
-        }
+        },
       );
       if (!patchRes.ok) {
         const patchText = await patchRes.text();
-        serverLog('error', 'remind.last_reminder_stamp_failed', {
-          route: '/api/remind',
+        serverLog("error", "remind.last_reminder_stamp_failed", {
+          route: "/api/remind",
           registration_id: reg.id,
           detail: patchText.slice(0, 300),
         });
@@ -180,8 +185,8 @@ export default async function handler(req, res) {
       failed += 1;
       const errText =
         sendErr instanceof Error ? sendErr.message : String(sendErr);
-      serverLog('error', 'remind.email_send_failed', {
-        route: '/api/remind',
+      serverLog("error", "remind.email_send_failed", {
+        route: "/api/remind",
         registration_id: reg.id,
         detail: errText.slice(0, 500),
       });
@@ -193,8 +198,8 @@ export default async function handler(req, res) {
 
   const skipped = registrations.length - candidates.length;
 
-  serverLog('info', 'remind.batch_complete', {
-    route: '/api/remind',
+  serverLog("info", "remind.batch_complete", {
+    route: "/api/remind",
     sent,
     failed,
     candidates: candidates.length,
@@ -205,8 +210,8 @@ export default async function handler(req, res) {
 
 function buildReminderEmail(reg, remaining, total, paid, replyTo) {
   const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
-  const tierLabel = TIER_LABELS[reg.tier] || reg.tier || '';
-  const firstName = reg.first_name || 'Friend';
+  const tierLabel = TIER_LABELS[reg.tier] || reg.tier || "";
+  const firstName = reg.first_name || "Friend";
   const barPct = Math.min(100, pct);
   const site = publicSiteUrl();
 
@@ -365,11 +370,11 @@ function buildReminderEmail(reg, remaining, total, paid, replyTo) {
 }
 
 function esc(s) {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function sleep(ms) {

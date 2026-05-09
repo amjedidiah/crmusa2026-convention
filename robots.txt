@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://crmusa2026-convention.vercel.app/sitemap.xml
+Sitemap: https://crmusa2026-convention.crm-na.org/sitemap.xml
