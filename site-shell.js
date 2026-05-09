@@ -1,5 +1,5 @@
 const DEFAULT_CLIENT_APP_URL =
-  "https://crm-na.org/events/crm-usa-national-convention-2026";
+  "https://www.crm-na.org/events/crm-usa-national-convention-2026";
 const RETURN_TO_STORAGE_KEY = "crm-na-client-app-return-to";
 
 function normalizeReturnTo(raw) {
