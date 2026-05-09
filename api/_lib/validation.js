@@ -1,4 +1,7 @@
+import { validate as deepValidateEmail } from 'deep-email-validator';
+
 import { normalizeEmail, normalizePhoneForDedup } from './registration.js';
+import { serverLog } from './server-log.js';
 
 export function isBlank(value) {
   return String(value || '').trim() === '';
@@ -35,6 +38,44 @@ export function validateContact(contact) {
       city: String(candidate.city || '').trim(),
     },
   };
+}
+
+const DISPOSABLE_EMAIL_MESSAGE =
+  'Please use a permanent email address so we can send your pledge code, payment updates, and reminder emails.';
+
+export async function validateRegistrationContact(contact) {
+  const base = validateContact(contact);
+  if (!base.valid) return base;
+
+  try {
+    const result = await deepValidateEmail({
+      email: base.normalized.email,
+      validateRegex: true,
+      validateDisposable: true,
+      validateTypo: false,
+      validateMx: false,
+      validateSMTP: false,
+    });
+
+    if (!result.valid && result.reason === 'disposable') {
+      return {
+        ...base,
+        valid: false,
+        errors: {
+          ...base.errors,
+          email: DISPOSABLE_EMAIL_MESSAGE,
+        },
+      };
+    }
+
+    return base;
+  } catch (error) {
+    serverLog('warn', 'register.email_validation_soft_failed', {
+      route: 'validation.validateRegistrationContact',
+      detail: error instanceof Error ? error.message : 'unknown_error',
+    });
+    return base;
+  }
 }
 
 export function validateAttendees(attendees) {

@@ -37,6 +37,10 @@ additional_redirect_urls = [
 ]
 jwt_expiry = 3600
 
+[auth.email.template.magic_link]
+subject = "CRM USA 2026 Staff Sign-In"
+content_path = "./supabase/templates/magic-link.html"
+
 [storage]
 enabled = true
 file_size_limit = "50MiB"

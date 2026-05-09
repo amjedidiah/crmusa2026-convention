@@ -232,7 +232,7 @@ function attendeeBracketCentsAdmin(age, tier) {
   let numericAge = Number(age);
   let pricing = PRICING_CENTS_ADMIN[tier];
   if (!pricing || !Number.isFinite(numericAge) || numericAge < 0) return 0;
-  if (numericAge < 10) return pricing.u10;
+  if (numericAge <= 10) return pricing.u10;
   if (numericAge < 18) return pricing.u17;
   return pricing.adu;
 }
@@ -270,6 +270,19 @@ function chicagoYmdFromIso(iso) {
   return "";
 }
 
+/** Human-readable date/time in UTC for report tables / exports (e.g. "May 9, 2026, 2:30 PM UTC"). */
+function formatReportDateTimeUtc(iso) {
+  if (iso == null || iso === "") return "—";
+  let d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  let formatted = new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(d);
+  return formatted + " UTC";
+}
+
 /** Same calendar rules as activeTierForDate(registration.js) for a Chicago YYYY-MM-DD. */
 function activeTierFromChicagoYmd(ymd) {
   if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return "";
@@ -298,8 +311,13 @@ function windowLeadSentence(calTier) {
 /**
  * Human-readable tier + ticket math for Pledges Report (HTML / CSV / PDF).
  * Uses stored tier for bracket prices; Chicago calendar on created_at for window copy.
+ *
+ * @param {object} [opts]
+ * @param {boolean} [opts.slimColumn] — Omit amounts duplicated in Pledged/Paid columns (HTML + CSV/PDF when passed).
  */
-function buildPricingBreakdownParts(r) {
+function buildPricingBreakdownParts(r, opts) {
+  opts = opts || {};
+  let slim = !!opts.slimColumn;
   let preamble = [];
   let items = [];
   let summary = null;
@@ -341,28 +359,35 @@ function buildPricingBreakdownParts(r) {
     items.push(nm + " (age " + ag + "): " + formatUsdFromCentsAdmin(cents));
   }
   if (items.length === 0) {
-    footers.push("No attendees on file.");
     if (totalC > 0) {
-      summary = "Stored pledge " + formatUsdFromCentsAdmin(totalC) + ".";
+      summary = slim
+        ? "No attendee line items — see Pledged column."
+        : "Stored pledge " + formatUsdFromCentsAdmin(totalC) + ".";
+      if (!slim) {
+        footers.push("No attendees on file.");
+      }
+    } else {
+      footers.push("No attendees on file.");
     }
   } else {
-    summary =
-      "Total pledged " +
-      formatUsdFromCentsAdmin(totalC) +
-      (totalC === bracketSum
-        ? " — matches ticket line items."
-        : " — ticket prices add to " +
+    summary = slim
+      ? totalC === bracketSum
+        ? "Matches ticket line items."
+        : "Line items add to " +
           formatUsdFromCentsAdmin(bracketSum) +
-          " at this tier (differs from stored pledge).");
+          " — differs from stored pledge."
+      : "Total pledged " +
+        formatUsdFromCentsAdmin(totalC) +
+        (totalC === bracketSum
+          ? " — matches ticket line items."
+          : " — ticket prices add to " +
+            formatUsdFromCentsAdmin(bracketSum) +
+            " at this tier (differs from stored pledge).");
   }
   if (r.last_reminder_at) {
-    footers.push(
-      "Last reminder sent " +
-        String(r.last_reminder_at).slice(0, 10) +
-        " (UTC).",
-    );
+    footers.push("Last reminder sent " + formatReportDateTimeUtc(r.last_reminder_at) + ".");
   }
-  if (paidC > 0) {
+  if (paidC > 0 && !slim) {
     footers.push("Recorded paid " + formatUsdFromCentsAdmin(paidC) + ".");
   }
   return {
@@ -373,9 +398,9 @@ function buildPricingBreakdownParts(r) {
   };
 }
 
-/** Flat lines for CSV / PDF: bullets on each attendee line item. */
-function buildPricingBreakdownLines(r) {
-  let p = buildPricingBreakdownParts(r);
+/** Flat lines for CSV / PDF: bullets on each attendee line item. Pass `{ slimColumn: true }` to match HTML column density. */
+function buildPricingBreakdownLines(r, opts) {
+  let p = buildPricingBreakdownParts(r, opts || {});
   let out = [p.preamble].flat();
   p.items.forEach(function (it) {
     out.push("\u2022 " + it);
@@ -386,7 +411,7 @@ function buildPricingBreakdownLines(r) {
 }
 
 function buildPricingBreakdownHtml(r) {
-  let p = buildPricingBreakdownParts(r);
+  let p = buildPricingBreakdownParts(r, { slimColumn: true });
   let chunks = [];
   p.preamble.forEach(function (line) {
     chunks.push('<p class="report-pricing-p">' + esc(line) + "</p>");
@@ -958,9 +983,62 @@ function reportBalanceExport(pled, paid, opts) {
   }
   let rem = Math.max(0, pled - paid);
   if (pled > 0 && rem <= 0.005) {
-    return "Paid";
+    return "Paid ✓";
   }
   return pdf ? "$" + rem.toFixed(2) : rem.toFixed(2);
+}
+
+/** Same column order and labels for Pledges Report HTML, CSV, and PDF (13 columns). */
+const REPORT_TABLE_HEADERS = [
+  "Code",
+  "Name",
+  "Email",
+  "Church",
+  "City",
+  "Tier",
+  "Pledged",
+  "Paid",
+  "Balance",
+  "% Paid",
+  "Status",
+  "Registered",
+  "Pricing / logic",
+];
+
+function reportDisplayName(r) {
+  return [r.first_name, r.last_name].filter(Boolean).join(" ").trim() || "—";
+}
+
+function syncReportTableHead() {
+  let tr = document.getElementById("report-head-row");
+  if (!tr) return;
+  tr.innerHTML = REPORT_TABLE_HEADERS.map(function (h) {
+    return "<th>" + esc(h) + "</th>";
+  }).join("");
+}
+
+function reportExportCellValues(r) {
+  let pled = regTotalPledged(r);
+  let paid = regAmountPaid(r);
+  let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
+  let overpaid = registrationIsOverpaidRow(pled, paid);
+  let balStr = reportBalanceExport(pled, paid, { pdf: true });
+  let statusStr = overpaid ? "overpaid" : String(r.status || "pending");
+  return [
+    String(r.pledge_code || ""),
+    reportDisplayName(r),
+    String(r.email || "").trim() || "—",
+    String(r.church || "").trim() || "—",
+    String(r.city || "").trim() || "—",
+    String(r.tier || "").trim() || "—",
+    "$" + pled.toFixed(2),
+    "$" + paid.toFixed(2),
+    balStr,
+    rPct + "%",
+    statusStr,
+    formatReportDateTimeUtc(r.created_at),
+    buildPricingBreakdownLines(r, { slimColumn: true }).join("\n"),
+  ];
 }
 
 function renderReport(rows) {
@@ -988,27 +1066,27 @@ function renderReport(rows) {
   document.getElementById("rs-bar").style.width = Math.min(100, pct) + "%";
   document.getElementById("report-summary").classList.remove("hidden");
 
+  syncReportTableHead();
   let tbody = document.getElementById("report-body");
   tbody.innerHTML = "";
   rows.forEach(function (r) {
+    let vals = reportExportCellValues(r);
     let pled = regTotalPledged(r);
     let paid = regAmountPaid(r);
     let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
     let overpaid = registrationIsOverpaidRow(pled, paid);
     let balCell = reportBalanceCell(pled, paid);
     let badgeCls = "b-pending";
-    let badgeText = r.status || "pending";
     if (overpaid) {
       badgeCls = "b-overpaid";
-      badgeText = "overpaid";
-    } else if (r.status === "complete") {
+    } else if (vals[10] === "complete") {
       badgeCls = "b-complete";
-    } else if (r.status === "partial") {
+    } else if (vals[10] === "partial") {
       badgeCls = "b-partial";
     }
     let tr = document.createElement("tr");
     tr.className = "report-row";
-    let code = r.pledge_code != null ? String(r.pledge_code) : "";
+    let code = vals[0];
     tr.innerHTML =
       '<td><div class="report-code-cell">' +
       '<span class="report-code-text">' +
@@ -1020,30 +1098,30 @@ function renderReport(rows) {
       REPORT_COPY_ICON_SVG +
       "</button></div></td>" +
       "<td>" +
-      esc((r.first_name || "") + " " + (r.last_name || "")) +
+      esc(vals[1]) +
       "</td>" +
       '<td style="font-size:0.72rem;">' +
-      esc(r.email) +
+      esc(vals[2]) +
       "</td>" +
       "<td>" +
-      esc(r.church || "—") +
+      esc(vals[3]) +
       "</td>" +
       "<td>" +
-      esc(r.city || "—") +
+      esc(vals[4]) +
       "</td>" +
       "<td>" +
-      esc(r.tier || "—") +
+      esc(vals[5]) +
       "</td>" +
-      "<td>$" +
-      pled.toFixed(2) +
+      "<td>" +
+      esc(vals[6]) +
       "</td>" +
-      '<td style="color:#7dbf80;">$' +
-      paid.toFixed(2) +
+      '<td style="color:#7dbf80;">' +
+      esc(vals[7]) +
       "</td>" +
       '<td style="color:' +
       balCell.color +
       ';">' +
-      esc(balCell.text) +
+      esc(vals[8]) +
       "</td>" +
       "<td>" +
       '<div style="display:flex;align-items:center;gap:0.4rem;">' +
@@ -1053,17 +1131,17 @@ function renderReport(rows) {
       '%;"></div>' +
       "</div>" +
       '<span style="font-size:0.72rem;color:rgba(232,223,200,0.4);">' +
-      rPct +
-      "%</span>" +
+      esc(vals[9]) +
+      "</span>" +
       "</div>" +
       "</td>" +
       '<td><span class="badge ' +
       badgeCls +
       '">' +
-      esc(badgeText) +
+      esc(vals[10]) +
       "</span></td>" +
       '<td style="font-size:0.72rem;color:rgba(232,223,200,0.4);">' +
-      (r.created_at || "").slice(0, 10) +
+      esc(vals[11]) +
       "</td>" +
       '<td class="report-logic-cell">' +
       buildPricingBreakdownHtml(r) +
@@ -1075,50 +1153,16 @@ function renderReport(rows) {
 
 function downloadCSV() {
   if (!reportData.length) return;
-  let headers = [
-    "Pledge Code",
-    "First Name",
-    "Last Name",
-    "Email",
-    "Phone",
-    "Church",
-    "City",
-    "Tier",
-    "Total Pledged",
-    "Amount Paid",
-    "Balance",
-    "Status",
-    "Registered",
-    "Pricing / logic",
-  ];
   let rows = reportData.map(function (r) {
-    let pled = regTotalPledged(r);
-    let paid = regAmountPaid(r);
-    let overpaid = registrationIsOverpaidRow(pled, paid);
-    let balExport = reportBalanceExport(pled, paid);
-    let statusDisp = overpaid ? "overpaid" : r.status || "";
-    return [
-      r.pledge_code,
-      r.first_name,
-      r.last_name,
-      r.email,
-      r.phone || "",
-      r.church || "",
-      r.city || "",
-      r.tier || "",
-      pled.toFixed(2),
-      paid.toFixed(2),
-      balExport,
-      statusDisp,
-      (r.created_at || "").slice(0, 10),
-      buildPricingBreakdownLines(r).join("\n"),
-    ]
+    return reportExportCellValues(r)
       .map(function (v) {
         return '"' + String(v).replaceAll('"', '""') + '"';
       })
       .join(",");
   });
-  let csv = [headers.join(",")].concat(rows).join("\n");
+  let csv = [REPORT_TABLE_HEADERS.map(function (h) {
+    return '"' + String(h).replaceAll('"', '""') + '"';
+  }).join(",")].concat(rows).join("\n");
   let blob = new Blob([csv], { type: "text/csv" });
   let url = URL.createObjectURL(blob);
   let a = document.createElement("a");
@@ -1203,45 +1247,9 @@ function downloadPDF() {
       );
       doc.setTextColor(0, 0, 0);
 
-      let head = [
-        [
-          "Code",
-          "Name",
-          "Email",
-          "Church",
-          "City",
-          "Tier",
-          "Pledged",
-          "Paid",
-          "Balance",
-          "% Paid",
-          "Status",
-          "Registered",
-          "Pricing / logic",
-        ],
-      ];
+      let head = [REPORT_TABLE_HEADERS];
       let body = reportData.map(function (r) {
-        let pled = regTotalPledged(r);
-        let paid = regAmountPaid(r);
-        let rPct = pled > 0 ? Math.round((paid / pled) * 100) : 0;
-        let balanceStr = reportBalanceExport(pled, paid, { pdf: true });
-        let overpaid = registrationIsOverpaidRow(pled, paid);
-        let statusStr = overpaid ? "overpaid" : String(r.status || "");
-        return [
-          String(r.pledge_code || ""),
-          [r.first_name, r.last_name].filter(Boolean).join(" "),
-          String(r.email || ""),
-          String(r.church || "—"),
-          String(r.city || "—"),
-          String(r.tier || "—"),
-          "$" + pled.toFixed(2),
-          "$" + paid.toFixed(2),
-          balanceStr,
-          rPct + "%",
-          statusStr,
-          (r.created_at || "").slice(0, 10),
-          buildPricingBreakdownLines(r).join("\n"),
-        ];
+        return reportExportCellValues(r);
       });
 
       try {

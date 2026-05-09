@@ -100,7 +100,8 @@ export async function sendConfirmationEmails(payload) {
   /* ── Build attendee rows ── */
   const attRows = attList.map(function(a, i) {
     var age   = parseInt(a.age);
-    var price = isNaN(age) ? '' : (age <= 10 ? 'Free' : ('$' + calcPrice(age, tier)));
+    var amt   = isNaN(age) ? NaN : calcPrice(age, tier);
+    var price = isNaN(age) ? '' : (amt === 0 ? 'Free' : ('$' + amt));
     return (
       '<tr>' +
         '<td style="padding:8px 16px;font-size:13px;color:rgba(245,239,224,0.65);border-bottom:1px solid rgba(200,168,90,0.05);">' +
@@ -145,6 +146,14 @@ export async function sendConfirmationEmails(payload) {
   var remColor =
     remaining > 0 ? '#E8C87A' : trulyFullyPaid ? '#7dbf80' : 'rgba(245,239,224,0.55)';
 
+  var paymentCtaHref = lookup_url ? esc(lookup_url) : publicSiteUrl() + '#return';
+  var paymentCtaLabel = lookup_url
+    ? 'View registration &amp; pay'
+    : 'Continue payment on site';
+  var paymentCtaIntro = lookup_url
+    ? 'Use your secure returning-registration link below to open the Already Registered payment page with your balance already loaded.'
+    : 'Open the Already Registered payment page on the convention site to continue your payment.';
+
   var paymentInstructions =
     remaining > 0
       ? '<table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(200,168,90,0.06);border:1px solid rgba(200,168,90,0.2);margin-bottom:24px;">' +
@@ -163,7 +172,10 @@ export async function sendConfirmationEmails(payload) {
               safePledge + '</strong> ' +
               'in the <strong style="color:#E8C87A;">Conference Registration Code</strong> field.' +
             '</p>' +
-            '<a href="' + publicSiteUrl() + '#register" style="display:inline-block;padding:11px 28px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Return to Convention Site</a>' +
+            '<p style="margin:0 0 16px;font-size:13px;color:rgba(245,239,224,0.6);line-height:1.8;">' +
+              paymentCtaIntro +
+            '</p>' +
+            '<a href="' + paymentCtaHref + '" style="display:inline-block;padding:11px 28px;background:#C8A85A;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">' + paymentCtaLabel + '</a>' +
           '</td></tr>' +
         '</table>'
       : trulyFullyPaid
@@ -194,7 +206,7 @@ export async function sendConfirmationEmails(payload) {
         '<tr><td style="padding:20px 24px;">' +
           '<p style="margin:0 0 8px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(125,191,128,0.7);">Your secure registration link</p>' +
           '<p style="margin:0 0 16px;font-size:13px;color:rgba(245,239,224,0.65);line-height:1.75;">' +
-            'Bookmark or save this link to check your balance and payment options without entering your pledge code. ' +
+            'Bookmark or save this link to reopen the Already Registered payment page with your balance and payment options already loaded. ' +
             'The link expires in 7 days; you can request a fresh link from the convention site using your email and pledge code.' +
           '</p>' +
           '<a href="' + esc(lookup_url) + '" style="display:inline-block;padding:12px 28px;background:#7dbf80;color:#0B1628;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">View registration &amp; balance</a>' +
@@ -204,7 +216,7 @@ export async function sendConfirmationEmails(payload) {
 
   /* ── Confirmation email to registrant ── */
   var confirmHtml =
-    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>' +
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>CRM 2026 Registration Confirmed</title></head>' +
     '<body style="margin:0;padding:0;background:#EDE8DF;font-family:Georgia,serif;">' +
     '<table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;">' +
     '<tr><td align="center" style="padding:32px 16px;">' +
@@ -388,7 +400,7 @@ export async function sendLookupLinkEmail({ email, first_name, lookup_url, regis
   const greeting = esc(first_name || 'there');
   const plainName = String(first_name || 'there').replace(/[\r\n\u2028\u2029]/g, ' ').trim() || 'there';
   const html =
-    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>' +
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>Your CRM 2026 registration link</title></head>' +
     '<body style="margin:0;padding:0;background:#EDE8DF;font-family:Georgia,serif;">' +
     '<table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;">' +
     '<tr><td align="center" style="padding:32px 16px;">' +
@@ -473,6 +485,7 @@ function esc(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** Age brackets 0–10 / 11–17 / 18+; amounts must match api/_lib/registration.js PRICING_CENTS. */
 function calcPrice(age, tier) {
   var pricing = {
     earlybird: { u10: 0,   u17: 100, adu: 200 },
@@ -481,6 +494,6 @@ function calcPrice(age, tier) {
   };
   var p = pricing[tier] || pricing.earlybird;
   if (age <= 10) return p.u10;
-  if (age <= 17) return p.u17;
+  if (age < 18) return p.u17;
   return p.adu;
 }

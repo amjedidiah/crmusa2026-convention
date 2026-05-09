@@ -9,7 +9,7 @@ import { enforceRateLimit, getRegisterRateLimiter } from './_lib/rate-limit.js';
 import { buildLookupUrlForRegistration } from './_lib/site.js';
 import { supabaseRestRequest } from './_lib/supabase.js';
 import { serverLog } from './_lib/server-log.js';
-import { validateAttendees, validateContact } from './_lib/validation.js';
+import { validateAttendees, validateRegistrationContact } from './_lib/validation.js';
 
 const MAX_PLEDGE_CODE_ATTEMPTS = 8;
 
@@ -31,10 +31,10 @@ function firstContactFocusId(fieldErrors) {
 }
 
 const DUPLICATE_EMAIL_MESSAGE =
-  'This email already has a registration. If you need your pledge code, use Find registration from the site. If you are registering someone else separately, use a different email or contact convention@crmusanational.org.';
+  "This email already has a registration. If you need your pledge code, use Find registration from the site. If you are registering someone else separately, use a different email or contact info@crm-na.org.";
 
 const DUPLICATE_PHONE_MESSAGE =
-  'This phone number is already tied to a registration. If several households share one line, use a different number on this form or contact convention@crmusanational.org.';
+  "This phone number is already tied to a registration. If several households share one line, use a different number on this form or contact info@crm-na.org.";
 
 function duplicateRegistrationError(field) {
   const err = new Error('duplicate_registration');
@@ -103,7 +103,7 @@ export default async function handler(req, res) {
   }
 
   const { contact, attendees, payment_intent_cents: rawPaymentIntent } = req.body || {};
-  const validatedContact = validateContact(contact);
+  const validatedContact = await validateRegistrationContact(contact);
   if (!validatedContact.valid) {
     return res.status(400).json(
       createRegistrationGate('contact', 'Please correct your contact information and try again.', {
@@ -133,12 +133,14 @@ export default async function handler(req, res) {
   if (rawPaymentIntent !== undefined && rawPaymentIntent !== null && rawPaymentIntent !== '') {
     const n = Number(rawPaymentIntent);
     if (!Number.isInteger(n) || n < 0) {
-      return res.status(400).json(
-        createRegistrationGate(
-          'payment',
-          'Enter a valid payment amount on the submit step, or contact convention@crmusanational.org.',
-        )
-      );
+      return res
+        .status(400)
+        .json(
+          createRegistrationGate(
+            "payment",
+            "Enter a valid payment amount on the submit step, or contact info@crm-na.org.",
+          ),
+        );
     }
     paymentIntentCents = n;
   }

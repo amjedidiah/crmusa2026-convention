@@ -80,7 +80,7 @@ export function attendeePriceCents(age, tier) {
     return 0;
   }
 
-  if (numericAge < 10) return pricing.u10;
+  if (numericAge <= 10) return pricing.u10;
   if (numericAge < 18) return pricing.u17;
   return pricing.adu;
 }

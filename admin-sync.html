@@ -288,8 +288,11 @@
         background: #4a9a5a;
       }
 
-      /* Messages */
+      /* Messages (<output> defaults to inline — keep banners full-width below controls) */
       .msg {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
         padding: 0.7rem 1rem;
         font-size: 0.8rem;
         margin-top: 0.8rem;
@@ -1499,21 +1502,7 @@
               <div class="tbl-wrap">
                 <table>
                   <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Church</th>
-                      <th>City</th>
-                      <th>Tier</th>
-                      <th>Pledged</th>
-                      <th>Paid</th>
-                      <th>Balance</th>
-                      <th>% Paid</th>
-                      <th>Status</th>
-                      <th>Registered</th>
-                      <th>Pricing / logic</th>
-                    </tr>
+                    <tr id="report-head-row"></tr>
                   </thead>
                   <tbody id="report-body"></tbody>
                 </table>
@@ -1534,6 +1523,7 @@
       integrity="sha384-iWpUQPQzWsFiosLgsS8o+e6E8y3Gm+EW2m/vAAo7A2H3fuc4KOKEx+5CAord2H2z"
       crossorigin="anonymous"
     ></script>
-    <script defer src="/admin-sync-app.js"></script>
+    <!-- Bump `v` when admin-sync-app.js changes so browsers pick up the new bundle. -->
+    <script defer src="/admin-sync-app.js?v=20260509"></script>
   </body>
 </html>

@@ -15,7 +15,8 @@ import {
   resolveConventionMailReplyTo,
 } from './_lib/convention-mail.js';
 
-const BREEZE_URL = 'https://gracelifecenter.breezechms.com/give/online';
+const ZEFFY_URL =
+  'https://www.zeffy.com/en-US/donation-form/donate-to-facilitate-the-work-of-this-ministry';
 
 const TIER_LABELS = {
   earlybird: 'Early Bird (Apr 1 – Jun 15)',
@@ -211,7 +212,7 @@ function buildReminderEmail(reg, remaining, total, paid, replyTo) {
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>CRM 2026 Balance Reminder</title></head>
 <body style="margin:0;padding:0;background:#EDE8DF;font-family:Georgia,serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;">
 <tr><td align="center" style="padding:32px 16px;">
@@ -309,15 +310,14 @@ function buildReminderEmail(reg, remaining, total, paid, replyTo) {
                 text-transform:uppercase;color:rgba(200,168,90,0.55);">How to Pay</p>
             <ol style="margin:0;padding-left:18px;font-size:13px;
                 color:rgba(245,239,224,0.6);line-height:2.2;">
-              <li>Click the button below to open the giving portal</li>
-              <li>Select <strong style="color:#E8C87A;">2026 CRM USA Conference</strong> as the fund</li>
+              <li>Click the button below to open the Zeffy payment page</li>
               <li>Enter any amount you'd like to pay today</li>
-              <li>In the <strong style="color:#E8C87A;">Comments field</strong>, enter:
+              <li>In the <strong style="color:#E8C87A;">Conference Registration Code</strong> field, enter:
                   <strong style="color:#E8C87A;letter-spacing:3px;
                   font-family:'Courier New',monospace;">${reg.pledge_code}</strong></li>
             </ol>
             <div style="text-align:center;margin-top:18px;">
-              <a href="${BREEZE_URL}" style="display:inline-block;padding:12px 32px;
+              <a href="${ZEFFY_URL}" style="display:inline-block;padding:12px 32px;
                   background:#C8A85A;color:#0B1628;text-decoration:none;
                   font-size:11px;letter-spacing:2px;text-transform:uppercase;
                   font-weight:700;margin-right:10px;">
@@ -342,7 +342,6 @@ function buildReminderEmail(reg, remaining, total, paid, replyTo) {
 
       <p style="margin:16px 0 0;font-size:11px;color:rgba(245,239,224,0.25);
           line-height:1.8;text-align:center;">
-        To unsubscribe from these reminders, reply with "unsubscribe".<br/>
         Questions? <a href="mailto:${esc(replyTo)}"
         style="color:#C8A85A;">${esc(replyTo)}</a>
       </p>

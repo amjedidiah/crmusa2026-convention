@@ -16,9 +16,13 @@ test('activeTierForDate earlybird / regular / late boundaries (Chicago)', () => 
   assert.equal(activeTierForDate(new Date('2026-07-17T17:00:00Z')), 'late');
 });
 
-test('attendeePriceCents respects tier brackets', () => {
+test('attendeePriceCents age boundaries 0–10 / 11–17 / 18+', () => {
   assert.equal(attendeePriceCents(8, 'earlybird'), 0);
-  assert.equal(attendeePriceCents(15, 'regular'), 15000);
+  assert.equal(attendeePriceCents(10, 'earlybird'), 0);
+  assert.equal(attendeePriceCents(10, 'regular'), 5000);
+  assert.equal(attendeePriceCents(11, 'earlybird'), 10000);
+  assert.equal(attendeePriceCents(17, 'regular'), 15000);
+  assert.equal(attendeePriceCents(18, 'earlybird'), 20000);
   assert.equal(attendeePriceCents(40, 'late'), 30000);
 });
 
@@ -30,6 +34,16 @@ test('calculateRegistrationTotalCents sums attendees', () => {
     { name: 'C', age: 40 },
   ];
   assert.equal(calculateRegistrationTotalCents(attendees, tier), 0 + 10000 + 20000);
+});
+
+test('calculateRegistrationTotalCents includes age 10 in child bracket', () => {
+  assert.equal(
+    calculateRegistrationTotalCents(
+      [{ name: 'Ten', age: 10 }, { name: 'Eleven', age: 11 }],
+      'earlybird',
+    ),
+    0 + 10000,
+  );
 });
 
 test('deriveRegistrationStatus pending / partial / complete', () => {

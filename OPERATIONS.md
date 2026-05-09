@@ -31,7 +31,7 @@ Server routes emit **one JSON object per line** to stdout/stderr (searchable in 
 
 Treat **`admin-sync.html`** session data and API responses as **sensitive** (screen sharing, recordings, support tickets).
 
-`admin-sync.html`, `admin-sync-app.js`, and `/api/admin/*` are also behind a middleware **Basic Auth** gate. If those paths start returning **401**, verify the browser still has the current shared credentials. If they return **503**, the deployment is missing `ADMIN_BASIC_AUTH_USER` and/or `ADMIN_BASIC_AUTH_PASSWORD`.
+Staff admin HTTP APIs require a valid **Supabase session JWT** and **`STAFF_EMAIL_ALLOWLIST`** match (`401` / `403` otherwise). The static admin page and `/api/admin/auth-config` are not additionally gated at the edge—operational security is allowlist + Auth + RLS as documented in the README.
 
 ## Registration failures
 
@@ -50,8 +50,9 @@ Treat **`admin-sync.html`** session data and API responses as **sensitive** (scr
 Convention **`EMAIL_TRANSPORT`**, **`RESEND_API_KEY`**, and app **`SMTP_*`** affect **transactional** mail only (`email-send.js`). **Staff** sign-in emails (`admin-sync.html` magic link) are sent by **Supabase Auth (GoTrue)**.
 
 1. **Hosted:** Configure **Dashboard → Authentication → SMTP** on **each** Supabase project staff use (production and preview/staging if separate). See [Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
-2. **Redirect / URL errors:** If `signInWithOtp` fails with redirect-related messages, fix **Authentication → URL Configuration** (allowlist for `admin-sync.html`) and align **`SITE_URL`** / **`STAFF_MAGIC_LINK_REDIRECT`** with [`api/_lib/site.js`](./api/_lib/site.js) (`buildStaffMagicLinkRedirectUrl`).
-3. **Triage:** Prefer **Supabase Dashboard → Authentication** (logs, users) and the mail provider over Vercel logs alone for Auth SMTP rejection or spam-folder issues.
+2. **Template / branding:** Local `supabase start` uses [`supabase/templates/magic-link.html`](./supabase/templates/magic-link.html) via [`supabase/config.toml`](./supabase/config.toml). Hosted Supabase does **not** read that file automatically; paste the same HTML into **Authentication → Email Templates → Magic Link** (or update via the Supabase Management API) for each hosted project.
+3. **Redirect / URL errors:** If `signInWithOtp` fails with redirect-related messages, fix **Authentication → URL Configuration** (allowlist for `admin-sync.html`) and align **`SITE_URL`** / **`STAFF_MAGIC_LINK_REDIRECT`** with [`api/_lib/site.js`](./api/_lib/site.js) (`buildStaffMagicLinkRedirectUrl`).
+4. **Triage:** Prefer **Supabase Dashboard → Authentication** (logs, users) and the mail provider over Vercel logs alone for Auth SMTP rejection or spam-folder issues.
 
 ### Lookup / resend recovery (anti-enumeration)
 
@@ -84,6 +85,7 @@ Convention **`EMAIL_TRANSPORT`**, **`RESEND_API_KEY`**, and app **`SMTP_*`** aff
 2. **Email must be configured** before the job queries registrants: **Resend** (`RESEND_API_KEY`) on production/preview, or **SMTP → Mailpit** locally (`EMAIL_TRANSPORT` defaults). If misconfigured, the handler returns **500** with `remind.email_not_configured` in logs (fail-fast).
 3. Logs: `remind.supabase_query_failed`, `remind.email_send_failed`, `remind.last_reminder_stamp_failed`, `remind.batch_complete`.
 4. If email succeeds but `last_reminder_stamp_failed`, the same registrant may receive duplicate reminders next cycle—PATCH `last_reminder_at` manually if needed after fixing permissions/network.
+5. Reminder emails do **not** have an unsubscribe/suppression workflow today. Sending cadence is controlled only by registration status plus `last_reminder_at`.
 
 ## Database backups
 
