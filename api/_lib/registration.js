@@ -40,13 +40,15 @@ export function normalizePhoneForDedup(phone) {
 }
 
 export function activeTierForDate(input = new Date()) {
+  // Early bird through Jun 30; regular Jul 1–16; late Jul 17+ (America/Chicago).
+  // Jan–Mar also map to earlybird until a registration-open gate exists elsewhere.
   // If a plain date string like "2026-07-01" is passed, parse it as wall-clock
   // components directly to avoid UTC-midnight → previous-day drift in Chicago.
   if (typeof input === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
     const [year, month, day] = input.split("-").map(Number);
     // Use those components directly — skip Intl conversion for this branch.
-    if (month < 6 || (month === 6 && day <= 15)) return "earlybird";
-    if (month < 7 || (month === 7 && day <= 16)) return "regular";
+    if (month < 7) return "earlybird";
+    if (month === 7 && day <= 16) return "regular";
     return "late";
   }
   const date = input instanceof Date ? input : new Date(input);
@@ -67,8 +69,8 @@ export function activeTierForDate(input = new Date()) {
   const month = values.month;
   const day = values.day;
 
-  if (month < 6 || (month === 6 && day <= 15)) return "earlybird";
-  if (month < 7 || (month === 7 && day <= 16)) return "regular";
+  if (month < 7) return "earlybird";
+  if (month === 7 && day <= 16) return "regular";
   return "late";
 }
 

@@ -12,7 +12,21 @@ import {
 
 test('activeTierForDate earlybird / regular / late boundaries (Chicago)', () => {
   assert.equal(activeTierForDate(new Date('2026-06-10T17:00:00Z')), 'earlybird');
-  assert.equal(activeTierForDate(new Date('2026-06-16T17:00:00Z')), 'regular');
+  assert.equal(activeTierForDate(new Date('2026-06-16T17:00:00Z')), 'earlybird');
+  assert.equal(activeTierForDate(new Date('2026-07-17T17:00:00Z')), 'late');
+});
+
+test('activeTierForDate YYYY-MM-DD string boundaries (Chicago wall-clock)', () => {
+  assert.equal(activeTierForDate('2026-06-30'), 'earlybird');
+  assert.equal(activeTierForDate('2026-07-01'), 'regular');
+  assert.equal(activeTierForDate('2026-07-16'), 'regular');
+  assert.equal(activeTierForDate('2026-07-17'), 'late');
+});
+
+test('activeTierForDate Date object boundaries on cutoff days (Chicago)', () => {
+  assert.equal(activeTierForDate(new Date('2026-06-30T17:00:00Z')), 'earlybird');
+  assert.equal(activeTierForDate(new Date('2026-07-01T17:00:00Z')), 'regular');
+  assert.equal(activeTierForDate(new Date('2026-07-16T17:00:00Z')), 'regular');
   assert.equal(activeTierForDate(new Date('2026-07-17T17:00:00Z')), 'late');
 });
 

@@ -2351,7 +2351,7 @@
           <div class="pricing-grid">
             <div class="pricing-tier" id="tier-earlybird">
               <div class="tier-label">Early Bird</div>
-              <div class="tier-dates">April 1 – June 15</div>
+              <div class="tier-dates">April 1 – June 30</div>
               <ul class="tier-rows">
                 <li><span>Ages 0–10</span><span class="price">Free</span></li>
                 <li><span>Ages 11–17</span><span class="price">$100</span></li>
@@ -2360,7 +2360,7 @@
             </div>
             <div class="pricing-tier" id="tier-regular">
               <div class="tier-label">Regular</div>
-              <div class="tier-dates">June 16 – July 16</div>
+              <div class="tier-dates">July 1 – July 16</div>
               <ul class="tier-rows">
                 <li><span>Ages 0–10</span><span class="price">$50</span></li>
                 <li><span>Ages 11–17</span><span class="price">$150</span></li>
@@ -2891,16 +2891,30 @@
         late: { u10: 300, u17: 300, adu: 300 },
       };
       var TIER_LABEL = {
-        earlybird: "Early Bird (Apr 1 – Jun 15)",
-        regular: "Regular (Jun 16 – Jul 16)",
+        earlybird: "Early Bird (Apr 1 – Jun 30)",
+        regular: "Regular (Jul 1 – Jul 16)",
         late: "Late (Jul 17+)",
       };
 
+      function chicagoMonthDay(date) {
+        var parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/Chicago",
+          month: "numeric",
+          day: "numeric",
+        }).formatToParts(date || new Date());
+        var month = 0;
+        var day = 0;
+        for (var i = 0; i < parts.length; i++) {
+          if (parts[i].type === "month") month = Number(parts[i].value);
+          if (parts[i].type === "day") day = Number(parts[i].value);
+        }
+        return { month: month, day: day };
+      }
+
       function activeTier() {
-        var n = new Date(),
-          y = n.getFullYear();
-        if (n <= new Date(y, 5, 15)) return "earlybird";
-        if (n <= new Date(y, 6, 16)) return "regular";
+        var md = chicagoMonthDay();
+        if (md.month < 7) return "earlybird";
+        if (md.month === 7 && md.day <= 16) return "regular";
         return "late";
       }
       function calcPrice(age) {

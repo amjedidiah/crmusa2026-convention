@@ -25,8 +25,8 @@ function publicSiteUrl() {
 }
 
 const TIER_LABELS = {
-  earlybird: 'Early Bird (Apr 1 - Jun 15)',
-  regular:   'Regular (Jun 16 - Jul 16)',
+  earlybird: 'Early Bird (Apr 1 - Jun 30)',
+  regular:   'Regular (Jul 1 - Jul 16)',
   late:      'Late (Jul 17+)',
 };
 

@@ -70,8 +70,8 @@ insert into public.registrations (
     1,
     '2026-07-02T14:00:00+00'::timestamptz,
     '{"seed":"complete"}'::jsonb,
-    '2026-06-20T16:00:00+00'::timestamptz,
-    '2026-06-20T16:00:00+00'::timestamptz
+    '2026-07-10T16:00:00+00'::timestamptz,
+    '2026-07-10T16:00:00+00'::timestamptz
   ),
   (
     '33333333-3333-3333-3333-333333333333',
@@ -114,7 +114,7 @@ insert into public.registration_payments (
     'zeffy_import',
     'zeffy-seed-0001',
     25000,
-    '2026-06-22T16:30:00+00'::timestamptz,
+    '2026-07-12T16:30:00+00'::timestamptz,
     'Seeded fully paid card payment',
     '{"provider":"zeffy"}'::jsonb,
     'seed',

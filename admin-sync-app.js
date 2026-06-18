@@ -289,8 +289,9 @@ function activeTierFromChicagoYmd(ymd) {
   let segs = ymd.split("-");
   let mo = Number(segs[1]);
   let dom = Number(segs[2]);
-  if (mo < 6 || (mo === 6 && dom <= 15)) return "earlybird";
-  if (mo < 7 || (mo === 7 && dom <= 16)) return "regular";
+  // Jan–Mar also map to earlybird until a registration-open gate exists elsewhere.
+  if (mo < 7) return "earlybird";
+  if (mo === 7 && dom <= 16) return "regular";
   return "late";
 }
 
